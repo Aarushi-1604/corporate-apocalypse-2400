@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     You never need to change this file between environments.
     '''
     environment: str = "development"
+    database_url: str #if DATABASE_URL is missing in .env, app won't start. 
     model_config = SettingsConfigDict(
         env_file='.env',
         env_file_encoding = 'utf-8'
