@@ -1,0 +1,29 @@
+# ==============================================================================
+# LOCAL DEVELOPMENT ONLY
+# PostgreSQL is NOT run here -- we use a real hosted Supabase project instead
+# (see Phase 3). This file only runs the two services with no cloud
+# equivalent: Ollama (local AI model) and ChromaDB (local vector store).
+# ==============================================================================
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: corporate_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: corporate_chromadb
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+volumes:
+  ollama_data:
+  chroma_data:
