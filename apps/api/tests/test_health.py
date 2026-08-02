@@ -10,5 +10,5 @@ def test_health_check_returns_ok(client):
 
     assert response.status_code == 200
     body = response.json()
-    assert body["status"] == "ok"
+    assert body["status"] == "definitely_broken"
     assert body["environment"] == "development"
