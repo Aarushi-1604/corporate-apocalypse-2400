@@ -1,0 +1,96 @@
+# ==============================================================================
+# COMPANY TEMPLATES
+# `id` here is a config-level slug, NOT a database UUID (that mapping
+# happens later, when templates get seeded into company_templates).
+# base_stats power-score band: see balance_check.py -- every template
+# below was hand-checked to land within [270, 335].
+# ==============================================================================
+
+templates:
+  - id: cybersecurity
+    sector: Cybersecurity
+    name_pool: ["Ironwall Systems", "Cipher & Vale", "Blacklatch Security"]
+    backstory_pool:
+      - "Born from the ashes of three failed national defense agencies, [Company] now sells the only thing anyone in 2400 still trusts: a locked door."
+    base_stats: { cash: 70000, employees: 40, innovation: 65, brand: 45, esg: 40, market_share: 10, investor_confidence: 60 }
+    unique_strength: "Deep encryption expertise means client data breaches are rare."
+    unique_weakness: "High operating costs from constant threat monitoring."
+    unique_passive_ability: "Fortress Protocol -- Risk accumulates 15% slower."
+    passive_multipliers: { risk: 0.85 }
+
+  - id: renewable_energy
+    sector: Renewable Energy
+    name_pool: ["Solvane Grid", "Meridian Power Collective", "Heliarc Energy"]
+    backstory_pool:
+      - "Formed from the merger of three bankrupt solar utilities, [Company] bet everything on fusion-adjacent grid tech when the old power ministries collapsed."
+    base_stats: { cash: 75000, employees: 55, innovation: 55, brand: 45, esg: 75, market_share: 12, investor_confidence: 50 }
+    unique_strength: "Public goodwill from visible environmental impact."
+    unique_weakness: "Capital-intensive infrastructure limits fast expansion."
+    unique_passive_ability: "Green Momentum -- ESG gains amplified 15%."
+    passive_multipliers: { esg: 1.15 }
+
+  - id: space_mining
+    sector: Space Mining
+    name_pool: ["Orbital Extraction Corp", "Vantablack Mining Guild", "Perigee Resources"]
+    backstory_pool:
+      - "[Company] holds three of the last unclaimed asteroid mining charters, staking its entire future on rocks nobody has actually reached yet."
+    base_stats: { cash: 95000, employees: 75, innovation: 60, brand: 40, esg: 35, market_share: 8, investor_confidence: 45 }
+    unique_strength: "First-mover claims on high-value orbital resources."
+    unique_weakness: "Extremely long payback periods on capital investment."
+    unique_passive_ability: "Frontier R&D -- Innovation gains amplified 15%."
+    passive_multipliers: { innovation: 1.15 }
+
+  - id: healthcare
+    sector: Healthcare
+    name_pool: ["Vitalcore Medical", "Ashgrove Health Systems", "Lumen Clinical Group"]
+    backstory_pool:
+      - "When public health ministries dissolved, [Company] absorbed a dozen regional hospitals overnight, becoming a corporation that quite literally keeps a city alive."
+    base_stats: { cash: 85000, employees: 90, innovation: 50, brand: 55, esg: 55, market_share: 14, investor_confidence: 55 }
+    unique_strength: "Extremely loyal client base -- people don't switch hospitals lightly."
+    unique_weakness: "Heavy regulatory scrutiny slows new initiatives."
+    unique_passive_ability: "Trusted Care -- Client Satisfaction gains amplified 15%."
+    passive_multipliers: { client_satisfaction: 1.15 }
+
+  - id: airlines
+    sector: Airlines
+    name_pool: ["Zenith Skyways", "Continental Vantage Air", "Halcyon Aviation"]
+    backstory_pool:
+      - "[Company] survived the collapse of every national aviation authority by simply buying the runways outright."
+    base_stats: { cash: 60000, employees: 120, innovation: 35, brand: 50, esg: 30, market_share: 18, investor_confidence: 40 }
+    unique_strength: "Extensive route network gives strong market presence."
+    unique_weakness: "Thin margins -- highly exposed to fuel/oil price shocks."
+    unique_passive_ability: "Route Dominance -- Market Share gains amplified 15%."
+    passive_multipliers: { market_share: 1.15 }
+
+  - id: banking
+    sector: Banking
+    name_pool: ["Meridian Trust Bank", "Ashford Capital", "Sovereign Ledger Group"]
+    backstory_pool:
+      - "[Company] became the de facto central bank for three former nations, simply by being the last institution still solvent."
+    base_stats: { cash: 120000, employees: 80, innovation: 40, brand: 55, esg: 45, market_share: 10, investor_confidence: 70 }
+    unique_strength: "Deep capital reserves provide resilience against shocks."
+    unique_weakness: "Slow-moving culture makes rapid pivots difficult."
+    unique_passive_ability: "Blue Chip Trust -- Investor Confidence gains amplified 15%."
+    passive_multipliers: { investor_confidence: 1.15 }
+
+  - id: media
+    sector: Media
+    name_pool: ["Signalwave Media", "Nightglass Broadcasting", "Pulsegrid Entertainment"]
+    backstory_pool:
+      - "[Company] owns the only broadcast network most citizens still trust, which makes it more powerful than most of the governments it outlived."
+    base_stats: { cash: 55000, employees: 45, innovation: 45, brand: 70, esg: 35, market_share: 15, investor_confidence: 45 }
+    unique_strength: "Massive existing audience reach accelerates campaigns."
+    unique_weakness: "Reputation is fragile -- scandals hit especially hard."
+    unique_passive_ability: "Viral Reach -- Brand gains amplified 15%."
+    passive_multipliers: { brand: 1.15 }
+
+  - id: logistics
+    sector: Logistics
+    name_pool: ["Ferrovax Freight", "Continental Supply Chain Co.", "Ironroute Logistics"]
+    backstory_pool:
+      - "[Company] runs the last functioning cross-continental freight network, and every other corporation on this list quietly depends on it."
+    base_stats: { cash: 70000, employees: 150, innovation: 35, brand: 40, esg: 40, market_share: 20, investor_confidence: 40 }
+    unique_strength: "Massive operational scale creates strong economies of scale."
+    unique_weakness: "Thin, sensitive-to-disruption profit margins."
+    unique_passive_ability: "Efficient Fleet -- Profit effects amplified 15%."
+    passive_multipliers: { profit: 1.15 }
