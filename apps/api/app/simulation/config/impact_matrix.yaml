@@ -1,0 +1,122 @@
+# ==============================================================================
+# GAME BALANCE CONFIGURATION
+# Every number here can be tuned without touching engine.py's logic.
+# coefficient = how many points a metric moves per 1000 currency spent
+# on that category. secondary effects are smaller ripple effects.
+# ==============================================================================
+
+categories:
+  marketing:
+    primary: { metric: brand, coefficient: 0.8 }
+    secondary:
+      - { metric: revenue, coefficient: 0.4 }
+      - { metric: risk, coefficient: 0.05 }
+
+  rnd:
+    primary: { metric: innovation, coefficient: 1.0 }
+    secondary:
+      - { metric: stock_price, coefficient: 0.1 }
+
+  hiring:
+    primary: { metric: employees, coefficient: 0.01 }
+    secondary:
+      - { metric: employee_satisfaction, coefficient: 0.3 }
+
+  layoffs:
+    primary: { metric: cash, coefficient: 0.0 }
+    secondary:
+      - { metric: employee_satisfaction, coefficient: -1.2 }
+      - { metric: brand, coefficient: -0.4 }
+      - { metric: risk, coefficient: 0.3 }
+
+  automation:
+    primary: { metric: profit, coefficient: 0.6 }
+    secondary:
+      - { metric: employee_satisfaction, coefficient: -0.5 }
+      - { metric: innovation, coefficient: 0.3 }
+
+  cybersecurity:
+    primary: { metric: risk, coefficient: -0.8 }
+    secondary: []
+
+  legal:
+    primary: { metric: risk, coefficient: -0.6 }
+    secondary: []
+
+  supply_chain:
+    primary: { metric: risk, coefficient: -0.5 }
+    secondary:
+      - { metric: profit, coefficient: 0.2 }
+
+  manufacturing:
+    primary: { metric: revenue, coefficient: 0.7 }
+    secondary:
+      - { metric: risk, coefficient: 0.1 }
+
+  expansion:
+    primary: { metric: market_share, coefficient: 0.3 }
+    secondary:
+      - { metric: risk, coefficient: 0.4 }
+
+  loans:
+    primary: { metric: cash, coefficient: 1.0 }
+    secondary:
+      - { metric: debt, coefficient: 1.0 }
+
+  dividends:
+    primary: { metric: investor_confidence, coefficient: 0.6 }
+    secondary: []
+
+  carbon_reduction:
+    primary: { metric: esg, coefficient: 1.0 }
+    secondary:
+      - { metric: profit, coefficient: -0.1 }
+
+  pricing:
+    primary: { metric: revenue, coefficient: 0.5 }
+    secondary:
+      - { metric: client_satisfaction, coefficient: -0.2 }
+      - { metric: market_share, coefficient: -0.15 }
+
+  acquisitions:
+    primary: { metric: market_share, coefficient: 0.5 }
+    secondary:
+      - { metric: risk, coefficient: 0.5 }
+
+  patents:
+    primary: { metric: innovation, coefficient: 0.6 }
+    secondary:
+      - { metric: stock_price, coefficient: 0.15 }
+
+  insurance:
+    primary: { metric: risk, coefficient: -0.4 }
+    secondary: []
+
+baseline_drift:
+  employee_satisfaction: -0.5
+  innovation: -0.3
+  risk: 0.4
+  client_satisfaction: 0.0
+  market_share: 0.0
+  esg: -0.1
+  brand: -0.2
+
+variance:
+  max_fraction: 0.05
+
+stock_price:
+  profit_trend_weight: 0.02
+  investor_confidence_weight: 0.15
+  brand_weight: 0.1
+  max_quarter_swing_fraction: 0.25
+
+board_confidence:
+  profit_trend_weight: 0.25
+  esg_weight: 0.15
+  risk_weight: -0.25
+  investor_confidence_weight: 0.2
+  board_session_threshold: 40
+
+market_macro:
+  interest_rate_debt_drag: 1.0
+  inflation_employee_cost_drag: 0.02
