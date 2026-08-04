@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     '''
     environment: str = "development"
     database_url: str #if DATABASE_URL is missing in .env, app won't start. 
+    jwt_secret: str #if JWT_SECRET is missing in .env, app won't start.
+    cors_origin: str = "http://localhost:3000" #default for local dev. In production, the real env variable will override this.
     model_config = SettingsConfigDict(
         env_file='.env',
         env_file_encoding = 'utf-8'
