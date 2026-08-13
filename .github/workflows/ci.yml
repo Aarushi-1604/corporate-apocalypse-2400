@@ -15,7 +15,7 @@ jobs:
         working-directory: apps/api
     env:
       DATABASE_URL: postgresql+asyncpg://ci_user:ci_pass@localhost:5432/ci_db
-
+      JWT_SECRET: ci_fake_secret_not_used_for_anything_real
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
