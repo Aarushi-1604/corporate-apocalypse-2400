@@ -25,5 +25,6 @@ class CompanyOut(BaseModel):
 class RegisterResponse(BaseModel):
     player_id: uuid.UUID
     session_id: uuid.UUID
+    company_id: uuid.UUID
     resumed: bool
     company: CompanyOut

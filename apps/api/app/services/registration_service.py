@@ -16,6 +16,7 @@ async def _build_response(
     return RegisterResponse(
         player_id=player_id,
         session_id=session.id,
+        company_id=company.id,
         resumed=resumed,
         company=CompanyOut(
             name=company.name,

@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.core.security import create_access_token, decode_access_token
+from app.core.deps import get_current_session
+from app.core.security import create_access_token
 from app.models import Company, CompanyState as CompanyStateModel, Session as SessionModel
 from app.schemas.registration import CompanyOut, RegisterRequest, RegisterResponse
 from app.services.registration_service import register_or_resume
-from sqlalchemy import select
 
 router = APIRouter()
 
@@ -39,22 +40,10 @@ async def register_player(
 
 
 @router.get("/me", response_model=RegisterResponse)
-async def get_me(request: Request, db: AsyncSession = Depends(get_db)) -> RegisterResponse:
-    token = request.cookies.get("session_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Not logged in.")
-
-    payload = decode_access_token(token)
-    if payload is None:
-        raise HTTPException(status_code=401, detail="Invalid or expired session.")
-
-    session_result = await db.execute(
-        select(SessionModel).where(SessionModel.id == payload["session_id"])
-    )
-    session_row = session_result.scalar_one_or_none()
-    if session_row is None:
-        raise HTTPException(status_code=404, detail="Session not found.")
-
+async def get_me(
+    session_row: SessionModel = Depends(get_current_session),
+    db: AsyncSession = Depends(get_db),
+) -> RegisterResponse:
     company_result = await db.execute(select(Company).where(Company.session_id == session_row.id))
     company = company_result.scalar_one()
 
@@ -69,6 +58,7 @@ async def get_me(request: Request, db: AsyncSession = Depends(get_db)) -> Regist
     return RegisterResponse(
         player_id=session_row.player_id,
         session_id=session_row.id,
+        company_id=company.id,
         resumed=True,
         company=CompanyOut(
             name=company.name, sector=company.sector, backstory=company.backstory,

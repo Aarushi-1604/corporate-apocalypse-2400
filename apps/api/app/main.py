@@ -6,6 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.registration import router as registration_router
+from app.api.v1.companies import router as companies_router
 from app.company_gen.seed import ensure_templates_seeded
 from app.core.config import Settings, get_settings
 from app.core.db import async_session_maker, get_db
@@ -40,7 +41,7 @@ app.add_middleware(
 )
 
 app.include_router(registration_router, prefix="/api/v1")
-
+app.include_router(companies_router, prefix="/api/v1")
 
 @app.get("/api/v1/health")
 def health_check(settings: Settings = Depends(get_settings)) -> dict:
