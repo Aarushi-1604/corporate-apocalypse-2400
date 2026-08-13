@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { registerPlayer, type RegisterResponse } from "@/lib/api/registration";
 
 export default function Home() {
+  const router = useRouter();
   const [form, setForm] = useState({
     full_name: "",
     prn: "",
@@ -48,6 +50,12 @@ export default function Home() {
         {result.resumed && (
           <p className="mt-4 text-xs text-yellow-500">Resumed existing session.</p>
         )}
+        <button
+          onClick={() => router.push("/hq/executive")}
+          className="mt-6 rounded bg-white px-4 py-2 font-semibold text-black"
+        >
+        Enter Headquarters
+        </button>
       </main>
     );
   }
