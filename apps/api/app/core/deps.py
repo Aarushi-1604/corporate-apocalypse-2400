@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.core.security import decode_access_token
-from app.models import Session as SessionModel
+from app.models import Company, Session as SessionModel
 
 
 async def get_current_session(
@@ -32,3 +32,22 @@ async def get_current_session(
         raise HTTPException(status_code=404, detail="Session not found.")
 
     return session_row
+
+async def get_owned_company(
+    company_id: str,
+    session_row: SessionModel = Depends(get_current_session),
+    db: AsyncSession = Depends(get_db),
+) -> Company:
+    """
+    Reusable ownership check. `company_id` is matched automatically
+    from the route's own path parameter -- any endpoint with
+    {company_id} in its path can declare this as a dependency instead
+    of repeating the lookup-and-check inline every time.
+    """
+    result = await db.execute(select(Company).where(Company.id == company_id))
+    company = result.scalar_one_or_none()
+    if company is None:
+        raise HTTPException(status_code=404, detail="Company not found.")
+    if company.session_id != session_row.id:
+        raise HTTPException(status_code=403, detail="This company does not belong to you.")
+    return company

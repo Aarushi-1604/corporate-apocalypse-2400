@@ -17,6 +17,7 @@ export type SessionData = {
   player_id: string;
   session_id: string;
   company_id: string;
+  current_quarter: number;
   resumed: boolean;
   company: CompanyOut;
 };

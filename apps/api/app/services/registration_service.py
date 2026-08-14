@@ -17,6 +17,7 @@ async def _build_response(
         player_id=player_id,
         session_id=session.id,
         company_id=company.id,
+        current_quarter=session.current_quarter,
         resumed=resumed,
         company=CompanyOut(
             name=company.name,

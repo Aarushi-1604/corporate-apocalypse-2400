@@ -7,7 +7,7 @@ import { TrendChart } from "@/components/domain/TrendChart";
 
 export default function ExecutiveOfficePage() {
   const { data: session } = useSession();
-  const { data: state, isLoading, isError } = useCompanyState(session?.company_id, 1);
+  const { data: state, isLoading, isError } = useCompanyState(session?.company_id, session?.current_quarter ?? 1);
 
   if (isLoading) return <p className="text-neutral-400">Loading company data...</p>;
   if (isError || !state) return <p className="text-red-500">Failed to load company data.</p>;

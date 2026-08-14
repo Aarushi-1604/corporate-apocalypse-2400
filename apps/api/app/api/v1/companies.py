@@ -3,8 +3,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.core.deps import get_current_session
-from app.models import Company, CompanyState as CompanyStateModel, Session as SessionModel
+from app.core.deps import get_owned_company
+from app.models import Company, CompanyState as CompanyStateModel
 from app.schemas.company import CompanyStateOut
 
 router = APIRouter()
@@ -12,19 +12,10 @@ router = APIRouter()
 
 @router.get("/companies/{company_id}/state", response_model=CompanyStateOut)
 async def get_company_state(
-    company_id: str,
     quarter: int,
-    session_row: SessionModel = Depends(get_current_session),
+    company: Company = Depends(get_owned_company),
     db: AsyncSession = Depends(get_db),
 ) -> CompanyStateOut:
-    company_result = await db.execute(select(Company).where(Company.id == company_id))
-    company = company_result.scalar_one_or_none()
-    if company is None:
-        raise HTTPException(status_code=404, detail="Company not found.")
-
-    if company.session_id != session_row.id:
-        raise HTTPException(status_code=403, detail="This company does not belong to you.")
-
     state_result = await db.execute(
         select(CompanyStateModel).where(
             CompanyStateModel.company_id == company.id,
