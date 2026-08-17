@@ -1,0 +1,180 @@
+templates:
+  - category: cyberattack
+    severity: red
+    title: "Ransomware Lockout"
+    body: "Internal systems have been frozen. An anonymous group demands payment to restore access."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Pay the ransom quietly"
+        stat_deltas: { cash: -8000, brand: -2, risk: 1 }
+        follow_up_text: "Systems restored. Word may leak that you paid."
+      - label: "Refuse and rebuild from backups"
+        stat_deltas: { cash: -3000, employee_satisfaction: -3, risk: -1 }
+        follow_up_text: "Costly, but you held the line."
+    default_response:
+      label: "No response"
+      stat_deltas: { cash: -10000, brand: -4, risk: 3 }
+      follow_up_text: "Systems stayed frozen for days. The damage compounded."
+
+  - category: climate
+    severity: yellow
+    title: "Regional Heatwave"
+    body: "Extreme heat is straining operations and slowing logistics across your region."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Fund emergency cooling infrastructure"
+        stat_deltas: { cash: -4000, esg: 2, employee_satisfaction: 2 }
+        follow_up_text: "Operations stabilized quickly."
+      - label: "Push through with reduced hours"
+        stat_deltas: { profit: -2000, employee_satisfaction: -3 }
+        follow_up_text: "Output dipped and morale took a hit."
+    default_response:
+      label: "No response"
+      stat_deltas: { profit: -3000, employee_satisfaction: -4, esg: -1 }
+      follow_up_text: "The heatwave passed, but not without real cost."
+
+  - category: market
+    severity: yellow
+    title: "Interest Rate Spike"
+    body: "Central financial authorities have sharply raised interest rates this quarter."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Refinance existing debt now"
+        stat_deltas: { cash: -1500, debt: -5000 }
+        follow_up_text: "Locked in better terms before rates climbed further."
+      - label: "Ride it out"
+        stat_deltas: { profit: -1000 }
+        follow_up_text: "Interest costs quietly ate into this quarter's margin."
+    default_response:
+      label: "No response"
+      stat_deltas: { profit: -2000 }
+      follow_up_text: "Rising rates went unmanaged."
+
+  - category: employee
+    severity: yellow
+    title: "Burnout Epidemic"
+    body: "Internal surveys show productivity and morale sliding across multiple teams."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Fund a wellness and workload review"
+        stat_deltas: { cash: -3000, employee_satisfaction: 5 }
+        follow_up_text: "Teams responded well to being heard."
+      - label: "Acknowledge it, no budget allocated"
+        stat_deltas: { employee_satisfaction: 1 }
+        follow_up_text: "A gesture, but not much changed."
+    default_response:
+      label: "No response"
+      stat_deltas: { employee_satisfaction: -5, innovation: -2 }
+      follow_up_text: "Burnout deepened, unaddressed."
+
+  - category: client
+    severity: red
+    title: "Major Client Threatens to Leave"
+    body: "Your largest client is publicly unhappy and reviewing competitor bids."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Offer a personalized retention deal"
+        stat_deltas: { cash: -2000, client_satisfaction: 6, revenue: -1000 }
+        follow_up_text: "The client stayed, at a discount."
+      - label: "Let them walk"
+        stat_deltas: { revenue: -6000, market_share: -1 }
+        follow_up_text: "A hard quarter, but no desperate concessions made."
+    default_response:
+      label: "No response"
+      stat_deltas: { revenue: -8000, client_satisfaction: -3, market_share: -2 }
+      follow_up_text: "The client left without a word from you."
+
+  - category: legal
+    severity: yellow
+    title: "Regulatory Compliance Audit"
+    body: "Government observers have scheduled a surprise compliance review."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Hire outside counsel to prepare"
+        stat_deltas: { cash: -3500, risk: -3 }
+        follow_up_text: "The audit went smoothly."
+      - label: "Handle it internally"
+        stat_deltas: { risk: -1, employee_satisfaction: -1 }
+        follow_up_text: "Stretched thin, but it got done."
+    default_response:
+      label: "No response"
+      stat_deltas: { risk: 4, brand: -2 }
+      follow_up_text: "The audit found gaps nobody prepared for."
+
+  - category: operations
+    severity: red
+    title: "Supply Chain Disruption"
+    body: "A key supplier has abruptly halted shipments."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Air-freight from an alternate supplier"
+        stat_deltas: { cash: -5000, revenue: -500 }
+        follow_up_text: "Expensive, but operations barely slowed."
+      - label: "Absorb the delay"
+        stat_deltas: { revenue: -4000, client_satisfaction: -2 }
+        follow_up_text: "Shipments slipped and clients noticed."
+    default_response:
+      label: "No response"
+      stat_deltas: { revenue: -6000, client_satisfaction: -4 }
+      follow_up_text: "Nothing moved until the supplier resumed on its own."
+
+  - category: pr
+    severity: red
+    title: "Social Media Scandal"
+    body: "A leaked internal memo is spreading rapidly online, painting the company poorly."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Issue a swift public apology"
+        stat_deltas: { brand: -2, cash: -1000 }
+        follow_up_text: "It faded faster than expected."
+      - label: "Stay silent, let it blow over"
+        stat_deltas: { brand: -6 }
+        follow_up_text: "Silence read as indifference."
+    default_response:
+      label: "No response"
+      stat_deltas: { brand: -8, investor_confidence: -2 }
+      follow_up_text: "The story dominated headlines for days."
+
+  - category: technology
+    severity: green
+    title: "Unexpected R&D Breakthrough"
+    body: "Your engineering team stumbled onto a promising efficiency gain."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Fast-track it to production"
+        stat_deltas: { cash: -2000, innovation: 6, stock_price: 2 }
+        follow_up_text: "The gamble paid off ahead of schedule."
+      - label: "Bank it for later, low risk"
+        stat_deltas: { innovation: 2 }
+        follow_up_text: "Filed away for a safer quarter."
+    default_response:
+      label: "No response"
+      stat_deltas: { innovation: 0 }
+      follow_up_text: "The moment passed without action."
+
+  - category: investor
+    severity: blue
+    title: "Institutional Investor Inquiry"
+    body: "A major institutional investor is asking pointed questions about your strategy."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Host a detailed briefing"
+        stat_deltas: { cash: -1000, investor_confidence: 5 }
+        follow_up_text: "Transparency paid off."
+      - label: "Send a brief written response"
+        stat_deltas: { investor_confidence: 1 }
+        follow_up_text: "Adequate, not impressive."
+    default_response:
+      label: "No response"
+      stat_deltas: { investor_confidence: -4 }
+      follow_up_text: "The silence was noticed."
