@@ -67,9 +67,10 @@ async def _apply_deltas_and_resolve(
 
 async def get_active_event(db: AsyncSession, company: Company, quarter: int) -> ActiveEventOut | None:
     result = await db.execute(
-        select(EventInstance).where(
+        select(EventInstance).join(EventTemplateModel, EventInstance.template_id == EventTemplateModel.id).where(
             EventInstance.company_id == company.id,
             EventInstance.quarter == quarter,
+            EventTemplateModel.category.notlike("hr\\_%", escape="\\"),
         )
     )
     instances_this_quarter = result.scalars().all()
@@ -109,7 +110,7 @@ async def get_active_event(db: AsyncSession, company: Company, quarter: int) -> 
         return None
 
     templates_result = await db.execute(
-        select(EventTemplateModel).where(EventTemplateModel.min_quarter <= quarter)
+        select(EventTemplateModel).where(EventTemplateModel.min_quarter <= quarter,EventTemplateModel.category.notlike("hr\\_%", escape="\\"))
     )
     candidates = templates_result.scalars().all()
     if not candidates:

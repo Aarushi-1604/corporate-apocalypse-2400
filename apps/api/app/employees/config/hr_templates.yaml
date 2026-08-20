@@ -1,0 +1,144 @@
+templates:
+  - category: hr_burnout
+    severity: yellow
+    title: "Team Burnout Signs"
+    body: "Several team leads have flagged rising exhaustion and slipping deadlines."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Approve extra paid time off"
+        stat_deltas: { cash: -1500, employee_satisfaction: 4 }
+        follow_up_text: "The team took a breather. Morale visibly improved."
+      - label: "Encourage pushing through"
+        stat_deltas: { employee_satisfaction: -3, innovation: -1 }
+        follow_up_text: "Deadlines were met, but at a cost."
+    default_response:
+      label: "No response"
+      stat_deltas: { employee_satisfaction: -2 }
+      follow_up_text: "Nothing changed."
+
+  - category: hr_resignation_threat
+    severity: yellow
+    title: "Star Performer Considering Leaving"
+    body: "One of your top engineers has been approached by a competitor."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Offer a retention bonus"
+        stat_deltas: { cash: -2500, employee_satisfaction: 3, innovation: 1 }
+        follow_up_text: "They stayed, and morale nearby improved too."
+      - label: "Let them decide freely"
+        stat_deltas: { innovation: -2 }
+        follow_up_text: "They left. The team felt the gap."
+    default_response:
+      label: "No response"
+      stat_deltas: { innovation: -3, employee_satisfaction: -1 }
+      follow_up_text: "They left without a counteroffer ever being made."
+
+  - category: hr_harassment_complaint
+    severity: red
+    title: "Formal Complaint Filed"
+    body: "HR has received a formal complaint requiring a serious, documented response."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Launch a full independent investigation"
+        stat_deltas: { cash: -2000, employee_satisfaction: 3, brand: 1 }
+        follow_up_text: "Handled thoroughly. Trust in leadership grew."
+      - label: "Resolve quietly, informally"
+        stat_deltas: { employee_satisfaction: -4, risk: 2 }
+        follow_up_text: "Word got around anyway. Trust took a hit."
+    default_response:
+      label: "No response"
+      stat_deltas: { employee_satisfaction: -6, risk: 3, brand: -2 }
+      follow_up_text: "The complaint went unanswered."
+
+  - category: hr_remote_work_request
+    severity: blue
+    title: "Remote Work Policy Petition"
+    body: "A significant portion of staff have petitioned for permanent remote flexibility."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Approve flexible remote policy"
+        stat_deltas: { employee_satisfaction: 4, esg: 1 }
+        follow_up_text: "Well received across the board."
+      - label: "Maintain current in-office policy"
+        stat_deltas: { employee_satisfaction: -2 }
+        follow_up_text: "Some grumbling, but no major disruption."
+    default_response:
+      label: "No response"
+      stat_deltas: { employee_satisfaction: -1 }
+      follow_up_text: "The petition sat unanswered."
+
+  - category: hr_workplace_accident
+    severity: red
+    title: "Workplace Safety Incident"
+    body: "A minor but real safety incident occurred on-site this quarter."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Fund a full safety audit and upgrades"
+        stat_deltas: { cash: -3000, employee_satisfaction: 3, risk: -2 }
+        follow_up_text: "Staff felt genuinely reassured."
+      - label: "Address the immediate issue only"
+        stat_deltas: { cash: -800, risk: 1 }
+        follow_up_text: "The immediate problem was fixed, nothing more."
+    default_response:
+      label: "No response"
+      stat_deltas: { employee_satisfaction: -3, risk: 3 }
+      follow_up_text: "Staff noticed the silence."
+
+  - category: hr_wellness_program
+    severity: green
+    title: "Wellness Program Proposal"
+    body: "Your HR team has proposed a proactive employee wellness initiative."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Fund it fully"
+        stat_deltas: { cash: -2000, employee_satisfaction: 5, brand: 1 }
+        follow_up_text: "Genuinely well received, and noticed externally too."
+      - label: "Approve a smaller pilot version"
+        stat_deltas: { cash: -500, employee_satisfaction: 2 }
+        follow_up_text: "A modest but appreciated gesture."
+    default_response:
+      label: "No response"
+      stat_deltas: { employee_satisfaction: 0 }
+      follow_up_text: "The proposal quietly stalled."
+
+  - category: hr_internal_promotion
+    severity: green
+    title: "Internal Promotion Opportunity"
+    body: "A strong internal candidate has emerged for a senior opening."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Promote from within"
+        stat_deltas: { employee_satisfaction: 4, innovation: 1 }
+        follow_up_text: "The team saw it as proof effort gets rewarded."
+      - label: "Hire externally instead"
+        stat_deltas: { employee_satisfaction: -2, innovation: 1 }
+        follow_up_text: "Fresh perspective, but some quiet disappointment internally."
+    default_response:
+      label: "No response"
+      stat_deltas: { employee_satisfaction: -1 }
+      follow_up_text: "The opening sat unfilled for now."
+
+  - category: hr_union_inquiry
+    severity: yellow
+    title: "Early Union Interest"
+    body: "Informal conversations about unionizing have started among staff."
+    weight: 1.0
+    min_quarter: 1
+    response_options:
+      - label: "Open a direct dialogue with staff"
+        stat_deltas: { employee_satisfaction: 3, cash: -1000 }
+        follow_up_text: "Staff appreciated being heard directly."
+      - label: "Take no formal position"
+        stat_deltas: { employee_satisfaction: 0 }
+        follow_up_text: "Conversations continued quietly."
+    default_response:
+      label: "No response"
+      stat_deltas: { employee_satisfaction: -2, risk: 1 }
+      follow_up_text: "Silence was read as indifference."
