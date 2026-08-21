@@ -10,7 +10,7 @@ export function TopStatusBar() {
       <span className="font-semibold">{data?.company.name ?? "Loading..."}</span>
       <div className="flex items-center gap-6 text-sm text-neutral-400">
         <span>Cash: {data ? data.company.cash.toFixed(0) : "--"}</span>
-        <span>Q1</span>
+        <span>Q{data?.current_quarter ?? "1"}</span>
         <span>🔔 0</span>
       </div>
     </header>
