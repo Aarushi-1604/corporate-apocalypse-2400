@@ -10,7 +10,7 @@ from app.models import Company, CompanyState as CompanyStateModel
 from app.models import DecisionLog, EventInstance, EventTemplate as EventTemplateModel
 from app.schemas.events import ActiveEventOut, ResponseOptionOut
 
-MIN_DELAY_SECONDS = 10
+MIN_DELAY_SECONDS = 60
 RESPONSE_WINDOW_SECONDS = 45
 BOUNDED_METRICS = [
     "innovation", "brand", "client_satisfaction", "employee_satisfaction",

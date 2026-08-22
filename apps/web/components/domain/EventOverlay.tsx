@@ -50,7 +50,7 @@ export function EventOverlay({ event }: { event: ActiveEvent }) {
       <p className="text-xs uppercase tracking-wide text-neutral-500">
         {event.category} -- {remaining}s remaining
       </p>
-      <h2 className="mt-2 text-xl font-bold">{event.title}</h2>
+      <h2 className="mt-2 text-xl font-bold text-white">{event.title}</h2>
       <p className="mt-2 text-neutral-300">{event.body}</p>
 
       {result ? (

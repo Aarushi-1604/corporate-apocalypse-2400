@@ -33,10 +33,10 @@ async function fetchCompanyState(companyId: string, quarter: number): Promise<Co
   return res.json();
 }
 
-export function useCompanyState(companyId: string | undefined, quarter: number) {
+export function useCompanyState(companyId: string | undefined, quarter: number | undefined) {
   return useQuery({
     queryKey: ["company-state", companyId, quarter],
-    queryFn: () => fetchCompanyState(companyId as string, quarter),
-    enabled: !!companyId,
+    queryFn: () => fetchCompanyState(companyId as string, quarter as number),
+    enabled: !!companyId && !!quarter,
   });
 }

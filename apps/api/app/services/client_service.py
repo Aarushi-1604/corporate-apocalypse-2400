@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Company, CompanyState as CompanyStateModel, Contract, DecisionLog
 from app.schemas.clients import ContractOut
 
-MIN_DELAY_SECONDS = 8
+MIN_DELAY_SECONDS = 30
 
 CLIENT_NAME_POOL = [
     "Halden Industrial Group", "Ferrow & Co.", "Meridian Civic Authority",

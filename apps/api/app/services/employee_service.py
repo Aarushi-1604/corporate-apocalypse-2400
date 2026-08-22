@@ -11,7 +11,7 @@ from app.models import EventInstance, EventTemplate as EventTemplateModel
 from app.schemas.employees import EmployeeFeedItemOut, EmployeeFeedOut, EmployeeResponseOptionOut
 
 MAX_HR_EVENTS_PER_QUARTER = 2
-SPAWN_DELAYS_SECONDS = [5, 20]
+SPAWN_DELAYS_SECONDS = [45, 90]
 
 
 async def _maybe_spawn_next(
