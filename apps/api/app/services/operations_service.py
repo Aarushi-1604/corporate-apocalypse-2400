@@ -8,6 +8,7 @@ from app.schemas.operations import BudgetAllocationIn, BudgetAllocationOut, Budg
 from app.simulation.engine import tick
 from app.simulation.models import CompanyState as EngineCompanyState, Decision
 
+from app.services.market_service import get_or_create_snapshot
 
 async def get_budget_draft(db: AsyncSession, company: Company, quarter: int) -> BudgetDraftOut:
     result = await db.execute(
@@ -119,14 +120,18 @@ async def lock_decisions(
         board_confidence=float(current.board_confidence),
     )
 
-    # market=None, traits=None: macro market effects (Phase 16) and
-    # passive-ability wiring aren't connected yet -- deliberate scope
-    # cut, both flagged for a later phase. Engine already handles
-    # both being absent (Phase 7).
+    # traits still deliberately unwired -- passive-ability multipliers
+    # are a separate scope cut, tracked for a future phase.
+    snapshot = await get_or_create_snapshot(db, session_row.id, quarter)
+    from app.simulation.models import MarketSnapshot as EngineMarketSnapshot
+    engine_market = EngineMarketSnapshot(
+        interest_rate=float(snapshot.interest_rate), inflation=float(snapshot.inflation)
+    )
+
     seed = (company.id.int % (2**31)) + quarter
 
     try:
-        result = tick(engine_state, decisions, market=None, traits=None, seed=seed)
+        result = tick(engine_state, decisions, market=engine_market, traits=None, seed=seed)
     except ValueError as e:
         raise ValueError("OVERSPENT") from e
 
