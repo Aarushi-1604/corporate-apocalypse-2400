@@ -158,3 +158,11 @@ def test_negative_cash_triggers_bankruptcy_flag():
 def test_invalid_category_rejected_by_pydantic():
     with pytest.raises(Exception):
         Decision(category="not_a_real_category", amount=100)
+
+def test_debt_never_goes_negative():
+    state = make_baseline_state()
+    state.debt = 0
+
+    result = tick(state, decisions=[], seed=1)
+
+    assert result.new_state.debt >= 0

@@ -1,0 +1,60 @@
+exchanges:
+  - speaker: chairperson
+    question: "The board convened this session for a reason. Walk us through what happened."
+    options:
+      - label: "Take full accountability, present a clear recovery plan"
+        confidence_delta: 8
+      - label: "Point to external market conditions"
+        confidence_delta: 2
+      - label: "Downplay the severity of the situation"
+        confidence_delta: -10
+
+  - speaker: lead_investor
+    question: "Our return projections for this quarter were significantly missed. What's the plan to correct course?"
+    options:
+      - label: "Commit to a specific, measurable turnaround target"
+        confidence_delta: 8
+      - label: "Ask for patience without specifics"
+        confidence_delta: -2
+      - label: "Suggest the projections themselves were unrealistic"
+        confidence_delta: -8
+
+  - speaker: cfo
+    question: "Cash reserves are a real concern right now. How do we stabilize the balance sheet?"
+    options:
+      - label: "Propose a concrete cost discipline plan"
+        confidence_delta: 8
+      - label: "Defer the question to next quarter"
+        confidence_delta: -4
+      - label: "Suggest taking on more debt to bridge the gap"
+        confidence_delta: -6
+
+  - speaker: independent_director
+    question: "Governance concerns aside, do you believe current leadership decisions reflect the company's stated values?"
+    options:
+      - label: "Acknowledge specific missteps honestly"
+        confidence_delta: 6
+      - label: "Defend the decisions as necessary trade-offs"
+        confidence_delta: 0
+      - label: "Dismiss the question as irrelevant to performance"
+        confidence_delta: -8
+
+  - speaker: employee_rep
+    question: "Morale on the ground is low. What message do you have for the people actually doing the work?"
+    options:
+      - label: "Commit to direct, ongoing dialogue with staff"
+        confidence_delta: 6
+      - label: "Acknowledge concerns without concrete commitments"
+        confidence_delta: -1
+      - label: "Redirect focus entirely to shareholder outcomes"
+        confidence_delta: -9
+
+  - speaker: government_observer
+    question: "Regulators are watching this sector closely. Can you assure this board of continued compliance?"
+    options:
+      - label: "Provide a clear, confident compliance commitment"
+        confidence_delta: 6
+      - label: "Give a vague, non-committal assurance"
+        confidence_delta: -2
+      - label: "Suggest regulatory scrutiny is overblown"
+        confidence_delta: -8

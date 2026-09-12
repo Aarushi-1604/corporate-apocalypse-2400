@@ -23,7 +23,7 @@ export default function OperationsPage() {
   const [amounts, setAmounts] = useState<Record<string, number>>({});
   const [locking, setLocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [bankrupt, setBankrupt] = useState(false);
   useEffect(() => {
     if (draft) {
       const initial: Record<string, number> = {};
@@ -45,6 +45,17 @@ export default function OperationsPage() {
     return <p className="text-neutral-400">Loading budget...</p>;
   }
 
+  if (bankrupt) {
+    return (
+      <div className="max-w-md rounded border-2 border-red-600 bg-neutral-950 p-6 text-center">
+        <h2 className="text-2xl font-bold text-red-500">BANKRUPT</h2>
+        <p className="mt-3 text-neutral-300">
+          Cash reserves have run out. This company can no longer continue operating.
+        </p>
+        <RestartButton />
+      </div>
+    );
+  }
   const total = Object.values(amounts).reduce((sum, v) => sum + (v || 0), 0);
   const remaining = draft.available_capital - total;
   const overBudget = remaining < 0;
@@ -54,9 +65,13 @@ export default function OperationsPage() {
     setLocking(true);
     setError(null);
     try {
-      await lockDecisions(session.company_id, quarter);
-      await queryClient.invalidateQueries({ queryKey: ["session"] });
-      router.push("/hq/executive");
+      const res = await lockDecisions(session.company_id, quarter);
+      if (res.bankruptcy) {
+        setBankrupt(true);
+      } else {
+        await queryClient.invalidateQueries({ queryKey: ["session"] });
+        router.push("/hq/executive");
+      } 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -100,6 +115,35 @@ export default function OperationsPage() {
       >
         {locking ? "Locking in..." : "Lock In Decisions"}
       </button>
+
     </div>
+  );
+}
+
+function RestartButton() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [restarting, setRestarting] = useState(false);
+
+  async function handleRestart() {
+    setRestarting(true);
+    try {
+      const { restartSession } = await import("@/lib/hooks/use-restart");
+      await restartSession();
+      queryClient.clear();
+      router.push("/hq/executive");
+    } finally {
+      setRestarting(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleRestart}
+      disabled={restarting}
+      className="mt-6 rounded bg-white px-4 py-2 font-semibold text-black disabled:opacity-50"
+    >
+      {restarting ? "Assigning new company..." : "Accept a New Appointment"}
+    </button>
   );
 }

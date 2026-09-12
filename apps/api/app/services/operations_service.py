@@ -7,7 +7,9 @@ from app.schemas.company import CompanyStateOut
 from app.schemas.operations import BudgetAllocationIn, BudgetAllocationOut, BudgetDraftOut, LockResponse
 from app.simulation.engine import tick
 from app.simulation.models import CompanyState as EngineCompanyState, Decision
-
+from datetime import datetime, timezone
+from app.board.scoring import clamp as _unused_clamp #not used directlty as board_service owns clamp
+from app.services.board_service import trigger_board_session 
 from app.services.market_service import get_or_create_snapshot
 
 async def get_budget_draft(db: AsyncSession, company: Company, quarter: int) -> BudgetDraftOut:
@@ -97,7 +99,15 @@ async def lock_decisions(
         )
     )
     current = current_result.scalar_one()
-
+    if float(current.cash) < 0:
+        session_row.status = "bankrupt"
+        session_row.ended_at = datetime.now(timezone.utc)
+        await db.commit()
+        return LockResponse(
+            new_quarter=quarter, deltas={}, board_session_required=False,
+            bankruptcy=True, already_locked=False,
+            new_state=_to_state_out(current),
+        )
     budget_result = await db.execute(
         select(BudgetAllocation).where(
             BudgetAllocation.company_id == company.id,
@@ -157,7 +167,18 @@ async def lock_decisions(
     )
 
     session_row.current_quarter = quarter + 1
-    session_row.current_stage = "planning"
+    if result.bankruptcy:
+        session_row.status = "bankrupt"
+        session_row.ended_at = datetime.now(timezone.utc)
+        session_row.current_stage = "report"
+    elif result.board_session_required:
+        session_row.current_stage = "board"
+        await db.flush()
+        await trigger_board_session(
+            db, company, quarter + 1, trigger_reason="low_board_confidence"
+        )
+    else:
+        session_row.current_stage = "planning"
 
     await db.commit()
     await db.refresh(new_state_row)

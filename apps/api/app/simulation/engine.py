@@ -152,7 +152,7 @@ def tick(
     _apply_variance(config, deltas, seed)
 
     new_cash = state.cash - total_spent + deltas.get("cash", 0.0) + deltas.get('profit', 0.0)
-    new_debt = state.debt + deltas.get("debt", 0.0)
+    new_debt = max(0.0, state.debt + deltas.get("debt", 0.0))
     new_profit = state.profit + deltas.get("profit", 0.0)
     new_revenue = state.revenue + deltas.get("revenue", 0.0)
     new_employees = max(0, state.employees + int(deltas.get("employees", 0.0)))

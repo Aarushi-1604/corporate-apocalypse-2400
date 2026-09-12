@@ -8,7 +8,7 @@ from app.core.security import create_access_token
 from app.models import Company, CompanyState as CompanyStateModel, Session as SessionModel
 from app.schemas.registration import CompanyOut, RegisterRequest, RegisterResponse
 from app.services.registration_service import register_or_resume
-
+from app.services.registration_service import register_or_resume, restart_session
 router = APIRouter()
 
 
@@ -68,3 +68,20 @@ async def get_me(
             cash=float(state.cash), employees=state.employees,
         ),
     )
+
+@router.post("/sessions/restart", response_model=RegisterResponse)
+async def restart(
+    response: Response,
+    session_row: SessionModel = Depends(get_current_session),
+    db: AsyncSession = Depends(get_db),
+) -> RegisterResponse:
+    if session_row.status not in ("fired", "bankrupt"):
+        raise HTTPException(status_code=409, detail="Current session is not terminated.")
+
+    result = await restart_session(db, session_row)
+
+    token = create_access_token(result.player_id, result.session_id)
+    response.set_cookie(
+        key="session_token", value=token, httponly=True, samesite="lax", max_age=60 * 60 * 24,
+    )
+    return result

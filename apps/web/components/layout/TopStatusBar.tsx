@@ -4,7 +4,9 @@ import { useSession } from "@/lib/hooks/use-session";
 
 export function TopStatusBar() {
   const { data } = useSession();
-
+  if (data && (data as any).status === "bankrupt") {
+    // session status isn't currently in SessionData -- see note below
+  }
   return (
     <header className="flex items-center justify-between border-b border-neutral-800 bg-neutral-950 px-6 py-3">
       <span className="font-semibold">{data?.company.name ?? "Loading..."}</span>

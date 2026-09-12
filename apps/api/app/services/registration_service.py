@@ -119,3 +119,50 @@ async def register_or_resume(db: AsyncSession, payload: RegisterRequest) -> Regi
     await db.commit()
 
     return await _build_response(player.id, new_session, company, company_state, resumed=False)
+
+async def restart_session(db: AsyncSession, old_session: SessionModel) -> RegisterResponse:
+    new_session = SessionModel(
+        player_id=old_session.player_id,
+        attempt_number=old_session.attempt_number + 1,
+    )
+    db.add(new_session)
+    await db.flush()
+
+    old_company_result = await db.execute(
+        select(Company).where(Company.session_id == old_session.id)
+    )
+    old_company = old_company_result.scalar_one()
+
+    templates = load_templates()
+    generated = generate_company(
+        templates, session_seed=new_session.id.int % (2**31), attempt_number=1,
+        exclude_template_id=old_company.template_id,
+    )
+
+    template_result = await db.execute(
+        select(CompanyTemplateModel).where(CompanyTemplateModel.sector == generated.sector)
+    )
+    db_template = template_result.scalar_one()
+
+    company = Company(
+        session_id=new_session.id, template_id=db_template.id, name=generated.name,
+        sector=generated.sector, backstory=generated.backstory,
+        unique_strength=generated.unique_strength, unique_weakness=generated.unique_weakness,
+        unique_passive_ability=generated.unique_passive_ability,
+    )
+    db.add(company)
+    await db.flush()
+
+    s = generated.initial_state
+    company_state = CompanyStateModel(
+        company_id=company.id, quarter=1,
+        cash=s.cash, revenue=s.revenue, profit=s.profit, debt=s.debt,
+        stock_price=s.stock_price, employees=s.employees, innovation=s.innovation,
+        brand=s.brand, client_satisfaction=s.client_satisfaction,
+        employee_satisfaction=s.employee_satisfaction, investor_confidence=s.investor_confidence,
+        esg=s.esg, risk=s.risk, market_share=s.market_share, board_confidence=s.board_confidence,
+    )
+    db.add(company_state)
+    await db.commit()
+
+    return await _build_response(old_session.player_id, new_session, company, company_state, resumed=False)

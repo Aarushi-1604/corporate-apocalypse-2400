@@ -49,7 +49,8 @@ async def _apply_deltas_and_resolve(
         if metric in BOUNDED_METRICS:
             new_value = _clamp(new_value)
         setattr(state, metric, new_value)
-
+    if "profit" in deltas:
+        state.cash = float(state.cash) + deltas["profit"]
     instance.resolved = True
     instance.responded_at = datetime.now(timezone.utc)
     instance.chosen_option_index = chosen_option_index
