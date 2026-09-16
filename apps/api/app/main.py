@@ -13,12 +13,12 @@ from app.api.v1.employees import router as employees_router
 from app.api.v1.clients import router as clients_router
 from app.api.v1.market import router as market_router
 from app.api.v1.board import router as board_router
+from app.api.v1.reports import router as reports_router
 from app.events.seed import ensure_event_templates_seeded
 from app.company_gen.seed import ensure_templates_seeded
 from app.employees.seed import ensure_hr_templates_seeded
 from app.core.config import Settings, get_settings
 from app.core.db import async_session_maker, get_db
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -58,6 +58,7 @@ app.include_router(employees_router, prefix="/api/v1")
 app.include_router(clients_router, prefix="/api/v1")
 app.include_router(market_router, prefix="/api/v1")
 app.include_router(board_router,prefix="/api/v1")
+app.include_router(reports_router,prefix="/api/v1")
 @app.get("/api/v1/health")
 def health_check(settings: Settings = Depends(get_settings)) -> dict:
     return {"status": "ok", "environment": settings.environment}

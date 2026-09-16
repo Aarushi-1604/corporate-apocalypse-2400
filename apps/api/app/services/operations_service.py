@@ -11,7 +11,8 @@ from datetime import datetime, timezone
 from app.board.scoring import clamp as _unused_clamp #not used directlty as board_service owns clamp
 from app.services.board_service import trigger_board_session 
 from app.services.market_service import get_or_create_snapshot
-
+from app.services.report_service import generate_narrative
+from app.models import QuarterReport 
 async def get_budget_draft(db: AsyncSession, company: Company, quarter: int) -> BudgetDraftOut:
     result = await db.execute(
         select(BudgetAllocation).where(
@@ -163,6 +164,12 @@ async def lock_decisions(
             company_id=company.id, quarter=quarter, decision_type="budget",
             summary=f"Locked in Q{quarter} budget across {len(decisions)} categories.",
             stat_deltas=result.deltas,
+        )
+    )
+    db.add(
+        QuarterReport(
+            company_id=company.id, quarter=quarter,
+            kpi_deltas=result.deltas, narrative=generate_narrative(result.deltas),
         )
     )
 

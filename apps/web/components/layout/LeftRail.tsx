@@ -13,6 +13,7 @@ const DEPARTMENTS = [
   { href: "/hq/advisor", label: "AI Advisor" },
   { href: "/hq/leaderboard", label: "Leaderboard" },
   { href: "/hq/settings", label: "Settings" },
+    { href: "/hq/reports/corporate-times", label: "Corporate Times" },
 ];
 
 export function LeftRail() {
