@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     database_url: str #if DATABASE_URL is missing in .env, app won't start. 
     jwt_secret: str #if JWT_SECRET is missing in .env, app won't start.
     cors_origin: str = "http://localhost:3000" #default for local dev. In production, the real env variable will override this.
+    ollama_host: str = "http://localhost:11434" #default
+    chroma_host: str = "localhost"
+    chroma_port: int = 8000
     model_config = SettingsConfigDict(
         env_file='.env',
         env_file_encoding = 'utf-8'
