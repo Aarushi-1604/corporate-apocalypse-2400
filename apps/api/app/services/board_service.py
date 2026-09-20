@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-
+from app.services.scoring_service import finalize_game
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -143,6 +143,7 @@ async def respond_to_board_exchange(
         session_row = session_row_result.scalar_one()
         session_row.status = "fired"
         session_row.ended_at = datetime.now(timezone.utc)
+        await finalize_game(db, company)
     else:
         company_result = await db.execute(select(Company).where(Company.id == board_session.company_id))
         company = company_result.scalar_one()

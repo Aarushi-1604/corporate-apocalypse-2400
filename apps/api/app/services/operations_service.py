@@ -1,6 +1,6 @@
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from fastapi import HTTPException
 from app.models import BudgetAllocation, Company, CompanyState as CompanyStateModel
 from app.models import DecisionLog, Session as SessionModel
 from app.schemas.company import CompanyStateOut
@@ -12,6 +12,7 @@ from app.board.scoring import clamp as _unused_clamp #not used directlty as boar
 from app.services.board_service import trigger_board_session 
 from app.services.market_service import get_or_create_snapshot
 from app.services.report_service import generate_narrative
+from app.services.scoring_service import finalize_game
 from app.models import QuarterReport 
 async def get_budget_draft(db: AsyncSession, company: Company, quarter: int) -> BudgetDraftOut:
     result = await db.execute(
@@ -68,10 +69,11 @@ def _to_state_out(row: CompanyStateModel) -> CompanyStateOut:
         board_confidence=float(row.board_confidence),
     )
 
-
 async def lock_decisions(
     db: AsyncSession, session_row: SessionModel, company: Company, quarter: int
 ) -> LockResponse:
+    if session_row.status != "active":
+        raise ValueError("GAME_COMPLETE")
     if quarter != session_row.current_quarter:
         raise ValueError("WRONG_QUARTER")
 
@@ -103,6 +105,7 @@ async def lock_decisions(
     if float(current.cash) < 0:
         session_row.status = "bankrupt"
         session_row.ended_at = datetime.now(timezone.utc)
+        await finalize_game(db,company)
         await db.commit()
         return LockResponse(
             new_quarter=quarter, deltas={}, board_session_required=False,
@@ -144,6 +147,8 @@ async def lock_decisions(
     try:
         result = tick(engine_state, decisions, market=engine_market, traits=None, seed=seed)
     except ValueError as e:
+        if str(e) == "GAME_COMPLETE":
+            raise HTTPException(status_code=409, detail="This Session has already ended.")
         raise ValueError("OVERSPENT") from e
 
     new_state_row = CompanyStateModel(
@@ -174,16 +179,21 @@ async def lock_decisions(
     )
 
     session_row.current_quarter = quarter + 1
+
     if result.bankruptcy:
         session_row.status = "bankrupt"
         session_row.ended_at = datetime.now(timezone.utc)
         session_row.current_stage = "report"
+        await finalize_game(db, company)
     elif result.board_session_required:
         session_row.current_stage = "board"
         await db.flush()
-        await trigger_board_session(
-            db, company, quarter + 1, trigger_reason="low_board_confidence"
-        )
+        await trigger_board_session(db, company, quarter + 1, trigger_reason="low_board_confidence")
+    elif quarter >= 4:
+        session_row.status = "completed"
+        session_row.ended_at = datetime.now(timezone.utc)
+        session_row.current_stage = "report"
+        await finalize_game(db, company)
     else:
         session_row.current_stage = "planning"
 

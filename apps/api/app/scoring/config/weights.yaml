@@ -1,0 +1,12 @@
+weights:
+  revenue: 0.20
+  profit: 0.15
+  satisfaction: 0.20
+  innovation: 0.10
+  investor: 0.10
+  survival: 0.15
+  risk_penalty: 0.10
+
+scaling:
+  revenue_growth_scale: 50.0
+  profit_score_divisor: 50.0

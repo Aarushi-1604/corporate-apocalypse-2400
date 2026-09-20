@@ -6,7 +6,8 @@ from app.core.deps import get_current_session, get_owned_company
 from app.models import Company, Session as SessionModel
 from app.schemas.reports import CorporateTimesOut, QuarterReportOut
 from app.services.report_service import get_or_create_corporate_times, get_quarter_report
-
+from app.schemas.annual_report import AnnualReportOut
+from app.services.annual_report_service import get_annual_report
 router = APIRouter()
 
 
@@ -29,3 +30,13 @@ async def get_corporate_times(
     db: AsyncSession = Depends(get_db),
 ) -> CorporateTimesOut:
     return await get_or_create_corporate_times(db, session_row.id, quarter)
+
+@router.get("/companies/{company_id}/reports/annual", response_model=AnnualReportOut)
+async def get_annual(
+    company: Company = Depends(get_owned_company),
+    db: AsyncSession = Depends(get_db),
+) -> AnnualReportOut:
+    try:
+        return await get_annual_report(db, company)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Annual report not yet available -- session still active.")
