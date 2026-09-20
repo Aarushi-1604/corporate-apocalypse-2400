@@ -14,6 +14,7 @@ from app.api.v1.clients import router as clients_router
 from app.api.v1.market import router as market_router
 from app.api.v1.board import router as board_router
 from app.api.v1.reports import router as reports_router
+from app.api.v1.ai import router as ai_router
 from app.events.seed import ensure_event_templates_seeded
 from app.company_gen.seed import ensure_templates_seeded
 from app.employees.seed import ensure_hr_templates_seeded
@@ -59,6 +60,7 @@ app.include_router(clients_router, prefix="/api/v1")
 app.include_router(market_router, prefix="/api/v1")
 app.include_router(board_router,prefix="/api/v1")
 app.include_router(reports_router,prefix="/api/v1")
+app.include_router(ai_router, prefix="/api/v1")
 @app.get("/api/v1/health")
 def health_check(settings: Settings = Depends(get_settings)) -> dict:
     return {"status": "ok", "environment": settings.environment}
