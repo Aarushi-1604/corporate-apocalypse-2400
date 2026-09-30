@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { askAdvisor } from "@/lib/hooks/use-advisor";
+import { askDictionary } from "@/lib/hooks/use-dictionary";
 
-type Message = { role: "user" | "advisor"; text: string; blocked?: boolean };
+type Message = { role: "user" | "ai"; text: string; blocked?: boolean };
 
 export default function AdvisorPage() {
+  const [tab, setTab] = useState<"advisor" | "dictionary">("advisor");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,18 +19,42 @@ export default function AdvisorPage() {
     setMessages((m) => [...m, { role: "user", text: query }]);
     setLoading(true);
     try {
-      const res = await askAdvisor(query);
-      setMessages((m) => [...m, { role: "advisor", text: res.answer, blocked: res.was_blocked }]);
+      const res = tab === "advisor" ? await askAdvisor(query) : await askDictionary(query);
+      setMessages((m) => [...m, { role: "ai", text: res.answer, blocked: res.was_blocked }]);
     } catch {
-      setMessages((m) => [...m, { role: "advisor", text: "Something went wrong. Try again." }]);
+      setMessages((m) => [...m, { role: "ai", text: "Something went wrong. Try again." }]);
     } finally {
       setLoading(false);
     }
   }
 
+  function switchTab(next: "advisor" | "dictionary") {
+    setTab(next);
+    setMessages([]); // stateless dictionary + a clean context switch, no mixed thread
+  }
+
   return (
     <div className="flex h-full max-w-2xl flex-col">
-      <h1 className="mb-4 text-2xl font-bold">Corporate Advisor</h1>
+      <div className="mb-4 flex gap-2">
+        <button
+          onClick={() => switchTab("advisor")}
+          className={`rounded px-3 py-1 text-sm font-semibold ${tab === "advisor" ? "bg-white text-black" : "border border-neutral-700 text-neutral-400"}`}
+        >
+          Corporate Advisor
+        </button>
+        <button
+          onClick={() => switchTab("dictionary")}
+          className={`rounded px-3 py-1 text-sm font-semibold ${tab === "dictionary" ? "bg-white text-black" : "border border-neutral-700 text-neutral-400"}`}
+        >
+          Corporate Dictionary
+        </button>
+      </div>
+
+      <p className="mb-4 text-xs text-neutral-500">
+        {tab === "advisor"
+          ? "Grounded in your company's current numbers -- asks trade-off questions, not direct answers."
+          : "Neutral concept lookup -- no access to your company's data."}
+      </p>
 
       <div className="flex-1 space-y-3 overflow-y-auto">
         {messages.map((m, i) => (
@@ -53,7 +79,7 @@ export default function AdvisorPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Ask about a trade-off, a metric, a decision..."
+          placeholder={tab === "advisor" ? "Ask about a trade-off or a decision..." : "Ask what a term means..."}
           className="flex-1 rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
         />
         <button

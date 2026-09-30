@@ -41,3 +41,28 @@ def test_scan_catches_volunteered_direct_advice():
 def test_scan_allows_trade_off_framing():
     text = "Marketing tends to raise brand faster, while R&D compounds over several quarters."
     assert scan_response_for_direct_advice(text) is False
+
+from app.ai.intent_guard import DICTIONARY_DEFLECTION_TEMPLATES, is_competitive_framing
+
+DICTIONARY_BLOCKED_EXAMPLES = [
+    "should I invest in marketing or rnd",
+    "which is better for my company, automation or hiring",
+    "what should my company do about risk",
+    "should my company choose expansion",
+]
+
+DICTIONARY_ALLOWED_EXAMPLES = [
+    "what is market segmentation",
+    "explain economies of scale",
+    "how does board confidence work",
+]
+
+
+@pytest.mark.parametrize("query", DICTIONARY_BLOCKED_EXAMPLES)
+def test_dictionary_blocks_competitive_framing(query):
+    assert is_competitive_framing(query) is True
+
+
+@pytest.mark.parametrize("query", DICTIONARY_ALLOWED_EXAMPLES)
+def test_dictionary_allows_neutral_lookups(query):
+    assert is_competitive_framing(query) is False

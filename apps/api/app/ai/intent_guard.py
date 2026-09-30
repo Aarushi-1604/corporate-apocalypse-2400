@@ -19,6 +19,33 @@ BLOCKED_PATTERNS = [
 
 _COMPILED = [re.compile(p, re.IGNORECASE) for p in BLOCKED_PATTERNS]
 
+DICTIONARY_ONLY_PATTERNS = [
+    r"\bshould i (invest|spend|choose) (in |on )?\w+ or \w+\b",
+    r"\bwhich (is|would be) better for my (company|business)\b",
+    r"\bwhat should my company do\b",
+    r"\bshould my company (choose|pick|go with)\b",
+    r"\bis it better to \w+ or \w+ for my company\b",
+]
+
+_DICTIONARY_COMPILED = [re.compile(p, re.IGNORECASE) for p in DICTIONARY_ONLY_PATTERNS]
+
+
+def is_competitive_framing(query: str) -> bool:
+    """
+    Dictionary-specific guard layer, on top of (not instead of) the
+    shared is_direct_answer_request check. Catches a strategic,
+    company-specific decision disguised as a neutral lookup -- e.g.
+    'should I invest in R&D or marketing' looks like a question about
+    two concepts, but is actually asking for a competitive decision.
+    """
+    return any(pattern.search(query) for pattern in _DICTIONARY_COMPILED)
+
+
+DICTIONARY_DEFLECTION_TEMPLATES = [
+    "That's a decision specific to your company -- the Corporate Advisor is the better place for that. I can explain the concepts involved here, though, if that helps.",
+    "I keep to neutral definitions, not company-specific strategy -- try the Corporate Advisor for that side of it. Happy to explain any of the terms involved.",
+    "That one's really a strategic call, not a lookup -- the Advisor handles those. I can define any of the terms in your question if useful.",
+]
 
 def is_direct_answer_request(query: str) -> bool:
     return any(pattern.search(query) for pattern in _COMPILED)

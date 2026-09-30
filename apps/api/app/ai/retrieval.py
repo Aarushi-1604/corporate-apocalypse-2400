@@ -4,8 +4,10 @@ from app.ai.ollama_client import get_embedding
 
 async def retrieve_concepts(query: str, top_k: int = 3) -> list[dict]:
     embedding = await get_embedding(query)
-    collection = get_concepts_collection()
+    if embedding is None:
+        return []
 
+    collection = get_concepts_collection()
     results = collection.query(query_embeddings=[embedding], n_results=top_k)
 
     concepts = []

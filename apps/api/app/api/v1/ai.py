@@ -8,7 +8,8 @@ from app.core.deps import get_current_session
 from app.models import AiConversation, Company, CompanyState as CompanyStateModel
 from app.models import Session as SessionModel
 from app.schemas.ai import AdvisorRequest, AdvisorResponse
-
+from app.ai.dictionary import get_dictionary_response
+from app.schemas.ai import DictionaryRequest, DictionaryResponse    
 router = APIRouter()
 
 
@@ -40,3 +41,21 @@ async def advisor(
     await db.commit()
 
     return AdvisorResponse(answer=answer, source=source, was_blocked=was_blocked)
+
+@router.post("/ai/dictionary", response_model=DictionaryResponse)
+async def dictionary(
+    payload: DictionaryRequest,
+    session_row: SessionModel = Depends(get_current_session),
+    db: AsyncSession = Depends(get_db),
+) -> DictionaryResponse:
+    answer, source, was_blocked = await get_dictionary_response(payload.query)
+
+    db.add(
+        AiConversation(
+            session_id=session_row.id, mode="dictionary",
+            prompt=payload.query, response=answer, was_blocked=was_blocked,
+        )
+    )
+    await db.commit()
+
+    return DictionaryResponse(answer=answer, source=source, was_blocked=was_blocked)
