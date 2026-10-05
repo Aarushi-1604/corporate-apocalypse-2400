@@ -41,21 +41,21 @@ export default function ExecutiveOfficePage() {
         </h2>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <KpiCard label="Cash" value={state.cash.toFixed(0)} delta={delta("cash")} />
-          <KpiCard label="Revenue" value={state.revenue.toFixed(0)} delta={delta("revenue")} />
-          <KpiCard label="Profit" value={state.profit.toFixed(0)} delta={delta("profit")} />
-          <KpiCard label="Debt" value={state.debt.toFixed(0)} delta={delta("debt")} />
-          <KpiCard label="Stock Price" value={state.stock_price.toFixed(2)} delta={delta("stock_price")} />
-          <KpiCard label="Employees" value={state.employees} delta={delta("employees")} />
-          <KpiCard label="Innovation" value={state.innovation.toFixed(1)} delta={delta("innovation")} />
-          <KpiCard label="Brand" value={state.brand.toFixed(1)} delta={delta("brand")} />
-          <KpiCard label="Client Satisfaction" value={state.client_satisfaction.toFixed(1)} delta={delta("client_satisfaction")} />
-          <KpiCard label="Employee Satisfaction" value={state.employee_satisfaction.toFixed(1)} delta={delta("employee_satisfaction")} />
-          <KpiCard label="Investor Confidence" value={state.investor_confidence.toFixed(1)} delta={delta("investor_confidence")} />
-          <KpiCard label="ESG" value={state.esg.toFixed(1)} delta={delta("esg")} />
-          <KpiCard label="Risk" value={state.risk.toFixed(1)} delta={delta("risk")} />
-          <KpiCard label="Market Share" value={state.market_share.toFixed(1)} delta={delta("market_share")} />
-          <KpiCard label="Board Confidence" value={state.board_confidence.toFixed(1)} delta={delta("board_confidence")} />
+          <KpiCard label="Cash" value={state.cash.toFixed(0)} delta={delta("cash")} previousValue={prevState?.cash.toFixed(0)} />
+          <KpiCard label="Revenue" value={state.revenue.toFixed(0)} delta={delta("revenue")} previousValue={prevState?.revenue.toFixed(0)} />
+          <KpiCard label="Profit" value={state.profit.toFixed(0)} delta={delta("profit")} previousValue={prevState?.profit.toFixed(0)} />
+          <KpiCard label="Debt" value={state.debt.toFixed(0)} delta={delta("debt")} previousValue={prevState?.debt.toFixed(0)} />
+          <KpiCard label="Stock Price" value={state.stock_price.toFixed(2)} delta={delta("stock_price")} previousValue={prevState?.stock_price.toFixed(2)} />
+          <KpiCard label="Employees" value={state.employees} delta={delta("employees")} previousValue={prevState?.employees} />
+          <KpiCard label="Innovation" value={state.innovation.toFixed(1)} delta={delta("innovation")} previousValue={prevState?.innovation.toFixed(1)} />
+          <KpiCard label="Brand" value={state.brand.toFixed(1)} delta={delta("brand")} previousValue={prevState?.brand.toFixed(1)} />
+          <KpiCard label="Client Satisfaction" value={state.client_satisfaction.toFixed(1)} delta={delta("client_satisfaction")} previousValue={prevState?.client_satisfaction.toFixed(1)} />
+          <KpiCard label="Employee Satisfaction" value={state.employee_satisfaction.toFixed(1)} delta={delta("employee_satisfaction")} previousValue={prevState?.employee_satisfaction.toFixed(1)} />
+          <KpiCard label="Investor Confidence" value={state.investor_confidence.toFixed(1)} delta={delta("investor_confidence")} previousValue={prevState?.investor_confidence.toFixed(1)} />
+          <KpiCard label="ESG" value={state.esg.toFixed(1)} delta={delta("esg")} previousValue={prevState?.esg.toFixed(1)} />
+          <KpiCard label="Risk" value={state.risk.toFixed(1)} delta={delta("risk")} previousValue={prevState?.risk.toFixed(1)} />
+          <KpiCard label="Market Share" value={state.market_share.toFixed(1)} delta={delta("market_share")} previousValue={prevState?.market_share.toFixed(1)} />
+          <KpiCard label="Board Confidence" value={state.board_confidence.toFixed(1)} delta={delta("board_confidence")} previousValue={prevState?.board_confidence.toFixed(1)} />
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
