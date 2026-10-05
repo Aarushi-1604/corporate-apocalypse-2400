@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/lib/hooks/use-session";
 import { useBudgetDraft, saveBudget, lockDecisions } from "@/lib/hooks/use-budget";
+import { OperationsGridGame } from "@/components/minigames/OperationsGridGame";
 
 const CATEGORIES = [
   "marketing", "rnd", "hiring", "layoffs", "automation", "cybersecurity",
@@ -96,43 +97,14 @@ export default function OperationsPage() {
   }
 
   return (
-    <div>
-      <h1 className="mb-2 text-2xl font-bold">Operations -- Q{quarter}</h1>
-      <p className={`mb-6 text-sm ${overBudget ? "text-red-500" : "text-neutral-400"}`}>
-        Remaining budget: {remaining.toFixed(0)} / {draft.available_capital.toFixed(0)}
-      </p>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {CATEGORIES.map((category) => (
-          <div key={category}>
-            <label className="mb-1 flex justify-between text-sm">
-              <span className="capitalize">{category.replace("_", " ")}</span>
-              <span>{(amounts[category] || 0).toFixed(0)}</span>
-            </label>
-            <input
-              type="range"
-              min={0}
-              max={draft.available_capital}
-              step={500}
-              value={amounts[category] || 0}
-              onChange={(e) => setAmounts({ ...amounts, [category]: Number(e.target.value) })}
-              className="w-full"
-            />
-          </div>
-        ))}
-      </div>
-
-      {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
-
-      <button
-        onClick={handleLock}
-        disabled={overBudget || locking}
-        className="mt-8 rounded bg-white px-4 py-2 font-semibold text-black disabled:opacity-50"
-      >
-        {locking ? "Locking in..." : "Lock In Decisions"}
-      </button>
-
-    </div>
+    <OperationsGridGame
+      availableCapital={draft.available_capital}
+      initialAmounts={amounts}
+      onSaveAmounts={(newAmounts) => setAmounts(newAmounts)}
+      onLockDecisions={handleLock}
+      locking={locking}
+      lockingError={error}
+    />
   );
 }
 
