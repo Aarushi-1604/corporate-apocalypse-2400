@@ -313,12 +313,51 @@ export function ActualOperationsScreen({
     }
   };
 
-  // Filtered categories
-  const categoriesToRender = useMemo(() => {
-    const all = Object.keys(SECTOR_METADATA);
-    if (activeTab === "all") return all;
-    return all.filter((k) => SECTOR_METADATA[k]?.category === activeTab);
-  }, [activeTab]);
+  // Sector groups definition (defined top-level in component so hook order is unconditional)
+  const SECTOR_GROUPS = useMemo(() => [
+    {
+      id: "growth",
+      name: "GROWTH & INFLUENCE",
+      subline: "STRATEGIC EXPANSION, BRAND EQUITY & R&D",
+      accentColor: "var(--gold)",
+      glowColor: "rgba(217, 188, 122, 0.15)",
+      borderColor: "rgba(218, 189, 123, 0.4)",
+      sectors: ["marketing", "rnd", "patents", "expansion", "acquisitions"],
+    },
+    {
+      id: "operations",
+      name: "CORE OPERATIONS",
+      subline: "INFRASTRUCTURE, LOGISTICS & WORKFORCE THROUGHPUT",
+      accentColor: "var(--cyan)",
+      glowColor: "rgba(114, 217, 234, 0.12)",
+      borderColor: "rgba(114, 217, 234, 0.35)",
+      sectors: ["hiring", "automation", "manufacturing", "supply_chain", "carbon_reduction"],
+    },
+    {
+      id: "defense",
+      name: "DEFENSE & RISK MITIGATION",
+      subline: "CYBERSHIELD, REGULATORY IMMUNITY & ASSET PROTECTION",
+      accentColor: "var(--red-bright)",
+      glowColor: "rgba(255, 119, 112, 0.12)",
+      borderColor: "rgba(255, 119, 112, 0.35)",
+      sectors: ["cybersecurity", "legal", "insurance"],
+    },
+    {
+      id: "finance",
+      name: "FINANCIAL INSTRUMENTS & TREASURY",
+      subline: "LIQUIDITY EXPANSION, DIVIDENDS & MARGIN CONTROL",
+      accentColor: "#fbbf24",
+      glowColor: "rgba(251, 191, 36, 0.12)",
+      borderColor: "rgba(251, 191, 36, 0.35)",
+      sectors: ["loans", "dividends", "pricing", "layoffs"],
+    },
+  ], []);
+
+  // Filtered groups according to tab selection
+  const visibleGroups = useMemo(() => {
+    if (activeTab === "all") return SECTOR_GROUPS;
+    return SECTOR_GROUPS.filter((g) => g.id === activeTab);
+  }, [activeTab, SECTOR_GROUPS]);
 
   if (isLoading || !draft) {
     return (
@@ -384,52 +423,6 @@ export function ActualOperationsScreen({
       </main>
     );
   }
-
-  // Sector groups definition
-  const SECTOR_GROUPS = useMemo(() => [
-    {
-      id: "growth",
-      name: "GROWTH & INFLUENCE",
-      subline: "STRATEGIC EXPANSION, BRAND EQUITY & R&D",
-      accentColor: "var(--gold)",
-      glowColor: "rgba(217, 188, 122, 0.15)",
-      borderColor: "rgba(218, 189, 123, 0.4)",
-      sectors: ["marketing", "rnd", "patents", "expansion", "acquisitions"],
-    },
-    {
-      id: "operations",
-      name: "CORE OPERATIONS",
-      subline: "INFRASTRUCTURE, LOGISTICS & WORKFORCE THROUGHPUT",
-      accentColor: "var(--cyan)",
-      glowColor: "rgba(114, 217, 234, 0.12)",
-      borderColor: "rgba(114, 217, 234, 0.35)",
-      sectors: ["hiring", "automation", "manufacturing", "supply_chain", "carbon_reduction"],
-    },
-    {
-      id: "defense",
-      name: "DEFENSE & RISK MITIGATION",
-      subline: "CYBERSHIELD, REGULATORY IMMUNITY & ASSET PROTECTION",
-      accentColor: "var(--red-bright)",
-      glowColor: "rgba(255, 119, 112, 0.12)",
-      borderColor: "rgba(255, 119, 112, 0.35)",
-      sectors: ["cybersecurity", "legal", "insurance"],
-    },
-    {
-      id: "finance",
-      name: "FINANCIAL INSTRUMENTS & TREASURY",
-      subline: "LIQUIDITY EXPANSION, DIVIDENDS & MARGIN CONTROL",
-      accentColor: "#fbbf24",
-      glowColor: "rgba(251, 191, 36, 0.12)",
-      borderColor: "rgba(251, 191, 36, 0.35)",
-      sectors: ["loans", "dividends", "pricing", "layoffs"],
-    },
-  ], []);
-
-  // Filtered groups according to tab selection
-  const visibleGroups = useMemo(() => {
-    if (activeTab === "all") return SECTOR_GROUPS;
-    return SECTOR_GROUPS.filter((g) => g.id === activeTab);
-  }, [activeTab, SECTOR_GROUPS]);
 
   return (
     <main className="screen department-screen finance finance-operations-revamp">
