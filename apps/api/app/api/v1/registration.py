@@ -85,3 +85,13 @@ async def restart(
         key="session_token", value=token, httponly=True, samesite="lax", max_age=60 * 60 * 24,
     )
     return result
+
+
+@router.post("/sessions/logout")
+async def logout(response: Response) -> dict:
+    response.delete_cookie(
+        key="session_token",
+        httponly=True,
+        samesite="lax",
+    )
+    return {"status": "logged_out"}

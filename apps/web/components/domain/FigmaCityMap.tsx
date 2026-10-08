@@ -23,18 +23,22 @@ function formatCapital(amount?: number) {
   return `₹${amount.toLocaleString()}`;
 }
 
+import { LogoutButton } from "./LogoutButton";
+
 export function SystemBar({
   section,
   companyName,
   capital,
   onBack,
   danger = false,
+  showLogout = true,
 }: {
   section: string;
   companyName?: string;
   capital?: number;
   onBack?: () => void;
   danger?: boolean;
+  showLogout?: boolean;
 }) {
   return (
     <header className="system-bar">
@@ -49,6 +53,7 @@ export function SystemBar({
       <div className="system-stats">
         <span>CAPITAL</span>
         <strong>{formatCapital(capital)}</strong>
+        {showLogout && <LogoutButton />}
         {onBack && (
           <button className="key-control" onClick={onBack} type="button">
             <kbd>ESC</kbd> RETURN

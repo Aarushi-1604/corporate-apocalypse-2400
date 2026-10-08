@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession } from "@/lib/hooks/use-session";
+import { LogoutButton } from "@/components/domain/LogoutButton";
 
 export function TopStatusBar() {
   const { data } = useSession();
@@ -14,6 +15,7 @@ export function TopStatusBar() {
         <span>Cash: {data ? data.company.cash.toFixed(0) : "--"}</span>
         <span>Q{data?.current_quarter ?? "1"}</span>
         <span>🔔 0</span>
+        <LogoutButton />
       </div>
     </header>
   );
