@@ -15,14 +15,18 @@ class Player(Base):
         UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
     full_name: Mapped[str] = mapped_column(Text, nullable=False)
-    prn: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
-    email: Mapped[str] = mapped_column(Text, nullable=False)
-    department: Mapped[str] = mapped_column(Text, nullable=False)
-    year_of_study: Mapped[str] = mapped_column(Text, nullable=False)
+    registration_type: Mapped[str] = mapped_column(Text, nullable=False, server_default="SIT")
+    prn: Mapped[str | None] = mapped_column(Text, nullable=True, unique=True)
+    email: Mapped[str | None] = mapped_column(Text, nullable=True)
+    department: Mapped[str | None] = mapped_column(Text, nullable=True)
+    year_of_study: Mapped[str | None] = mapped_column(Text, nullable=True)
+    phone_number: Mapped[str | None] = mapped_column(Text, nullable=True)
+    institution_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )
     last_active_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
 
 
 class Session(Base):
