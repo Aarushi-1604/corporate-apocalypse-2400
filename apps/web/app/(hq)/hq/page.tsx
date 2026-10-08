@@ -1,0 +1,49 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { FigmaHQMap } from "@/components/domain/FigmaHQMap";
+import { useSession } from "@/lib/hooks/use-session";
+import { useActiveBoard } from "@/lib/hooks/use-active-board";
+
+export default function HQPage() {
+  const router = useRouter();
+  const { data: session, isLoading, isError } = useSession();
+  const { data: activeBoard } = useActiveBoard(session?.company_id);
+
+  useEffect(() => {
+    if (!isLoading && (!session || isError)) {
+      router.replace("/login");
+    }
+  }, [session, isLoading, isError, router]);
+
+  if (isLoading || !session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-amber-500 font-mono tracking-widest">
+        CONNECTING TO HEADQUARTERS COMMAND CORE...
+      </div>
+    );
+  }
+
+  return (
+    <FigmaHQMap
+      data={session}
+      onBack={() => {
+        router.push("/city");
+      }}
+      onEnterFinance={() => {
+        router.push("/hq/operations/training");
+      }}
+      onEnterMarketing={() => {
+        router.push("/hq/market");
+      }}
+      onEnterResearch={() => {
+        router.push("/hq/operations");
+      }}
+      onEnterBoard={() => {
+        router.push("/hq/board");
+      }}
+      boardUnlocked={Boolean(activeBoard)}
+    />
+  );
+}
