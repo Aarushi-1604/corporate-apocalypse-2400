@@ -62,14 +62,34 @@ export function SystemBar({
 interface FigmaCityMapProps {
   data: RegisterResponse;
   onEnterHQ: () => void;
+  onVisitClient?: () => void;
+  onVisitPress?: () => void;
 }
 
-export function FigmaCityMap({ data, onEnterHQ }: FigmaCityMapProps) {
+export function FigmaCityMap({
+  data,
+  onEnterHQ,
+  onVisitClient,
+  onVisitPress,
+}: FigmaCityMapProps) {
   const [notice, setNotice] = useState("");
 
-  const unavailable = (place: string) => {
-    setNotice(`${place} // TRANSIT CLEARANCE PENDING`);
-    window.setTimeout(() => setNotice(""), 2400);
+  const handleClientClick = () => {
+    if (onVisitClient) {
+      onVisitClient();
+    } else {
+      setNotice("CLIENT OFFICE // TRANSIT CLEARANCE PENDING");
+      window.setTimeout(() => setNotice(""), 2400);
+    }
+  };
+
+  const handlePressClick = () => {
+    if (onVisitPress) {
+      onVisitPress();
+    } else {
+      setNotice("PRESS // TRANSIT CLEARANCE PENDING");
+      window.setTimeout(() => setNotice(""), 2400);
+    }
   };
 
   return (
@@ -102,7 +122,7 @@ export function FigmaCityMap({ data, onEnterHQ }: FigmaCityMapProps) {
       <button
         className="map-hotspot city-client"
         aria-label="Visit Client Office"
-        onClick={() => unavailable("CLIENT OFFICE")}
+        onClick={handleClientClick}
         type="button"
       >
         <span>
@@ -112,7 +132,7 @@ export function FigmaCityMap({ data, onEnterHQ }: FigmaCityMapProps) {
       <button
         className="map-hotspot city-press"
         aria-label="Visit Press"
-        onClick={() => unavailable("PRESS")}
+        onClick={handlePressClick}
         type="button"
       >
         <span>
@@ -126,3 +146,4 @@ export function FigmaCityMap({ data, onEnterHQ }: FigmaCityMapProps) {
     </main>
   );
 }
+

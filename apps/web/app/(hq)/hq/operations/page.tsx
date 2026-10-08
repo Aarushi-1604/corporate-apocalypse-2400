@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/lib/hooks/use-session";
 import { useBudgetDraft, saveBudget, lockDecisions } from "@/lib/hooks/use-budget";
+import { DiminishingReturnsTrainingReactor } from "@/components/domain/DiminishingReturnsTrainingReactor";
 
 const CATEGORIES = [
   "marketing", "rnd", "hiring", "layoffs", "automation", "cybersecurity",
@@ -25,6 +26,29 @@ export default function OperationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [bankrupt, setBankrupt] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
+
+  // Demonstration gating: first visit per quarter requires completing the 3-round training simulation
+  const [demoCompleted, setDemoCompleted] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!session?.company_id || !quarter) return;
+    const key = `diminishing_returns_demo_completed_${session.company_id}_q${quarter}`;
+    const alreadyDone = typeof window !== "undefined" && localStorage.getItem(key) === "true";
+    setDemoCompleted(alreadyDone);
+  }, [session?.company_id, quarter]);
+
+  const handleDemoComplete = () => {
+    if (session?.company_id && quarter) {
+      const key = `diminishing_returns_demo_completed_${session.company_id}_q${quarter}`;
+      localStorage.setItem(key, "true");
+    }
+    setDemoCompleted(true);
+  };
+
+  const handleBackToHQ = () => {
+    router.push("/");
+  };
+
   useEffect(() => {
     if (draft) {
       const initial: Record<string, number> = {};
@@ -42,8 +66,18 @@ export default function OperationsPage() {
     return () => clearTimeout(timeout);
   }, [amounts, session?.company_id, draft, quarter]);
 
-  if (isLoading || !draft || !quarter) {
-    return <p className="text-neutral-400">Loading budget...</p>;
+  if (isLoading || !draft || !quarter || demoCompleted === null) {
+    return <p className="text-neutral-400">Loading operations...</p>;
+  }
+
+  // If player hasn't completed the demonstration for this quarter, render the training simulation
+  if (!demoCompleted) {
+    return (
+      <DiminishingReturnsTrainingReactor
+        onBack={handleBackToHQ}
+        onComplete={handleDemoComplete}
+      />
+    );
   }
 
   if (bankrupt) {
