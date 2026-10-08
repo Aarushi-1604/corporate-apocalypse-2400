@@ -9,9 +9,10 @@ import { FigmaAssignment } from "@/components/domain/FigmaAssignment";
 import { FigmaCityMap } from "@/components/domain/FigmaCityMap";
 import { FigmaHQMap } from "@/components/domain/FigmaHQMap";
 import { DiminishingReturnsTrainingReactor } from "@/components/domain/DiminishingReturnsTrainingReactor";
+import { ActualOperationsScreen } from "@/components/domain/ActualOperationsScreen";
 import { useActiveBoard } from "@/lib/hooks/use-active-board";
 
-type Screen = "login" | "assignment" | "city_map" | "hq_map" | "finance";
+type Screen = "login" | "assignment" | "city_map" | "hq_map" | "finance" | "operations";
 
 export default function Home() {
   const router = useRouter();
@@ -66,7 +67,12 @@ export default function Home() {
 
   // Completion of the 3-round training reactor unlocks the actual operations interface
   const handleFinanceTrainingComplete = () => {
-    router.push("/hq/operations");
+    setScreen("operations");
+  };
+
+  // After locking decisions in Actual Operations, return to HQ or view results
+  const handleOperationsLockComplete = () => {
+    setScreen("hq_map");
   };
 
   // HQ Map -> 2. Research & Development Hotspot
@@ -83,6 +89,16 @@ export default function Home() {
   const handleEnterBoard = () => {
     router.push("/hq/board");
   };
+
+  if (screen === "operations" && sessionData) {
+    return (
+      <ActualOperationsScreen
+        sessionData={sessionData}
+        onBack={() => setScreen("hq_map")}
+        onLockComplete={handleOperationsLockComplete}
+      />
+    );
+  }
 
   if (screen === "finance" && sessionData) {
     return (

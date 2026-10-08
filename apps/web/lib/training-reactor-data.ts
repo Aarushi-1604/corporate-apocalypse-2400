@@ -41,7 +41,7 @@ export const TRAINING_ROUNDS: TrainingRoundConfig[] = [
     title: "ROUND 01 // TRI-SECTOR FOUNDATION",
     story: "Distribute 6 capital units (₹1,50,000). Watch the marginal output meters as you feed capital into different sectors.",
     units: 6,
-    seconds: 30,
+    seconds: 45,
     sectors: [
       {
         id: "marketing",
@@ -82,7 +82,7 @@ export const TRAINING_ROUNDS: TrainingRoundConfig[] = [
     title: "ROUND 02 // HEX-SECTOR DIVERSIFICATION",
     story: "Distribute 10 units (₹2,50,000) across 6 sectors. Notice the high-first-dollar traps vs durable infrastructure.",
     units: 10,
-    seconds: 25,
+    seconds: 60,
     sectors: [
       {
         id: "marketing",
@@ -153,7 +153,7 @@ export const TRAINING_ROUNDS: TrainingRoundConfig[] = [
     title: "ROUND 03 // FULL ENTERPRISE MATRIX",
     story: "Final assessment: 10 corporate sectors, 15 units (₹3,75,000). Balance marginal yields across competing branches before the timer expires.",
     units: 15,
-    seconds: 22,
+    seconds: 75,
     sectors: [
       {
         id: "marketing",

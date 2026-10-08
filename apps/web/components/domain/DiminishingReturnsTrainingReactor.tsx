@@ -135,6 +135,17 @@ export function DiminishingReturnsTrainingReactor({
     setPhase("allocating");
   }, []);
 
+  // Global Escape Key Listener for return navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && onBack) {
+        onBack();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onBack]);
+
   // Sync allocations when roundIdx changes
   useEffect(() => {
     setAllocations(new Array(currentRound.sectors.length).fill(0));
@@ -231,7 +242,7 @@ export function DiminishingReturnsTrainingReactor({
         <header className="system-bar">
           <div className="system-brand">
             <BrandMark />
-            <span>APEX DYNAMICS</span>
+            <span>{data?.company?.name ? data.company.name.toUpperCase() : "APEX DYNAMICS"}</span>
           </div>
           <div className="location-readout">
             <i />
@@ -518,6 +529,16 @@ export function DiminishingReturnsTrainingReactor({
             <span>{currentRound.title}</span>
           </div>
           <small>TRAINING PROTOCOL ACTIVE</small>
+          {onBack && (
+            <button
+              className="key-control"
+              onClick={onBack}
+              type="button"
+              style={{ marginLeft: 16 }}
+            >
+              <kbd>ESC</kbd> BACK TO HQ
+            </button>
+          )}
         </div>
 
         {/* Live Timer Ring */}
