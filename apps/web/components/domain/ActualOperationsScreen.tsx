@@ -16,6 +16,9 @@ export interface SectorMetadata {
   description: string;
   accentColor: string; // Gold, Crimson, Purple, Muted Blue/Cyan
   primaryMetric: string;
+  baseYield: number; // Initial points returned per 10k allocation
+  saturationRate: number; // Rate at which returns diminish with spending
+  yieldUnit: string;
 }
 
 export const SECTOR_METADATA: Record<string, SectorMetadata> = {
@@ -28,6 +31,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Expands brand awareness and customer acquisition momentum.",
     accentColor: "var(--gold)",
     primaryMetric: "+ BRAND // + REVENUE",
+    baseYield: 8.0,
+    saturationRate: 0.000045, // Fast saturation
+    yieldUnit: "pts brand",
   },
   rnd: {
     id: "rnd",
@@ -37,6 +43,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Drives patentable breakthroughs and technical innovation.",
     accentColor: "#a855f7", // Purple for R&D/innovation
     primaryMetric: "+ INNOVATION // + STOCK",
+    baseYield: 10.0,
+    saturationRate: 0.000022, // High ceiling, slower decay
+    yieldUnit: "pts innov",
   },
   patents: {
     id: "patents",
@@ -46,6 +55,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Secures proprietary technological moats and IP licenses.",
     accentColor: "#9333ea",
     primaryMetric: "+ INNOVATION // + STOCK",
+    baseYield: 6.0,
+    saturationRate: 0.000030,
+    yieldUnit: "pts tech",
   },
   expansion: {
     id: "expansion",
@@ -55,6 +67,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Establishes physical distribution and regional outposts.",
     accentColor: "var(--gold-bright)",
     primaryMetric: "+ MARKET SHARE // + RISK",
+    baseYield: 3.0,
+    saturationRate: 0.000038,
+    yieldUnit: "% share",
   },
   acquisitions: {
     id: "acquisitions",
@@ -64,6 +79,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Aggressive M&A buyout of competing market players.",
     accentColor: "#d97706",
     primaryMetric: "+ MARKET SHARE // + RISK",
+    baseYield: 5.0,
+    saturationRate: 0.000025,
+    yieldUnit: "% share",
   },
 
   // Core Operations & Productivity (Muted Blue / Cyan)
@@ -75,6 +93,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Recruits specialized technical, executive, and line talent.",
     accentColor: "var(--cyan)",
     primaryMetric: "+ EMPLOYEES // + MORALE",
+    baseYield: 3.0,
+    saturationRate: 0.000035,
+    yieldUnit: "pts morale",
   },
   automation: {
     id: "automation",
@@ -84,6 +105,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Replaces high-friction overhead with automated robotics.",
     accentColor: "#38bdf8",
     primaryMetric: "+ PROFIT // + TECH",
+    baseYield: 6.0,
+    saturationRate: 0.000020,
+    yieldUnit: "pts profit",
   },
   manufacturing: {
     id: "manufacturing",
@@ -93,6 +117,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Maximizes hardware throughput and production yield.",
     accentColor: "#0284c7",
     primaryMetric: "+ REVENUE // + RISK",
+    baseYield: 7.0,
+    saturationRate: 0.000028,
+    yieldUnit: "pts rev",
   },
   supply_chain: {
     id: "supply_chain",
@@ -102,6 +129,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Hardens procurement corridors against macro embargoes.",
     accentColor: "#14b8a6",
     primaryMetric: "- RISK // + PROFIT",
+    baseYield: 5.0,
+    saturationRate: 0.000025,
+    yieldUnit: "pts stab",
   },
   carbon_reduction: {
     id: "carbon_reduction",
@@ -111,6 +141,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Complies with planetary environmental sustainability covenants.",
     accentColor: "#10b981",
     primaryMetric: "+ ESG INDEX // - PROFIT",
+    baseYield: 10.0,
+    saturationRate: 0.000040,
+    yieldUnit: "pts esg",
   },
 
   // Defense & Risk Mitigation (Crimson / Red)
@@ -122,6 +155,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Deploys neural firewalls to thwart espionage and data breaches.",
     accentColor: "var(--red-bright)",
     primaryMetric: "- OVERALL RISK",
+    baseYield: 8.0,
+    saturationRate: 0.000032,
+    yieldUnit: "-pts risk",
   },
   legal: {
     id: "legal",
@@ -131,6 +167,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Retains antitrust litigation defense and regulatory lobbyists.",
     accentColor: "var(--red)",
     primaryMetric: "- LITIGATION RISK",
+    baseYield: 6.0,
+    saturationRate: 0.000050,
+    yieldUnit: "-pts risk",
   },
   insurance: {
     id: "insurance",
@@ -140,6 +179,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Hedges corporate balance sheet against catastrophic liabilities.",
     accentColor: "#f87171",
     primaryMetric: "- TAIL RISK",
+    baseYield: 4.0,
+    saturationRate: 0.000042,
+    yieldUnit: "-pts risk",
   },
 
   // Financial Instruments & Treasury (Gold / Muted Slate)
@@ -151,6 +193,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Injects immediate liquid cash while incurring long-term debt.",
     accentColor: "#fbbf24",
     primaryMetric: "+ LIQUID CASH // + DEBT",
+    baseYield: 10.0,
+    saturationRate: 0.000020,
+    yieldUnit: "pts cash",
   },
   dividends: {
     id: "dividends",
@@ -160,6 +205,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Disburses capital yield to bolster institutional investor trust.",
     accentColor: "var(--gold)",
     primaryMetric: "+ INVESTOR FAITH",
+    baseYield: 6.0,
+    saturationRate: 0.000036,
+    yieldUnit: "pts faith",
   },
   pricing: {
     id: "pricing",
@@ -169,6 +217,9 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Calibrates contract margins and price elasticity curves.",
     accentColor: "#eab308",
     primaryMetric: "+ REVENUE // - CLIENT SAT",
+    baseYield: 5.0,
+    saturationRate: 0.000048,
+    yieldUnit: "pts rev",
   },
   layoffs: {
     id: "layoffs",
@@ -178,8 +229,53 @@ export const SECTOR_METADATA: Record<string, SectorMetadata> = {
     description: "Curtails payroll commitments at heavy expense to company morale.",
     accentColor: "#ef4444",
     primaryMetric: "+ CASH FLOW // - MORALE",
+    baseYield: 7.0,
+    saturationRate: 0.000060,
+    yieldUnit: "pts cut",
   },
 };
+
+// -----------------------------------------------------------------------------
+// Diminishing Marginal Yield Calculation for ₹10,000 Next Unit
+// -----------------------------------------------------------------------------
+export function calculateNextYield10K(catKey: string, currentAmount: number): {
+  yieldValue: number;
+  decayPercent: number; // How much lower than baseline
+  status: "optimal" | "moderating" | "diminishing";
+  statusText: string;
+} {
+  const meta = SECTOR_METADATA[catKey];
+  const base = meta?.baseYield ?? 5.0;
+  const k = meta?.saturationRate ?? 0.00003;
+
+  // Marginal yield decays exponentially as allocation builds up: Y'(x) = Y0 * e^(-k * x)
+  const currentMarginalRatio = Math.exp(-k * currentAmount);
+  const yieldValue = Math.max(0.1, +(base * currentMarginalRatio).toFixed(1));
+  const decayPercent = Math.max(0, Math.round((1 - currentMarginalRatio) * 100));
+
+  if (decayPercent >= 60) {
+    return {
+      yieldValue,
+      decayPercent,
+      status: "diminishing",
+      statusText: "STEEP DIMINISHING ZONE",
+    };
+  }
+  if (decayPercent >= 30) {
+    return {
+      yieldValue,
+      decayPercent,
+      status: "moderating",
+      statusText: "APPROACHING SATURATION",
+    };
+  }
+  return {
+    yieldValue,
+    decayPercent,
+    status: "optimal",
+    statusText: "OPTIMAL YIELD BAND",
+  };
+}
 
 const CATEGORY_TABS = [
   { id: "all", label: "ALL SECTORS" },
@@ -312,6 +408,30 @@ export function ActualOperationsScreen({
       setLocking(false);
     }
   };
+
+  // Compute portfolio diminishing returns status across all sectors
+  const portfolioDiminishingStats = useMemo(() => {
+    let severeCount = 0; // >= 60% decay (Red Alert)
+    let moderateCount = 0; // >= 30% decay (Amber Alert)
+
+    Object.entries(amounts).forEach(([catKey, val]) => {
+      if (val > 0) {
+        const { status } = calculateNextYield10K(catKey, val);
+        if (status === "diminishing") severeCount++;
+        else if (status === "moderating") moderateCount++;
+      }
+    });
+
+    const isRedAlert = severeCount > 0;
+    const isAmberAlert = !isRedAlert && moderateCount > 0;
+
+    return {
+      severeCount,
+      moderateCount,
+      isRedAlert,
+      isAmberAlert,
+    };
+  }, [amounts]);
 
   // Sector groups definition (defined top-level in component so hook order is unconditional)
   const SECTOR_GROUPS = useMemo(() => [
@@ -477,7 +597,7 @@ export function ActualOperationsScreen({
           </div>
         </div>
 
-        {/* Dynamic Depletion Bar */}
+        {/* Dynamic Depletion Bar & Alerts */}
         <div className="capital-gauge-box">
           <div className="capital-gauge-track">
             <div
@@ -490,8 +610,18 @@ export function ActualOperationsScreen({
             <span>0.0% MIN</span>
             {overBudget ? (
               <span className="overbudget-warning">⚠️ DEFICIT: {formatCurrency(Math.abs(remaining))} OVER LIMIT</span>
+            ) : portfolioDiminishingStats.isRedAlert ? (
+              <span className="portfolio-diminishing-alert red">
+                🔴 RED ALERT: {portfolioDiminishingStats.severeCount} SECTORS IN STEEP DIMINISHING ZONE
+              </span>
+            ) : portfolioDiminishingStats.isAmberAlert ? (
+              <span className="portfolio-diminishing-alert amber">
+                🟡 AMBER ALERT: {portfolioDiminishingStats.moderateCount} SECTORS APPROACHING SATURATION
+              </span>
             ) : (
-              <span>CAPACITY LIMIT (100%)</span>
+              <span className="portfolio-diminishing-alert optimal">
+                🟢 CAPITAL EFFICIENCY: OPTIMAL YIELD DISPATCH
+              </span>
             )}
             <span>100.0% MAX</span>
           </div>
@@ -587,11 +717,12 @@ export function ActualOperationsScreen({
 
                   const amount = amounts[catKey] || 0;
                   const shareOfCap = availableCapital > 0 ? ((amount / availableCapital) * 100).toFixed(1) : "0";
+                  const next10k = calculateNextYield10K(catKey, amount);
 
                   return (
                     <article
                       key={catKey}
-                      className={`op-sector-card ${amount > 0 ? "has-allocation" : ""}`}
+                      className={`op-sector-card ${amount > 0 ? "has-allocation" : ""} ${next10k.status}`}
                       style={{
                         borderColor: amount > 0 ? meta.accentColor : "rgba(255, 255, 255, 0.08)",
                       }}
@@ -611,6 +742,26 @@ export function ActualOperationsScreen({
                       </div>
 
                       <p className="op-card-desc">{meta.description}</p>
+
+                      {/* Live Next 10K Yield & Diminishing Marginal Returns Indicator */}
+                      <div className="op-marginal-yield-strip">
+                        <div className="op-marginal-yield-left">
+                          <small>NEXT ₹10,000 YIELD</small>
+                          <strong>
+                            +{next10k.yieldValue} <span className="yield-unit">{meta.yieldUnit}</span>
+                          </strong>
+                        </div>
+
+                        <div className={`op-diminishing-pill ${next10k.status}`}>
+                          {next10k.status === "diminishing" && <span className="alert-dot red">●</span>}
+                          {next10k.status === "moderating" && <span className="alert-dot amber">●</span>}
+                          {next10k.status === "optimal" && <span className="alert-dot green">●</span>}
+                          <span>{next10k.statusText}</span>
+                          {next10k.decayPercent > 0 && (
+                            <small>(-{next10k.decayPercent}% decay)</small>
+                          )}
+                        </div>
+                      </div>
 
                       {/* Slider Track and Glowing Progress */}
                       <div className="op-slider-wrapper">
