@@ -299,12 +299,14 @@ interface ActualOperationsScreenProps {
   sessionData: RegisterResponse;
   onBack: () => void;
   onLockComplete: () => void;
+  isLocked?: boolean;
 }
 
 export function ActualOperationsScreen({
   sessionData,
   onBack,
   onLockComplete,
+  isLocked = false,
 }: ActualOperationsScreenProps) {
   const quarter = sessionData.current_quarter;
   const companyId = sessionData.company_id;
@@ -331,12 +333,12 @@ export function ActualOperationsScreen({
 
   // Debounced Autosave (Phase 23 Engine logic)
   useEffect(() => {
-    if (!companyId || !draft || !quarter) return;
+    if (!companyId || !draft || !quarter || isLocked) return;
     const timeout = setTimeout(() => {
       saveBudget(companyId, quarter, amounts).catch(() => {});
     }, 500);
     return () => clearTimeout(timeout);
-  }, [amounts, companyId, draft, quarter]);
+  }, [amounts, companyId, draft, quarter, isLocked]);
 
   // Global ESC Key Return Listener
   useEffect(() => {
@@ -360,6 +362,7 @@ export function ActualOperationsScreen({
 
   // Slider change helper
   const handleSliderChange = (category: string, value: number) => {
+    if (isLocked) return;
     soundManager.playClick();
     setAmounts((prev) => ({
       ...prev,
@@ -369,6 +372,7 @@ export function ActualOperationsScreen({
 
   // Preset quick adjustments
   const handleAdjust = (category: string, delta: number) => {
+    if (isLocked) return;
     soundManager.playClick();
     const current = amounts[category] || 0;
     const next = Math.max(0, Math.min(availableCapital, current + delta));
@@ -376,6 +380,7 @@ export function ActualOperationsScreen({
   };
 
   const handleReset = () => {
+    if (isLocked) return;
     soundManager.playClick();
     const resetAlloc: Record<string, number> = {};
     Object.keys(amounts).forEach((k) => {
@@ -386,7 +391,7 @@ export function ActualOperationsScreen({
 
   // Lock Decisions Submission
   const handleLockIn = async () => {
-    if (!companyId || !quarter || overBudget || locking) return;
+    if (!companyId || !quarter || overBudget || locking || isLocked) return;
     setLocking(true);
     setLockError(null);
     soundManager.playSuccess();
@@ -629,16 +634,27 @@ export function ActualOperationsScreen({
 
         {/* Global Controls */}
         <div className="capital-hud-actions">
-          <button className="reset-alloc-btn" onClick={handleReset} type="button">
+          <button
+            className="reset-alloc-btn"
+            onClick={handleReset}
+            disabled={isLocked}
+            type="button"
+          >
             RESET ALL
           </button>
           <button
-            className={`game-button ${overBudget ? "gold disabled" : "gold"}`}
-            disabled={overBudget || locking}
+            className={`game-button ${overBudget || isLocked ? "gold disabled" : "gold"}`}
+            disabled={overBudget || locking || isLocked}
             onClick={handleLockIn}
             type="button"
           >
-            <span>{locking ? "RATIFYING..." : "[ RATIFY & LOCK ALLOCATIONS ]"}</span>
+            <span>
+              {isLocked
+                ? "[ ALLOCATIONS RATIFIED // QUARTER LOCKED ]"
+                : locking
+                ? "RATIFYING..."
+                : "[ RATIFY & LOCK ALLOCATIONS ]"}
+            </span>
           </button>
         </div>
       </section>

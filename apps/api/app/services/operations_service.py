@@ -178,7 +178,8 @@ async def lock_decisions(
         )
     )
 
-    session_row.current_quarter = quarter + 1
+    # Do not advance quarter here; quarter progresses after completing departments & board meeting.
+    # session_row.current_quarter stays as quarter for the remainder of this quarter's operations.
 
     if result.bankruptcy:
         session_row.status = "bankrupt"

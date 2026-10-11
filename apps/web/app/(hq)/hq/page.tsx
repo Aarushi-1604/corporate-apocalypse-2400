@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { FigmaHQMap } from "@/components/domain/FigmaHQMap";
 import { useSession } from "@/lib/hooks/use-session";
 import { useActiveBoard } from "@/lib/hooks/use-active-board";
+import { useDepartmentLocks } from "@/lib/hooks/use-company-state";
 
 export default function HQPage() {
   const router = useRouter();
   const { data: session, isLoading, isError } = useSession();
   const { data: activeBoard } = useActiveBoard(session?.company_id);
+  const { data: deptLocks } = useDepartmentLocks(session?.company_id);
 
   useEffect(() => {
     if (!isLoading && (!session || isError)) {
@@ -44,6 +46,7 @@ export default function HQPage() {
         router.push("/hq/board");
       }}
       boardUnlocked={Boolean(activeBoard)}
+      departmentLocks={deptLocks}
     />
   );
 }

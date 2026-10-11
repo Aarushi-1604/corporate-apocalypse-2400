@@ -187,7 +187,7 @@ async def execute_strategic_decision(
     if float(state.cash) < cost:
         raise HTTPException(status_code=400, detail="Insufficient liquid cash for this strategic offensive.")
 
-    # 2. Check if decision already logged this quarter
+    # 2. Check if decision already logged this quarter (Idempotency)
     existing_log = await db.execute(
         select(DecisionLog).where(
             DecisionLog.company_id == company.id,
@@ -195,10 +195,21 @@ async def execute_strategic_decision(
             DecisionLog.decision_type == "strategic_marketing",
         )
     )
-    if existing_log.scalar_one_or_none() is not None:
-        raise HTTPException(
-            status_code=409,
-            detail="A strategic marketing campaign has already been committed this quarter.",
+    already = existing_log.scalar_one_or_none()
+    if already is not None:
+        return ExecuteMarketDecisionResponse(
+            status="already_committed",
+            option_id=payload.option_id,
+            option_title=option["title"],
+            summary=already.summary,
+            cost_cash=0.0,
+            stat_deltas=already.stat_deltas if isinstance(already.stat_deltas, dict) else {},
+            press_headline=option["press_headline"].format(company=company.name),
+            press_body=option["press_body"].format(company=company.name),
+            new_cash=float(state.cash),
+            new_market_share=float(state.market_share),
+            new_brand=float(state.brand),
+            new_risk=float(state.risk),
         )
 
     # 3. Apply state deltas (bounded metrics clamped to 0..100)

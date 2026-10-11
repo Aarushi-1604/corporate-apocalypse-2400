@@ -21,3 +21,20 @@ class CompanyStateOut(BaseModel):
     risk: float
     market_share: float
     board_confidence: float
+
+
+class DepartmentStatusOut(BaseModel):
+    locked: bool
+    summary: str | None = None
+    detail: str | None = None
+    headline: str | None = None
+    press: str | None = None
+    option_title: str | None = None
+    stat_deltas: dict[str, float] | None = None
+
+
+class DepartmentLocksOut(BaseModel):
+    quarter: int
+    operations: DepartmentStatusOut
+    market: DepartmentStatusOut
+    rd: DepartmentStatusOut

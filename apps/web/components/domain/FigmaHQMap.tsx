@@ -44,6 +44,11 @@ interface FigmaHQMapProps {
   onEnterResearch: () => void;
   onEnterBoard: () => void;
   boardUnlocked?: boolean;
+  departmentLocks?: {
+    operations?: { locked: boolean };
+    market?: { locked: boolean };
+    rd?: { locked: boolean };
+  };
 }
 
 export function FigmaHQMap({
@@ -54,8 +59,13 @@ export function FigmaHQMap({
   onEnterResearch,
   onEnterBoard,
   boardUnlocked = false,
+  departmentLocks,
 }: FigmaHQMapProps) {
   const [lockedMessage, setLockedMessage] = useState(false);
+
+  const opsLocked = Boolean(departmentLocks?.operations?.locked);
+  const marketLocked = Boolean(departmentLocks?.market?.locked);
+  const rdLocked = Boolean(departmentLocks?.rd?.locked);
 
   const handleBoardClick = () => {
     if (boardUnlocked) {
@@ -87,37 +97,61 @@ export function FigmaHQMap({
 
       {/* 1. Finance & Operations Hotspot */}
       <button
-        className="map-hotspot hq-finance"
-        aria-label="Enter Finance and Operations"
+        className={`map-hotspot hq-finance ${opsLocked ? "dept-locked" : ""}`}
+        aria-label={opsLocked ? "Finance and Operations (Action Committed)" : "Enter Finance and Operations"}
         onClick={onEnterFinance}
         type="button"
       >
         <span>
-          <kbd>E</kbd> ENTER FINANCE
+          {opsLocked ? (
+            <>
+              <LockIcon size={14} /> FINANCE // COMMITTED
+            </>
+          ) : (
+            <>
+              <kbd>E</kbd> ENTER FINANCE
+            </>
+          )}
         </span>
       </button>
 
       {/* 2. Research & Development Hotspot */}
       <button
-        className="map-hotspot hq-research"
-        aria-label="Enter Research and Development"
+        className={`map-hotspot hq-research ${rdLocked ? "dept-locked" : ""}`}
+        aria-label={rdLocked ? "Research and Development (Action Committed)" : "Enter Research and Development"}
         onClick={onEnterResearch}
         type="button"
       >
         <span>
-          <kbd>E</kbd> ENTER R&amp;D
+          {rdLocked ? (
+            <>
+              <LockIcon size={14} /> R&amp;D // COMMITTED
+            </>
+          ) : (
+            <>
+              <kbd>E</kbd> ENTER R&amp;D
+            </>
+          )}
         </span>
       </button>
 
       {/* 3. Marketing & Acquisitions Hotspot */}
       <button
-        className="map-hotspot hq-marketing"
-        aria-label="Enter Marketing and Acquisitions"
+        className={`map-hotspot hq-marketing ${marketLocked ? "dept-locked" : ""}`}
+        aria-label={marketLocked ? "Marketing and Acquisitions (Action Committed)" : "Enter Marketing and Acquisitions"}
         onClick={onEnterMarketing}
         type="button"
       >
         <span>
-          <kbd>E</kbd> ENTER MARKETING
+          {marketLocked ? (
+            <>
+              <LockIcon size={14} /> MARKETING // COMMITTED
+            </>
+          ) : (
+            <>
+              <kbd>E</kbd> ENTER MARKETING
+            </>
+          )}
         </span>
       </button>
 

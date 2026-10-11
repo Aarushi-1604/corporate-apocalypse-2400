@@ -115,201 +115,205 @@ export function MarketCascadeGame({
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto py-4">
-      {/* Scenario Brief Header */}
-      <div className="rounded-xl border border-amber-500/30 bg-neutral-950/80 p-6 backdrop-blur-md relative overflow-hidden">
-        <div className="absolute top-0 right-0 px-4 py-1.5 bg-amber-500/10 border-b border-l border-amber-500/30 font-mono text-xs text-amber-400">
-          CASCADE PROTOCOL ({scenarioIndex + 1}/{totalScenarios})
+    <div className="market-content-cluster">
+      {/* Cluster Header */}
+      <div className="market-cluster-header">
+        <div className="market-cluster-header-left">
+          <div className="market-cluster-accent-bar" />
+          <div>
+            <h2 className="market-cluster-title">
+              {scenario.shock_name}
+            </h2>
+            <span className="market-cluster-subline">
+              MODULE // {scenario.code} • {scenario.title.toUpperCase()}
+            </span>
+          </div>
         </div>
-
-        <div className="flex items-center gap-2 text-xs font-mono tracking-widest text-amber-500/70 mb-2">
-          <span>MODULE // {scenario.code}</span>
-          <span>•</span>
-          <span>{scenario.title}</span>
-        </div>
-
-        <div className="flex flex-wrap items-baseline gap-4 mb-3">
-          <h2 className="text-2xl font-black tracking-wider text-white">
-            {scenario.shock_name}
-          </h2>
-          <span className="px-3 py-1 rounded bg-red-500/20 border border-red-500/50 font-mono font-bold text-red-400 text-sm animate-pulse">
+        <div className="flex items-center gap-3">
+          <span className="px-3 py-1 font-mono text-[11px] font-bold text-red-400 bg-red-950/60 border border-red-500/40">
             {scenario.shock_value}
           </span>
-        </div>
-
-        <p className="text-neutral-300 text-sm max-w-3xl leading-relaxed">
-          {scenario.shock_description}
-        </p>
-
-        <div className="mt-4 pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs font-mono text-neutral-400">
-          <span>DRAG STATEMENTS TO ARRANGE THEM FROM FIRST THING THAT HAPPENS (SLOT 1) TO THE FINAL RESULT (SLOT 5).</span>
-          <span className="text-amber-400/80">STATEMENT NUMBERS STAY TIED TO THEIR CARDS</span>
+          <span className="font-mono text-[11px] text-slate-400 border border-slate-700/60 px-2.5 py-1">
+            PROTOCOL {scenarioIndex + 1} / {totalScenarios}
+          </span>
         </div>
       </div>
 
-      {/* Interactive Ranking Cards */}
-      <div className="flex flex-col gap-3">
-        {orderedItems.map((item, slotIdx) => {
-          const positionCheck = evaluation?.position_results.find(
-            (p) => p.card_id === item.card.id
-          );
-          const isDragOver = dragOverIdx === slotIdx;
-          const isDragging = draggedIdx === slotIdx;
+      <div className="market-cluster-body">
+        {/* Shock Description Callout */}
+        <div className="p-4 bg-black/60 border border-slate-800 text-slate-300 text-xs font-mono leading-relaxed">
+          <p className="m-0 text-slate-200">
+            {scenario.shock_description}
+          </p>
+          <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] tracking-wider text-slate-400">
+            <span>DRAG STATEMENTS TO ARRANGE THEM FROM ROOT SHOCK (SLOT 1) TO SYSTEMIC CONSEQUENCE (SLOT 5).</span>
+            <span className="text-amber-400">STATEMENT NUMBERS STAY TIED TO CARDS</span>
+          </div>
+        </div>
 
-          return (
-            <div
-              key={item.card.id}
-              draggable={!evaluation}
-              onDragStart={() => handleDragStart(slotIdx)}
-              onDragOver={(e) => handleDragOver(e, slotIdx)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, slotIdx)}
-              className={`flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 select-none relative ${
-                isDragging ? "opacity-30 scale-95" : ""
-              } ${
-                isDragOver ? "border-amber-400 bg-amber-500/20 scale-[1.01]" : ""
-              } ${
-                evaluation
-                  ? positionCheck?.status === "correct"
-                    ? "border-emerald-500/50 bg-emerald-950/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-                    : positionCheck?.status === "near"
-                    ? "border-amber-500/50 bg-amber-950/20 shadow-[0_0_15px_rgba(245,158,11,0.15)]"
-                    : "border-red-500/50 bg-red-950/20 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
-                  : "border-neutral-800 bg-neutral-900/60 hover:border-amber-500/40 hover:bg-neutral-900/90 cursor-grab active:cursor-grabbing"
-              }`}
-            >
-              {/* Slot Indicator badge */}
-              <div className="text-[11px] font-mono text-neutral-500 tracking-wider shrink-0 w-14 text-left">
-                SLOT {slotIdx + 1}
-              </div>
+        {/* Interactive Ranking Cards */}
+        <div className="flex flex-col gap-2.5">
+          {orderedItems.map((item, slotIdx) => {
+            const positionCheck = evaluation?.position_results.find(
+              (p) => p.card_id === item.card.id
+            );
+            const isDragOver = dragOverIdx === slotIdx;
+            const isDragging = draggedIdx === slotIdx;
 
-              {/* STATEMENT NUMBER TIED TO CONTENT (e.g. Statement 1 stays [ 1 ] wherever dragged) */}
+            return (
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded font-mono font-black text-base border shrink-0 ${
+                key={item.card.id}
+                draggable={!evaluation}
+                onDragStart={() => handleDragStart(slotIdx)}
+                onDragOver={(e) => handleDragOver(e, slotIdx)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, slotIdx)}
+                className={`flex items-center gap-4 p-3.5 border transition-all duration-150 select-none relative ${
+                  isDragging ? "opacity-30 scale-95" : ""
+                } ${
+                  isDragOver ? "border-amber-400 bg-amber-500/15 scale-[1.01]" : ""
+                } ${
                   evaluation
                     ? positionCheck?.status === "correct"
-                      ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                      ? "border-emerald-500/60 bg-emerald-950/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                       : positionCheck?.status === "near"
-                      ? "bg-amber-500/20 border-amber-500 text-amber-400"
-                      : "bg-red-500/20 border-red-500 text-red-400"
-                    : "bg-neutral-950 border-amber-500/40 text-amber-400"
+                      ? "border-amber-500/60 bg-amber-950/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                      : "border-red-500/60 bg-red-950/30 shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+                    : "border-slate-800/90 bg-neutral-950/80 hover:border-red-500/40 hover:bg-neutral-900/90 cursor-grab active:cursor-grabbing"
                 }`}
               >
-                {item.statementNum}
+                {/* Slot Indicator badge */}
+                <div className="text-[11px] font-mono text-slate-400 tracking-wider shrink-0 w-16 text-left">
+                  SLOT 0{slotIdx + 1}
+                </div>
+
+                {/* STATEMENT NUMBER TIED TO CONTENT */}
+                <div
+                  className={`flex items-center justify-center w-9 h-9 font-mono font-black text-sm border shrink-0 ${
+                    evaluation
+                      ? positionCheck?.status === "correct"
+                        ? "bg-emerald-500/20 border-emerald-500 text-emerald-300"
+                        : positionCheck?.status === "near"
+                        ? "bg-amber-500/20 border-amber-500 text-amber-300"
+                        : "bg-red-500/20 border-red-500 text-red-300"
+                      : "bg-black border-red-500/50 text-red-400"
+                  }`}
+                >
+                  {item.statementNum}
+                </div>
+
+                {/* Statement Content */}
+                <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                  <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase">
+                    STATEMENT #{item.statementNum}
+                  </span>
+                  <span className="text-slate-200 font-sans text-xs leading-relaxed">
+                    {item.card.text}
+                  </span>
+                </div>
+
+                {/* Evaluation feedback on position */}
+                {evaluation && positionCheck && (
+                  <div className="flex items-center gap-2 px-3 py-1 font-mono text-[11px] font-bold shrink-0">
+                    {positionCheck.status === "correct" && (
+                      <span className="text-emerald-400 flex items-center gap-1">
+                        <span>✓</span> CORRECT
+                      </span>
+                    )}
+                    {positionCheck.status === "near" && (
+                      <span className="text-amber-400 flex items-center gap-1">
+                        <span>⚠</span> PARTIAL
+                      </span>
+                    )}
+                    {positionCheck.status === "incorrect" && (
+                      <span className="text-red-400 flex items-center gap-1">
+                        <span>✕</span> SLOT 0{positionCheck.ideal_position}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Drag indicator */}
+                {!evaluation && (
+                  <div className="text-slate-400 hover:text-slate-200 font-mono text-xs px-2 shrink-0 cursor-grab" title="Drag to reorder">
+                    ⠿ DRAG
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Evaluation Results Drawer */}
+        {evaluation ? (
+          <div className="border border-slate-800 bg-black/90 p-5 flex flex-col gap-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase">
+                  CASCADE TELEMETRY RESOLVED
+                </span>
+                <span
+                  className={`text-lg font-bold font-sans tracking-wide ${
+                    evaluation.passed ? "text-emerald-400" : "text-amber-400"
+                  }`}
+                >
+                  {evaluation.passed ? "CAUSAL ORDER VERIFIED" : "PARTIAL TRANSMISSION MATCH"}
+                </span>
               </div>
 
-              {/* Statement Content */}
-              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                <span className="text-[10px] font-mono tracking-widest text-amber-500/60 uppercase">
-                  STATEMENT #{item.statementNum}
-                </span>
-                <span className="text-neutral-200 font-medium text-sm leading-snug">
-                  {item.card.text}
-                </span>
+              <div className="flex items-center gap-6">
+                <div className="flex flex-col items-end font-mono">
+                  <span className="text-[10px] text-slate-400">SCORE</span>
+                  <span className="text-2xl font-black text-amber-400 font-mono">
+                    {evaluation.score}
+                    <span className="text-xs text-slate-400"> / 100</span>
+                  </span>
+                </div>
+                <div className="flex flex-col items-end font-mono text-[11px] text-slate-400">
+                  <span>PAIRS: {evaluation.satisfied_pairs} / 10</span>
+                  <span>SLOTS: {evaluation.exact_matches} / 5</span>
+                </div>
               </div>
-
-              {/* Evaluation feedback on position */}
-              {evaluation && positionCheck && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded font-mono text-xs font-bold shrink-0">
-                  {positionCheck.status === "correct" && (
-                    <span className="text-emerald-400 flex items-center gap-1">
-                      <span>✓</span> POSITION CORRECT
-                    </span>
-                  )}
-                  {positionCheck.status === "near" && (
-                    <span className="text-amber-400 flex items-center gap-1">
-                      <span>⚠</span> CLOSE (PARTIAL CREDIT)
-                    </span>
-                  )}
-                  {positionCheck.status === "incorrect" && (
-                    <span className="text-red-400 flex items-center gap-1">
-                      <span>✕</span> MISPLACED (GOES IN SLOT #{positionCheck.ideal_position})
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Drag indicator */}
-              {!evaluation && (
-                <div className="text-neutral-500 hover:text-neutral-300 font-mono text-xs px-2 shrink-0 cursor-grab" title="Drag to reorder">
-                  ⠿ DRAG
-                </div>
-              )}
             </div>
-          );
-        })}
-      </div>
 
-      {/* Evaluation Results Drawer */}
-      {evaluation ? (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-6 flex flex-col gap-5 animate-in fade-in slide-in-from-bottom duration-300">
-          <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
-            <div className="flex flex-col">
-              <span className="text-xs font-mono tracking-widest text-neutral-400">
-                MARKET CASCADE RESOLVED
+            {/* Step-by-step causal explanation */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-mono tracking-widest text-amber-500 uppercase">
+                TRANSMISSION GRAPH EXPLANATION
               </span>
-              <span
-                className={`text-2xl font-black tracking-wide ${
-                  evaluation.passed ? "text-emerald-400" : "text-amber-400"
-                }`}
+              <div className="flex flex-col gap-2 p-3 bg-neutral-950/80 border border-slate-800/80 text-[11px] font-mono text-slate-300">
+                {evaluation.correct_order.map((cardId, i) => (
+                  <div key={cardId} className="flex items-start gap-3">
+                    <span className="text-red-400 font-bold">SLOT 0{i + 1}:</span>
+                    <span>{evaluation.explanations[cardId]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={onContinue}
+                className="game-button gold px-6 py-2.5 text-xs font-mono font-bold tracking-widest cursor-pointer"
               >
-                {evaluation.passed ? "CHAIN ORDER VERIFIED" : "CLOSE TRY -- PARTIAL CREDIT"}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-6">
-              <div className="flex flex-col items-end font-mono">
-                <span className="text-xs text-neutral-400">SCORE</span>
-                <span className="text-3xl font-black text-amber-400">
-                  {evaluation.score}
-                  <span className="text-sm text-neutral-500"> / 100</span>
-                </span>
-              </div>
-              <div className="flex flex-col items-end font-mono text-xs text-neutral-400">
-                <span>PAIRS SATISFIED: {evaluation.satisfied_pairs} / 10</span>
-                <span>EXACT SLOTS: {evaluation.exact_matches} / 5</span>
-              </div>
+                <span>{scenarioIndex < totalScenarios - 1 ? "NEXT CASCADE PROTOCOL →" : "COMPLETE CASCADE EVALUATION →"}</span>
+              </button>
             </div>
           </div>
-
-          {/* Simple step-by-step causal explanation */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-mono tracking-widest text-amber-500/80 uppercase">
-              WHY THIS HAPPENS // CAUSAL CHAIN
-            </span>
-            <div className="flex flex-col gap-2 p-4 rounded bg-neutral-900/60 border border-neutral-800 text-xs font-mono text-neutral-300">
-              {evaluation.correct_order.map((cardId, i) => (
-                <div key={cardId} className="flex items-start gap-3">
-                  <span className="text-amber-400 font-bold">SLOT {i + 1}:</span>
-                  <span>{evaluation.explanations[cardId]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
+        ) : (
           <div className="flex justify-end pt-2">
             <button
               type="button"
-              onClick={onContinue}
-              className="px-6 py-3 rounded bg-amber-500 hover:bg-amber-400 text-black font-bold font-mono tracking-wider flex items-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)] cursor-pointer"
+              disabled={evaluating}
+              onClick={handleLockPrediction}
+              className="game-button gold px-8 py-3 text-xs font-mono font-bold tracking-widest disabled:opacity-50 cursor-pointer"
             >
-              <span>CONTINUE TO MARKET INTELLIGENCE</span>
-              <span>→</span>
+              <span>{evaluating ? "CHECKING TRANSMISSION..." : "LOCK CASCADE PREDICTION"}</span>
             </button>
           </div>
-        </div>
-      ) : (
-        <div className="flex justify-end pt-2">
-          <button
-            type="button"
-            disabled={evaluating}
-            onClick={handleLockPrediction}
-            className="px-8 py-3.5 rounded bg-amber-500 hover:bg-amber-400 text-black font-black font-mono tracking-widest flex items-center gap-3 shadow-[0_0_25px_rgba(245,158,11,0.3)] disabled:opacity-50 cursor-pointer"
-          >
-            {evaluating ? "CHECKING SEQUENCE..." : "LOCK PREDICTION & TRACE SHOCK"}
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
