@@ -750,6 +750,29 @@ kbd { padding: 4px 6px; border: 1px solid rgba(255,255,255,.22); color: #c4c5c0;
 .briefing-card strong { display: block; color: var(--cyan); font-size: 11px; letter-spacing: .15em; margin-bottom: 6px; }
 .briefing-card p { margin: 0; color: #8fa09f; font-size: 11px; line-height: 1.4; }
 
+/* CMO Briefing Modal (Scarlet / Red Market Theme) */
+.briefing-modal.market {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: linear-gradient(145deg, rgba(18, 9, 10, 0.98), rgba(8, 4, 5, 0.96));
+  box-shadow: 0 35px 120px rgba(0, 0, 0, 0.95), 0 0 30px rgba(239, 68, 68, 0.12);
+}
+.briefing-modal.market .briefing-avatar {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+}
+.briefing-modal.market .briefing-speaker span {
+  color: #f87171;
+}
+.briefing-modal.market .briefing-card {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.03);
+}
+.briefing-modal.market .briefing-card strong {
+  color: #f87171;
+}
+
 /* ==========================================================================
    ACTUAL OPERATIONS / CAPITAL ALLOCATION 2400 COMMAND CENTER
    ========================================================================== */
