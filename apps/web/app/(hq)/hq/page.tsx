@@ -34,7 +34,11 @@ export default function HQPage() {
         router.push("/city");
       }}
       onEnterFinance={() => {
-        router.push("/hq/operations/training");
+        if (deptLocks?.operations?.locked) {
+          router.push("/hq/operations");
+        } else {
+          router.push("/hq/operations/training");
+        }
       }}
       onEnterMarketing={() => {
         router.push("/hq/market");

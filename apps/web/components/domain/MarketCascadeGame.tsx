@@ -115,7 +115,7 @@ export function MarketCascadeGame({
   };
 
   return (
-    <div className="market-content-cluster">
+    <div className="market-content-cluster max-w-4xl mx-auto my-4 shadow-2xl">
       {/* Cluster Header */}
       <div className="market-cluster-header">
         <div className="market-cluster-header-left">
@@ -130,10 +130,10 @@ export function MarketCascadeGame({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="px-3 py-1 font-mono text-[11px] font-bold text-red-400 bg-red-950/60 border border-red-500/40">
+          <span className="px-3.5 py-1.5 font-mono text-xs font-bold text-red-400 bg-red-950/60 border border-red-500/40">
             {scenario.shock_value}
           </span>
-          <span className="font-mono text-[11px] text-slate-400 border border-slate-700/60 px-2.5 py-1">
+          <span className="font-mono text-xs text-slate-300 border border-slate-700/60 px-3 py-1.5 bg-neutral-900">
             PROTOCOL {scenarioIndex + 1} / {totalScenarios}
           </span>
         </div>
@@ -141,18 +141,18 @@ export function MarketCascadeGame({
 
       <div className="market-cluster-body">
         {/* Shock Description Callout */}
-        <div className="p-4 bg-black/60 border border-slate-800 text-slate-300 text-xs font-mono leading-relaxed">
-          <p className="m-0 text-slate-200">
+        <div className="p-5 bg-black/70 border border-slate-800 text-slate-200 text-sm font-mono leading-relaxed">
+          <p className="m-0 text-white font-sans text-base leading-relaxed">
             {scenario.shock_description}
           </p>
-          <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] tracking-wider text-slate-400">
+          <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs tracking-wider text-slate-400">
             <span>DRAG STATEMENTS TO ARRANGE THEM FROM ROOT SHOCK (SLOT 1) TO SYSTEMIC CONSEQUENCE (SLOT 5).</span>
-            <span className="text-amber-400">STATEMENT NUMBERS STAY TIED TO CARDS</span>
+            <span className="text-amber-400 font-bold">STATEMENT NUMBERS STAY TIED TO CARDS</span>
           </div>
         </div>
 
         {/* Interactive Ranking Cards */}
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-3">
           {orderedItems.map((item, slotIdx) => {
             const positionCheck = evaluation?.position_results.find(
               (p) => p.card_id === item.card.id
@@ -168,7 +168,7 @@ export function MarketCascadeGame({
                 onDragOver={(e) => handleDragOver(e, slotIdx)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, slotIdx)}
-                className={`flex items-center gap-4 p-3.5 border transition-all duration-150 select-none relative ${
+                className={`flex items-center gap-5 p-4 border transition-all duration-150 select-none relative ${
                   isDragging ? "opacity-30 scale-95" : ""
                 } ${
                   isDragOver ? "border-amber-400 bg-amber-500/15 scale-[1.01]" : ""
@@ -183,38 +183,38 @@ export function MarketCascadeGame({
                 }`}
               >
                 {/* Slot Indicator badge */}
-                <div className="text-[11px] font-mono text-slate-400 tracking-wider shrink-0 w-16 text-left">
+                <div className="text-xs font-mono font-bold text-slate-400 tracking-wider shrink-0 w-20 text-left">
                   SLOT 0{slotIdx + 1}
                 </div>
 
                 {/* STATEMENT NUMBER TIED TO CONTENT */}
                 <div
-                  className={`flex items-center justify-center w-9 h-9 font-mono font-black text-sm border shrink-0 ${
+                  className={`flex items-center justify-center w-11 h-11 font-mono font-black text-base border shrink-0 ${
                     evaluation
                       ? positionCheck?.status === "correct"
                         ? "bg-emerald-500/20 border-emerald-500 text-emerald-300"
                         : positionCheck?.status === "near"
                         ? "bg-amber-500/20 border-amber-500 text-amber-300"
                         : "bg-red-500/20 border-red-500 text-red-300"
-                      : "bg-black border-red-500/50 text-red-400"
+                      : "bg-black border-red-500/60 text-red-400"
                   }`}
                 >
                   {item.statementNum}
                 </div>
 
                 {/* Statement Content */}
-                <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                  <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase">
+                <div className="flex flex-col gap-1 flex-1 min-w-0">
+                  <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase font-semibold">
                     STATEMENT #{item.statementNum}
                   </span>
-                  <span className="text-slate-200 font-sans text-xs leading-relaxed">
+                  <span className="text-slate-100 font-sans text-sm leading-relaxed">
                     {item.card.text}
                   </span>
                 </div>
 
                 {/* Evaluation feedback on position */}
                 {evaluation && positionCheck && (
-                  <div className="flex items-center gap-2 px-3 py-1 font-mono text-[11px] font-bold shrink-0">
+                  <div className="flex items-center gap-2 px-3 py-1 font-mono text-xs font-bold shrink-0">
                     {positionCheck.status === "correct" && (
                       <span className="text-emerald-400 flex items-center gap-1">
                         <span>✓</span> CORRECT
@@ -243,6 +243,7 @@ export function MarketCascadeGame({
             );
           })}
         </div>
+
 
         {/* Evaluation Results Drawer */}
         {evaluation ? (

@@ -4,10 +4,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DiminishingReturnsTrainingReactor } from "@/components/domain/DiminishingReturnsTrainingReactor";
 import { useSession } from "@/lib/hooks/use-session";
+import { useDepartmentLocks } from "@/lib/hooks/use-company-state";
 
 export default function TrainingReactorPage() {
   const router = useRouter();
   const { data: session, isLoading, isError } = useSession();
+  const { data: deptLocks, isLoading: isLocksLoading } = useDepartmentLocks(session?.company_id);
 
   useEffect(() => {
     if (!isLoading && (!session || isError)) {
@@ -15,13 +17,20 @@ export default function TrainingReactorPage() {
     }
   }, [session, isLoading, isError, router]);
 
-  if (isLoading || !session) {
+  useEffect(() => {
+    if (deptLocks?.operations?.locked) {
+      router.replace("/hq/operations");
+    }
+  }, [deptLocks, router]);
+
+  if (isLoading || isLocksLoading || !session) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-amber-500 font-mono tracking-widest">
         INITIALIZING NEURAL FINANCE TRAINING PROTOCOL...
       </div>
     );
   }
+
 
   const handleComplete = () => {
     // Flag this quarter's training simulation as cleared in localStorage

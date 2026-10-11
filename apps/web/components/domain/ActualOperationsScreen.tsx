@@ -549,10 +549,157 @@ export function ActualOperationsScreen({
     );
   }
 
+  // When Operations & Finance is locked for the active quarter:
+  // Show clean executive ledger summary as requested:
+  // "Q1 start budget: X You allocated A B C D E amounts to these these sectors. REMAINING BUDGET Y"
+  if (isLocked) {
+    return (
+      <main className="screen department-screen finance finance-operations-revamp">
+        <header className="system-bar">
+          <div className="system-brand">
+            <div className="brand-mark">
+              <i /><i /><i />
+            </div>
+            <span>{sessionData.company?.name ? sessionData.company.name.toUpperCase() : "APEX DYNAMICS"}</span>
+          </div>
+
+          <div className="location-readout">
+            <i />
+            <span>OPERATIONS &amp; FINANCE // Q0{quarter} RATIFIED LEDGER</span>
+          </div>
+
+          <div className="system-stats">
+            <span>QUARTER STATUS</span>
+            <strong style={{ color: "#34d399" }}>LOCKED &amp; RATIFIED</strong>
+            <button className="key-control" onClick={onBack} type="button">
+              <kbd>ESC</kbd> BACK TO HQ
+            </button>
+          </div>
+        </header>
+
+        <div className="w-full flex-1 flex items-center justify-center p-6">
+          <div className="market-content-cluster w-full max-w-4xl mx-auto shadow-2xl animate-in fade-in duration-200">
+            <div className="market-cluster-header">
+              <div className="market-cluster-header-left">
+                <div
+                  className="market-cluster-accent-bar"
+                  style={{
+                    background: "#10b981",
+                    boxShadow: "0 0 12px rgba(16,185,129,0.8)",
+                  }}
+                />
+                <div>
+                  <h2 className="market-cluster-title">
+                    OPERATIONS ALLOCATION LEDGER // Q0{quarter}
+                  </h2>
+                  <span className="market-cluster-subline">
+                    CONFIRMED BOARD-RATIFIED BUDGET EXPENDITURES
+                  </span>
+                </div>
+              </div>
+              <span className="px-4 py-1.5 font-mono text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40">
+                ALLOCATIONS RATIFIED
+              </span>
+            </div>
+
+            <div className="market-cluster-body">
+              {/* Financial Snapshot KPI cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-black/80 border border-slate-800 flex flex-col gap-1">
+                  <span className="text-xs font-mono text-slate-400 tracking-wider">
+                    Q0{quarter} START BUDGET
+                  </span>
+                  <strong className="text-2xl font-bold font-mono text-amber-400">
+                    {formatCurrency(availableCapital)}
+                  </strong>
+                </div>
+
+                <div className="p-4 bg-black/80 border border-slate-800 flex flex-col gap-1">
+                  <span className="text-xs font-mono text-slate-400 tracking-wider">
+                    TOTAL ALLOCATED
+                  </span>
+                  <strong className="text-2xl font-bold font-mono text-white">
+                    {formatCurrency(totalAllocated)}
+                  </strong>
+                </div>
+
+                <div className="p-4 bg-black/80 border border-slate-800 flex flex-col gap-1">
+                  <span className="text-xs font-mono text-slate-400 tracking-wider">
+                    REMAINING BUDGET
+                  </span>
+                  <strong className="text-2xl font-bold font-mono text-emerald-400">
+                    {formatCurrency(remaining)}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Breakdown of Allocated Sectors */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-mono text-slate-400 tracking-wider uppercase font-semibold">
+                  COMMITTED SECTOR ALLOCATIONS
+                </span>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {Object.entries(amounts).filter(([, val]) => val > 0).length === 0 ? (
+                    <div className="col-span-2 p-4 bg-neutral-950 border border-slate-800 text-sm font-mono text-slate-400">
+                      Zero additional funds were allocated to sector initiatives this quarter. Full capital preserved in liquid treasury reserves.
+                    </div>
+                  ) : (
+                    Object.entries(amounts)
+                      .filter(([, val]) => val > 0)
+                      .map(([key, val]) => {
+                        const meta = SECTOR_METADATA[key];
+                        return (
+                          <div
+                            key={key}
+                            className="p-3.5 bg-neutral-950/80 border border-slate-800 flex items-center justify-between"
+                          >
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs font-mono text-slate-400">
+                                {meta?.categoryLabel ?? "OPERATIONS"}
+                              </span>
+                              <strong className="text-sm font-sans text-white">
+                                {meta?.name ?? key.toUpperCase()}
+                              </strong>
+                            </div>
+                            <span
+                              className="font-mono text-base font-bold"
+                              style={{ color: meta?.accentColor || "var(--gold)" }}
+                            >
+                              {formatCurrency(val)}
+                            </span>
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Return Action */}
+              <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <span className="text-xs font-mono text-slate-400 tracking-wide">
+                  OPERATIONS EXPENDITURES LOCKED FOR QUARTER 0{quarter} • AWAITING END-OF-QUARTER BOARD MEETING
+                </span>
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="game-button gold px-8 py-3 text-xs font-mono font-bold tracking-widest cursor-pointer"
+                >
+                  <span>RETURN TO HQ →</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="screen department-screen finance finance-operations-revamp">
       {/* Top Header / System Bar */}
       <header className="system-bar">
+
         <div className="system-brand">
           <div className="brand-mark">
             <i /><i /><i />
