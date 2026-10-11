@@ -270,7 +270,7 @@ export default function MarketDepartmentPage() {
 
         {/* Stage 1: Market Cascade Training */}
         {stage === "cascade_training" && (
-          <div>
+          <div className="w-full flex items-center justify-center py-2">
             {isScenariosLoading || !currentScenario ? (
               <div className="flex h-96 items-center justify-center font-mono text-slate-400">
                 LOADING MARKET CASCADE PROTOCOLS...
@@ -394,7 +394,7 @@ export default function MarketDepartmentPage() {
 
         {/* Stage 2: Live Corporate Intelligence */}
         {stage === "live_intelligence" && (
-          <div>
+          <div className="w-full py-2">
             {isMarketLoading || !marketData ? (
               <div className="flex h-96 items-center justify-center font-mono text-slate-400">
                 SYNCHRONIZING CENTRAL RADAR TELEMETRY...
@@ -410,7 +410,7 @@ export default function MarketDepartmentPage() {
 
         {/* Stage 3: Strategic Decision / What Would You Do? */}
         {stage === "strategic_decision" && (
-          <div>
+          <div className="w-full py-2">
             {isDilemmasLoading || !activeDilemma || !companyId ? (
               <div className="flex h-96 items-center justify-center font-mono text-slate-400">
                 LOADING STRATEGIC BRIEF...

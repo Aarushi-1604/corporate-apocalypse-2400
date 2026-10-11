@@ -63,9 +63,9 @@ export function StrategicDecisionStage({
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto py-2">
+    <div className="flex flex-col gap-6 w-full py-2">
       {/* Header Cluster */}
-      <div className="market-content-cluster !m-0">
+      <div className="market-content-cluster !m-0 !max-w-none w-full">
         <div className="market-cluster-header">
           <div className="market-cluster-header-left">
             <div className="market-cluster-accent-bar" />
@@ -84,11 +84,11 @@ export function StrategicDecisionStage({
         </div>
 
         <div className="market-cluster-body">
-          <p className="text-slate-300 text-xs font-mono leading-relaxed m-0 p-3.5 bg-black/70 border border-slate-800">
+          <p className="text-slate-200 text-sm md:text-base font-mono leading-relaxed m-0 p-4 bg-black/70 border border-slate-800">
             {dilemma.context_brief}
           </p>
 
-          <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <div className="pt-2 flex items-center justify-between text-xs font-mono text-slate-400">
             <span>
               {committedResult || isAlreadyCommitted
                 ? "QUARTERLY STRATEGIC ACTION COMMITTED. READ-ONLY ARCHIVE."
@@ -108,7 +108,7 @@ export function StrategicDecisionStage({
       </div>
 
       {/* 4 Strategic Choices Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {dilemma.options.map((option) => {
           const isSelected = selectedOptionId === option.id;
 
@@ -116,41 +116,41 @@ export function StrategicDecisionStage({
             <div
               key={option.id}
               onClick={() => handleSelect(option.id)}
-              className={`p-4 border flex flex-col justify-between transition-all cursor-pointer ${
+              className={`p-6 border flex flex-col justify-between transition-all cursor-pointer ${
                 isSelected
                   ? "border-red-500 bg-red-950/25 shadow-[0_0_20px_rgba(239,68,68,0.25)]"
                   : "border-slate-800/90 bg-neutral-950/80 hover:border-slate-700 hover:bg-neutral-900/90"
               } ${(committedResult || isAlreadyCommitted) && !isSelected ? "opacity-35 pointer-events-none" : ""}`}
             >
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono tracking-widest text-red-400 font-bold uppercase">
+                  <span className="text-xs font-mono tracking-widest text-red-400 font-bold uppercase">
                     STRATEGIC MANDATE
                   </span>
-                  <span className="font-mono text-[11px] font-bold text-slate-300">
+                  <span className="font-mono text-sm font-bold text-slate-200">
                     COST: {option.cost_cash > 0 ? `₹${option.cost_cash.toLocaleString()}` : "₹0 (RESERVE)"}
                   </span>
                 </div>
 
-                <h3 className="text-sm font-bold font-sans text-white tracking-wide m-0">
+                <h3 className="text-lg font-bold font-sans text-white tracking-wide m-0">
                   {option.title}
                 </h3>
-                <p className="text-xs text-slate-400 leading-relaxed font-sans m-0">
+                <p className="text-sm md:text-base text-slate-300 leading-relaxed font-sans m-0">
                   {option.description}
                 </p>
 
-                <div className="mt-2 p-2.5 bg-black/70 border border-slate-800 text-[10px] font-mono flex flex-col gap-0.5">
+                <div className="mt-2.5 p-3.5 bg-black/70 border border-slate-800 text-xs md:text-sm font-mono flex flex-col gap-1">
                   <span className="text-amber-400 font-bold">PROJECTED TRADEOFF:</span>
-                  <span className="text-slate-300">{option.tradeoff}</span>
+                  <span className="text-slate-200">{option.tradeoff}</span>
                 </div>
               </div>
 
               {/* KPI Impact Preview */}
-              <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-wrap gap-1.5 text-[9px] font-mono">
+              <div className="mt-4 pt-3.5 border-t border-slate-800/80 flex flex-wrap gap-2 text-xs font-mono">
                 {Object.entries(option.stat_deltas).map(([kpi, val]) => (
                   <span
                     key={kpi}
-                    className={`px-2 py-0.5 font-bold ${
+                    className={`px-3 py-1 font-bold ${
                       val > 0
                         ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40"
                         : "bg-red-950/60 text-red-300 border border-red-500/40"
