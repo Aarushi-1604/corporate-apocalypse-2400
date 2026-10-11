@@ -44,7 +44,7 @@ export default function HQPage() {
         router.push("/hq/market");
       }}
       onEnterResearch={() => {
-        router.push("/hq/operations");
+        router.push("/hq/rd");
       }}
       onEnterBoard={() => {
         router.push("/hq/board");

@@ -12,6 +12,7 @@ from app.api.v1.events import router as events_router
 from app.api.v1.employees import router as employees_router
 from app.api.v1.clients import router as clients_router
 from app.api.v1.market import router as market_router
+from app.api.v1.rd import router as rd_router
 from app.api.v1.board import router as board_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.ai import router as ai_router
@@ -59,6 +60,7 @@ app.include_router(events_router,prefix="/api/v1")
 app.include_router(employees_router, prefix="/api/v1")
 app.include_router(clients_router, prefix="/api/v1")
 app.include_router(market_router, prefix="/api/v1")
+app.include_router(rd_router, prefix="/api/v1")
 app.include_router(board_router,prefix="/api/v1")
 app.include_router(reports_router,prefix="/api/v1")
 app.include_router(leaderboard_router, prefix="/api/v1")

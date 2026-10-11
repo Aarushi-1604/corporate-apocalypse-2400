@@ -1599,5 +1599,118 @@ kbd { padding: 4px 6px; border: 1px solid rgba(255,255,255,.22); color: #c4c5c0;
   gap: 24px;
 }
 
+/* ==========================================================================
+   RESEARCH & DEVELOPMENT / PROJECT GENESIS (2400 CYAN HUD)
+   ========================================================================== */
+
+.rd-screen-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100vh;
+  padding-top: 56px;
+  background: #030608;
+  color: #f1f5f9;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.rd-screen-container::-webkit-scrollbar {
+  width: 8px;
+}
+.rd-screen-container::-webkit-scrollbar-track {
+  background: #020405;
+}
+.rd-screen-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.25);
+  border-radius: 4px;
+}
+
+.rd-command-banner {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 32px;
+  margin: 16px 32px 0;
+  background: rgba(6, 12, 16, 0.96);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 240, 255, 0.05);
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .rd-command-banner {
+    grid-template-columns: 1fr;
+    margin: 16px 16px 0;
+    padding: 16px;
+  }
+}
+
+.rd-gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0088aa, #00f0ff);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.8);
+  transition: width 0.4s ease;
+}
+
+.rd-content-cluster {
+  display: flex;
+  flex-direction: column;
+  margin: 20px auto 40px;
+  max-width: 960px;
+  width: 100%;
+  border: 1px solid rgba(0, 240, 255, 0.32);
+  background: rgba(5, 10, 14, 0.95);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 240, 255, 0.06);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.rd-cluster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 26px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.rd-cluster-accent-bar {
+  width: 5px;
+  height: 40px;
+  border-radius: 2px;
+  background: #00f0ff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.85);
+}
+
+/* CTO Briefing Modal (Cyan / Electric Blue Theme) */
+.briefing-modal.rd {
+  border-color: rgba(0, 240, 255, 0.45);
+  background: linear-gradient(145deg, rgba(4, 14, 20, 0.98), rgba(2, 6, 9, 0.96));
+  box-shadow: 0 35px 120px rgba(0, 0, 0, 0.95), 0 0 35px rgba(0, 240, 255, 0.15);
+}
+.briefing-modal.rd .briefing-avatar {
+  border-color: #00f0ff;
+  color: #00f0ff;
+  background: rgba(0, 240, 255, 0.12);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+}
+.briefing-modal.rd .briefing-speaker span {
+  color: #38bdf8;
+}
+.briefing-modal.rd .briefing-card {
+  border-color: rgba(0, 240, 255, 0.2);
+  background: rgba(0, 240, 255, 0.03);
+}
+.briefing-modal.rd .briefing-card strong {
+  color: #38bdf8;
+}
+
+
 
 
