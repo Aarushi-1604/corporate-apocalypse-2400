@@ -20,9 +20,14 @@ class Settings(BaseSettings):
     ollama_host: str = "http://localhost:11434" #default
     chroma_host: str = "localhost"
     chroma_port: int = 8001
+    groq_api_key: str | None = None
+    groq_model: str = "openai/gpt-oss-20b"
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-3.5-flash-lite"
     model_config = SettingsConfigDict(
         env_file='.env',
-        env_file_encoding = 'utf-8'
+        env_file_encoding = 'utf-8',
+        extra='ignore'
     )
 
 @lru_cache #decorator. wrapps the function so python remembers the return value
