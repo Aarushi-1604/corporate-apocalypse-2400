@@ -69,7 +69,7 @@ export function ProjectHelixDecisionStage({
                 CTO // CONFIDENTIAL RESEARCH PROPOSAL
               </h2>
               <span className="market-cluster-subline">
-                PROJECT HELIX • PROCESS INTELLIGENCE ARCHITECTURE • Q0{quarter} DIRECTIVE
+                {project.name} • {project.subtitle ? project.subtitle.toUpperCase() : "R&D DIRECTIVE"} • Q0{quarter} MANDATE
               </span>
             </div>
           </div>
@@ -85,8 +85,14 @@ export function ProjectHelixDecisionStage({
               DR. MARCUS VANCE // CHIEF TECHNOLOGY OFFICER:
             </span>
             <p className="m-0 leading-relaxed">
-              “CEO, the R&amp;D team proposes an investment in <strong>Project Helix</strong>. The
-              initiative could improve operational efficiency and innovation capacity over future quarters, but its commercial outcome is uncertain. Funding the project will reduce available liquidity and prevent that same cash from being used elsewhere. Declining preserves resources for other priorities but could mean foregoing a future technological advantage. I need your directive.”
+              {project.briefing ? (
+                <span>“CEO, {project.briefing} I need your directive.”</span>
+              ) : (
+                <span>
+                  “CEO, the R&amp;D team proposes an investment in <strong>{project.name}</strong>. The
+                  initiative could improve operational efficiency and innovation capacity over future quarters, but its commercial outcome is uncertain. Funding the project will reduce available liquidity and prevent that same cash from being used elsewhere. Declining preserves resources for other priorities but could mean foregoing a future technological advantage. I need your directive.”
+                </span>
+              )}
             </p>
           </div>
 

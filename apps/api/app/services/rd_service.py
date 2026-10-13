@@ -16,61 +16,36 @@ from app.models import (
     Session as SessionModel,
 )
 
-PROJECT_HELIX_SPEC: Dict[str, Any] = {
-    "id": "project_helix",
-    "name": "PROJECT HELIX",
-    "subtitle": "Next-generation process intelligence & automated synthesis platform",
-    "briefing": (
-        "The R&D team proposes an initial capital commitment to Project Helix. "
-        "The initiative could improve operational efficiency and long-term innovation capacity "
-        "over future quarters, but its commercialization is uncertain. "
-        "Funding the project will reduce available liquidity and prevent that cash from being deployed elsewhere. "
-        "Declining preserves capital for other priorities but foregoes a potential technological leap."
-    ),
-    "cost_cash": 25000.0,
-    "options": [
-        {
-            "id": "invest",
-            "title": "OPTION A — INVEST IN PROJECT HELIX",
-            "action_label": "INVEST",
-            "cost_cash": 25000.0,
-            "description": "Commit ₹25,000 corporate capital to fund the initial Phase 1 engineering pipeline for Project Helix.",
-            "tradeoff": "Immediate ₹25,000 cash reduction. Enhances innovation capability and technical prestige at the cost of short-term liquidity reserves.",
-            "stat_deltas": {
-                "innovation": 6.0,
-                "risk": 2.0,
-                "board_confidence": 2.0,
-            },
-            "press_headline": "{company} COMMITS CAPITAL TO PROJECT HELIX AMID UNCERTAIN INNOVATION OUTLOOK",
-            "press_body": "In a decisive strategic directive, {company} greenlit Phase 1 capital expenditure for Project Helix, prioritizing next-gen process intelligence despite macroeconomic headwinds.",
-        },
-        {
-            "id": "decline",
-            "title": "OPTION B — DECLINE PROJECT HELIX",
-            "action_label": "DON'T INVEST",
-            "cost_cash": 0.0,
-            "description": "Decline the Project Helix research proposal to preserve pristine liquid treasury reserves.",
-            "tradeoff": "Preserves available cash and shields the balance sheet from speculative research risk, but surrenders immediate technological advantage.",
-            "stat_deltas": {
-                "innovation": 0.0,
-                "risk": -1.0,
-                "board_confidence": 0.0,
-            },
-            "press_headline": "{company} PRESERVES LIQUIDITY AS RESEARCH PROPOSAL IS DEFERRED",
-            "press_body": "{company} leadership has formally rejected the Project Helix funding mandate, prioritizing treasury discipline and liquid balance sheet reserves.",
-        },
-    ],
-}
+from app.services.rd_templates import build_sector_rd_spec
+
+# Kept for backward compatibility with existing tests
+PROJECT_HELIX_SPEC: Dict[str, Any] = build_sector_rd_spec("General", 100000.0, 42)
+PROJECT_HELIX_SPEC["id"] = "project_helix"
+PROJECT_HELIX_SPEC["cost_cash"] = 25000.0
+for opt in PROJECT_HELIX_SPEC["options"]:
+    if opt["id"] == "invest":
+        opt["cost_cash"] = 25000.0
+        opt["stat_deltas"]["innovation"] = 6.0
+    elif opt["id"] == "decline":
+        opt["cost_cash"] = 0.0
+        opt["stat_deltas"]["innovation"] = 0.0
+
+
+def _get_project_spec_for_company(company: Company, current_cash: float, quarter: int = 1) -> Dict[str, Any]:
+    """Generates the deterministic sector-specific R&D project spec for the given company and quarter."""
+    seed = (company.id.int % (2**31)) + quarter
+    return build_sector_rd_spec(company.sector, current_cash, seed)
 
 
 async def get_helix_proposal(company: Company, state: CompanyStateModel) -> Dict[str, Any]:
-    """Returns the Project Helix proposal data along with affordability checks based on current cash."""
-    cost = float(PROJECT_HELIX_SPEC["cost_cash"])
+    """Returns the sector-specific R&D proposal data along with affordability checks based on current cash."""
     current_cash = float(state.cash)
+    project_spec = _get_project_spec_for_company(company, current_cash, state.quarter)
+    cost = float(project_spec["cost_cash"])
     can_afford = current_cash >= cost
 
     return {
-        "project": PROJECT_HELIX_SPEC,
+        "project": project_spec,
         "company_cash": current_cash,
         "cost_cash": cost,
         "can_afford": can_afford,
@@ -87,15 +62,16 @@ async def execute_rd_decision(
     option_id: str,
 ) -> Dict[str, Any]:
     """
-    Executes the Project Helix decision:
+    Executes the dynamic R&D decision:
     - Enforces idempotency (cannot commit twice in the same quarter)
     - Validates affordability
     - Updates bounded CompanyState
     - Writes DecisionLog entry
     - Weaves story into CorporateTimesIssue
     """
+    project_spec = _get_project_spec_for_company(company, float(state.cash), quarter)
     selected_option = next(
-        (opt for opt in PROJECT_HELIX_SPEC["options"] if opt["id"] == option_id),
+        (opt for opt in project_spec["options"] if opt["id"] == option_id),
         None,
     )
     if not selected_option:
@@ -129,7 +105,7 @@ async def execute_rd_decision(
 
     cost = float(selected_option["cost_cash"])
     if cost > 0 and float(state.cash) < cost:
-        raise ValueError("Insufficient cash reserves to fund Project Helix.")
+        raise ValueError(f"Insufficient cash reserves to fund {project_spec['name']}.")
 
     # Apply state deltas
     deltas = dict(selected_option["stat_deltas"])
