@@ -569,8 +569,10 @@ export function ActualOperationsScreen({
           </div>
 
           <div className="system-stats">
-            <span>QUARTER STATUS</span>
-            <strong style={{ color: "#34d399" }}>LOCKED &amp; RATIFIED</strong>
+            <span>LIQUID RESERVES</span>
+            <strong style={{ color: "#34d399" }}>
+              {formatCurrency(availableCapital)}
+            </strong>
             <button className="key-control" onClick={onBack} type="button">
               <kbd>ESC</kbd> BACK TO HQ
             </button>
@@ -607,16 +609,16 @@ export function ActualOperationsScreen({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 bg-black/80 border border-slate-800 flex flex-col gap-1">
                   <span className="text-xs font-mono text-slate-400 tracking-wider">
-                    Q0{quarter} START BUDGET
+                    Q0{quarter} PRE-ALLOCATION CAPITAL
                   </span>
                   <strong className="text-2xl font-bold font-mono text-amber-400">
-                    {formatCurrency(availableCapital)}
+                    {formatCurrency(availableCapital + totalAllocated)}
                   </strong>
                 </div>
 
                 <div className="p-4 bg-black/80 border border-slate-800 flex flex-col gap-1">
                   <span className="text-xs font-mono text-slate-400 tracking-wider">
-                    TOTAL ALLOCATED
+                    COMMITTED TO SECTORS
                   </span>
                   <strong className="text-2xl font-bold font-mono text-white">
                     {formatCurrency(totalAllocated)}
@@ -625,10 +627,10 @@ export function ActualOperationsScreen({
 
                 <div className="p-4 bg-black/80 border border-slate-800 flex flex-col gap-1">
                   <span className="text-xs font-mono text-slate-400 tracking-wider">
-                    REMAINING BUDGET
+                    CURRENT LIQUID RESERVES
                   </span>
                   <strong className="text-2xl font-bold font-mono text-emerald-400">
-                    {formatCurrency(remaining)}
+                    {formatCurrency(availableCapital)}
                   </strong>
                 </div>
               </div>

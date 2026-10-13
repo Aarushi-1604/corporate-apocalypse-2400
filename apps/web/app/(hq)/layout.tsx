@@ -10,6 +10,7 @@ const FULLSCREEN_ROUTES = [
   "/hq/operations/training",
   "/hq/market",
   "/hq/rd",
+  "/hq/clients",
 ];
 
 export default function HqLayout({ children }: { children: React.ReactNode }) {

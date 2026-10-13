@@ -26,8 +26,12 @@ export default function OperationsPage() {
   };
 
   const handleLockComplete = async () => {
-    await queryClient.invalidateQueries({ queryKey: ["session"] });
-    await queryClient.invalidateQueries({ queryKey: ["department-locks", session?.company_id] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["session"] }),
+      queryClient.invalidateQueries({ queryKey: ["department-locks", session?.company_id] }),
+      queryClient.invalidateQueries({ queryKey: ["budget", session?.company_id] }),
+      queryClient.invalidateQueries({ queryKey: ["company-state", session?.company_id] }),
+    ]);
     router.push("/hq");
   };
 
