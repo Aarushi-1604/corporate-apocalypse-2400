@@ -38,3 +38,5 @@ class DepartmentLocksOut(BaseModel):
     operations: DepartmentStatusOut
     market: DepartmentStatusOut
     rd: DepartmentStatusOut
+    client: DepartmentStatusOut | None = None
+    press: DepartmentStatusOut | None = None

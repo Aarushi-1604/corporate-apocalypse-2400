@@ -33,7 +33,7 @@ export default function CityPage() {
         router.push("/hq/clients");
       }}
       onVisitPress={() => {
-        router.push("/hq/reports/corporate-times");
+        router.push("/hq/press");
       }}
     />
   );

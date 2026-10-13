@@ -49,7 +49,16 @@ export default function HQPage() {
       onEnterBoard={() => {
         router.push("/hq/board");
       }}
-      boardUnlocked={Boolean(activeBoard)}
+      boardUnlocked={
+        Boolean(activeBoard) ||
+        Boolean(
+          deptLocks?.operations?.locked &&
+          deptLocks?.market?.locked &&
+          deptLocks?.rd?.locked &&
+          deptLocks?.client?.locked &&
+          deptLocks?.press?.locked
+        )
+      }
       departmentLocks={deptLocks}
     />
   );

@@ -56,6 +56,8 @@ export type DepartmentLocks = {
   operations: DepartmentStatus;
   market: DepartmentStatus;
   rd: DepartmentStatus;
+  client?: DepartmentStatus | null;
+  press?: DepartmentStatus | null;
 };
 
 async function fetchDepartmentLocks(companyId: string): Promise<DepartmentLocks> {

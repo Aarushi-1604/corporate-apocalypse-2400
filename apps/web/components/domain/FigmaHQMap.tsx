@@ -45,9 +45,11 @@ interface FigmaHQMapProps {
   onEnterBoard: () => void;
   boardUnlocked?: boolean;
   departmentLocks?: {
-    operations?: { locked: boolean };
-    market?: { locked: boolean };
-    rd?: { locked: boolean };
+    operations?: { locked: boolean } | null;
+    market?: { locked: boolean } | null;
+    rd?: { locked: boolean } | null;
+    client?: { locked: boolean } | null;
+    press?: { locked: boolean } | null;
   };
 }
 

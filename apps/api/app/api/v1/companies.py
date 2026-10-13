@@ -128,6 +128,30 @@ async def get_department_locks(
     rd_log = rd_log_result.scalar_one_or_none()
     rd_locked = rd_log is not None
 
+    # 4. Check Client lock:
+    client_log_result = await db.execute(
+        select(DecisionLog).where(
+            DecisionLog.company_id == company.id,
+            DecisionLog.quarter == quarter,
+            DecisionLog.decision_type == "client_negotiation",
+        )
+    )
+    client_log = client_log_result.scalar_one_or_none()
+    client_locked = client_log is not None
+
+    # 5. Check Press lock:
+    press_log_result = await db.execute(
+        select(DecisionLog).where(
+            DecisionLog.company_id == company.id,
+            DecisionLog.quarter == quarter,
+            DecisionLog.decision_type == "press",
+        )
+    )
+    press_log = press_log_result.scalar_one_or_none()
+    press_deltas = None
+    if press_log and isinstance(press_log.stat_deltas, dict):
+        press_deltas = {k: float(v) for k, v in press_log.stat_deltas.items() if isinstance(v, (int, float))}
+
     return DepartmentLocksOut(
         quarter=quarter,
         operations=DepartmentStatusOut(
@@ -150,5 +174,17 @@ async def get_department_locks(
             summary=rd_log.summary if rd_log else None,
             detail=str(rd_log.stat_deltas) if rd_log else None,
             stat_deltas=rd_log.stat_deltas if rd_log and isinstance(rd_log.stat_deltas, dict) else None,
+        ),
+        client=DepartmentStatusOut(
+            locked=client_locked,
+            summary=client_log.summary if client_log else None,
+            detail=str(client_log.stat_deltas) if client_log else None,
+            stat_deltas=client_log.stat_deltas if client_log and isinstance(client_log.stat_deltas, dict) else None,
+        ),
+        press=DepartmentStatusOut(
+            locked=press_locked,
+            summary=press_log.summary if press_log else None,
+            detail=str(press_log.stat_deltas) if press_log else None,
+            stat_deltas=press_deltas,
         ),
     )
