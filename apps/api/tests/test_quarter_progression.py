@@ -293,6 +293,28 @@ async def test_q3_q4_gating():
 
 
 @pytest.mark.asyncio
+async def test_q3_q4_board_prerequisites_unlock_with_hq_activities():
+    """Test 6b: In Q3/Q4, Board Meeting unlocks when Ops, Market, and R&D are complete without requiring interactive client/press."""
+    db = AsyncMock()
+    company = Company(id=uuid.uuid4(), name="Apex Dynamics", sector="Technology")
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = DecisionLog(
+        company_id=company.id, quarter=3, decision_type="logged"
+    )
+    mock_result.scalars.return_value.all.return_value = []
+    db.execute.return_value = mock_result
+
+    # Q3: Board unlocks with just Ops, Market, R&D
+    can_board_q3, reason_q3 = await check_board_prerequisites(db, company, 3)
+    assert can_board_q3, f"Board must unlock in Q3 when Ops, Market, R&D are done, got: {reason_q3}"
+
+    # Q4: Board unlocks with just Ops, Market, R&D
+    can_board_q4, reason_q4 = await check_board_prerequisites(db, company, 4)
+    assert can_board_q4, f"Board must unlock in Q4 when Ops, Market, R&D are done, got: {reason_q4}"
+
+
+@pytest.mark.asyncio
 async def test_regression_bug_1_completed_quarter_payload_and_q4():
     """Regression Test for BUG 1: Explicit completed-quarter payload across quarters including Q4."""
     db = AsyncMock()

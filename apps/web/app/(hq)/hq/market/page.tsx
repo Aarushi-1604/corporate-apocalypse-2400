@@ -57,7 +57,7 @@ export default function MarketDepartmentPage() {
     }
     const key = `market_cascade_completed_${companyId}_q${quarter}`;
     const alreadyDone = typeof window !== "undefined" && localStorage.getItem(key) === "true";
-    if (alreadyDone) {
+    if (quarter > 1 || alreadyDone) {
       setStage("live_intelligence");
     }
   }, [companyId, quarter, isMarketLocked]);

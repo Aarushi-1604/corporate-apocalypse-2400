@@ -43,6 +43,7 @@ export interface NegotiationSessionResponse {
   relationship_score: number;
   target_value: number;
   is_locked: boolean;
+  lock_reason?: string;
   decision_summary?: string | null;
   decision_stat_deltas?: Record<string, number> | null;
   company_capabilities: CompanyCapabilities;

@@ -39,4 +39,24 @@ class DepartmentLocksOut(BaseModel):
     market: DepartmentStatusOut
     rd: DepartmentStatusOut
     client: DepartmentStatusOut | None = None
-    press: DepartmentStatusOut | None = None
+    press: DepartmentStatusOut | None = None
+
+
+class TabletEventOut(BaseModel):
+    quarter: int
+    decision_type: str
+    summary: str
+    stat_deltas: dict[str, float] | None = None
+    created_at: str
+
+
+class TabletSnapshotOut(BaseModel):
+    quarter: int
+    player_name: str | None = None
+    company_name: str
+    sector: str
+    session_status: str
+    state: CompanyStateOut
+    previous_state: CompanyStateOut | None = None
+    locks: DepartmentLocksOut
+    recent_events: list[TabletEventOut]

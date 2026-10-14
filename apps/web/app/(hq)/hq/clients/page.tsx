@@ -208,9 +208,38 @@ export default function ClientsNegotiationPage() {
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto px-6 pb-12 pt-4">
         {/* ====================================================================
+            LOCKED OR PASSIVE STATE (e.g. Q3/Q4 or missing prerequisites)
+           ==================================================================== */}
+        {status === "LOCKED" && (
+          <div className="flex flex-col gap-6 w-full py-8 max-w-2xl mx-auto animate-in fade-in duration-200">
+            <div className="client-content-cluster !m-0 !max-w-none w-full border border-purple-500/40 bg-black/90 p-8 flex flex-col gap-6 text-center items-center">
+              <span className="font-mono text-sm text-amber-400 bg-amber-950/60 border border-amber-500/40 px-4 py-2 font-bold tracking-wider">
+                ACCESS RESTRICTED // CLIENT PORTAL
+              </span>
+              <h2 className="text-2xl font-bold font-mono text-white tracking-wide">
+                {quarter > 2 ? `QUARTER 0${quarter} PASSIVE STATUS` : "CLIENT OFFICE RESTRICTED"}
+              </h2>
+              <p className="text-slate-300 font-sans text-base leading-relaxed max-w-lg">
+                {negSession.lock_reason ??
+                  (quarter > 2
+                    ? "New client commercial negotiations are concluded for the fiscal year. Client relations are maintained passively via existing enterprise agreements."
+                    : "Complete Finance & Operations, Marketing, and R&D before negotiating with clients.")}
+              </p>
+              <button
+                type="button"
+                onClick={handleBackToCity}
+                className="game-button gold px-8 py-3 text-sm font-mono font-bold tracking-widest cursor-pointer mt-4"
+              >
+                <span>RETURN TO CITY MAP →</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ====================================================================
             STAGE 1: INITIAL CLIENT REQUIREMENT
            ==================================================================== */}
-        {isRequirementStage && !isClosed && (
+        {status !== "LOCKED" && isRequirementStage && !isClosed && (
           <div className="flex flex-col gap-6 w-full py-2 animate-in fade-in duration-200">
             <div className="client-content-cluster !m-0 !max-w-none w-full">
               <div className="client-cluster-header">

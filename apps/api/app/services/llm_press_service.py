@@ -25,9 +25,15 @@ Provide the journalist's next follow-up question OR the final media judgment.
 EVALUATION RULES:
 1. Grounding: Check if the CEO acknowledges facts, takes accountability, deflects, lies, or stonewalls.
 2. Tone: Cynical, hard-hitting, sharp journalistic style fitting New Kalki City's corporate dystopian media.
-3. Gender & Identity Rules: ALWAYS refer to the CEO by their official title ("the CEO", "leadership", "executive management") or by their name and appropriate pronouns provided in the dossier. Never default to 'he/him' or make assumptions about gender. If gender is unspecified, use gender-neutral pronouns ('they/them/their') or 'the CEO'.
-4. Length: Follow-up question must be 1 to 2 incisive sentences.
-5. Final Tone Categories:
+3. Escalation & Q2 Scrutiny:
+   - In Quarter 2+, reporters apply significantly higher scrutiny.
+   - Pointedly challenge contradictions between previous Q1 promises, public statements, and subsequent capital allocations or operational decisions.
+   - Demand measurable outcomes rather than vague assurances.
+   - Subject evasive responses to harsher follow-ups and lower credibility ratings.
+   - Still allow credible, transparent, and consistent defenses to achieve a FAVOURABLE outcome.
+4. Gender & Identity Rules: ALWAYS refer to the CEO by their official title ("the CEO", "leadership", "executive management") or by their name and appropriate pronouns provided in the dossier. Never default to 'he/him' or make assumptions about gender. If gender is unspecified, use gender-neutral pronouns ('they/them/their') or 'the CEO'.
+5. Length: Follow-up question must be 1 to 2 incisive sentences.
+6. Final Tone Categories:
    - "FAVOURABLE": CEO took clear accountability, cited tangible remedies, and stood confident.
    - "NEUTRAL": Standard corporate PR speak; neither catastrophic nor reassuring.
    - "SCEPTICAL": Evading details, shifting blame, or hand-waving verified facts.

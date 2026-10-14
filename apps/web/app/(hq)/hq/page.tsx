@@ -34,7 +34,8 @@ export default function HQPage() {
         router.push("/city");
       }}
       onEnterFinance={() => {
-        if (deptLocks?.operations?.locked) {
+        const q = session?.current_quarter ?? 1;
+        if (q > 1 || deptLocks?.operations?.locked) {
           router.push("/hq/operations");
         } else {
           router.push("/hq/operations/training");
@@ -52,11 +53,15 @@ export default function HQPage() {
       boardUnlocked={
         Boolean(activeBoard) ||
         Boolean(
-          deptLocks?.operations?.locked &&
-          deptLocks?.market?.locked &&
-          deptLocks?.rd?.locked &&
-          deptLocks?.client?.locked &&
-          deptLocks?.press?.locked
+          (session?.current_quarter ?? 1) <= 2
+            ? deptLocks?.operations?.locked &&
+              deptLocks?.market?.locked &&
+              deptLocks?.rd?.locked &&
+              deptLocks?.client?.locked &&
+              deptLocks?.press?.locked
+            : deptLocks?.operations?.locked &&
+              deptLocks?.market?.locked &&
+              deptLocks?.rd?.locked
         )
       }
       departmentLocks={deptLocks}

@@ -90,8 +90,12 @@ export default function BoardRoomPage() {
   const clientDone = Boolean(deptLocks?.client?.locked);
   const pressDone = Boolean(deptLocks?.press?.locked);
 
-  const allFiveDone = opsDone && marketDone && rdDone && clientDone && pressDone;
-  const isLocked = !allFiveDone && !activeBoard;
+  const q = sessionQuarter ?? 1;
+  const prereqsSatisfied =
+    q <= 2
+      ? opsDone && marketDone && rdDone && clientDone && pressDone
+      : opsDone && marketDone && rdDone;
+  const isLocked = !prereqsSatisfied && !activeBoard;
 
   const handleRespond = async (index: number) => {
     if (!activeBoard || submitting) return;

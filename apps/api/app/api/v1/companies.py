@@ -4,11 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.core.deps import get_current_session, get_owned_company
-from app.models import Company, CompanyState as CompanyStateModel, DecisionLog, Session as SessionModel
+from app.models import Company, CompanyState as CompanyStateModel, DecisionLog, Player, Session as SessionModel
 from app.schemas.company import (
     CompanyStateOut,
     DepartmentLocksOut,
     DepartmentStatusOut,
+    TabletEventOut,
+    TabletSnapshotOut,
 )
 
 router = APIRouter()
@@ -188,4 +190,113 @@ async def get_department_locks(
             detail=str(press_log.stat_deltas) if press_log else None,
             stat_deltas=press_deltas,
         ),
+    )
+
+
+@router.get(
+    "/companies/{company_id}/tablet/snapshot",
+    response_model=TabletSnapshotOut,
+)
+async def get_tablet_snapshot(
+    company: Company = Depends(get_owned_company),
+    session_row: SessionModel = Depends(get_current_session),
+    db: AsyncSession = Depends(get_db),
+) -> TabletSnapshotOut:
+    """
+    Consolidated authenticated read-only endpoint powering the Holographic CEO Tablet.
+    Returns:
+    - Authoritative CompanyState for current quarter
+    - Previous quarter CompanyState (for genuine trend comparison)
+    - DepartmentLocks status
+    - Recent DecisionLog events with context and stat deltas
+    """
+    quarter = session_row.current_quarter
+
+    # 1. Fetch current quarter state
+    current_state_res = await db.execute(
+        select(CompanyStateModel).where(
+            CompanyStateModel.company_id == company.id,
+            CompanyStateModel.quarter == quarter,
+        )
+    )
+    current_state = current_state_res.scalar_one_or_none()
+    if not current_state:
+        raise HTTPException(status_code=404, detail="Company state for current quarter not found.")
+
+    state_out = CompanyStateOut(
+        company_id=company.id, quarter=current_state.quarter,
+        cash=float(current_state.cash), revenue=float(current_state.revenue), profit=float(current_state.profit),
+        debt=float(current_state.debt), stock_price=float(current_state.stock_price), employees=current_state.employees,
+        innovation=float(current_state.innovation), brand=float(current_state.brand),
+        client_satisfaction=float(current_state.client_satisfaction),
+        employee_satisfaction=float(current_state.employee_satisfaction),
+        investor_confidence=float(current_state.investor_confidence), esg=float(current_state.esg),
+        risk=float(current_state.risk), market_share=float(current_state.market_share),
+        board_confidence=float(current_state.board_confidence),
+    )
+
+    # 2. Fetch previous quarter state (if any)
+    prev_state_out = None
+    if quarter > 1:
+        prev_state_res = await db.execute(
+            select(CompanyStateModel).where(
+                CompanyStateModel.company_id == company.id,
+                CompanyStateModel.quarter == quarter - 1,
+            )
+        )
+        prev_state = prev_state_res.scalar_one_or_none()
+        if prev_state:
+            prev_state_out = CompanyStateOut(
+                company_id=company.id, quarter=prev_state.quarter,
+                cash=float(prev_state.cash), revenue=float(prev_state.revenue), profit=float(prev_state.profit),
+                debt=float(prev_state.debt), stock_price=float(prev_state.stock_price), employees=prev_state.employees,
+                innovation=float(prev_state.innovation), brand=float(prev_state.brand),
+                client_satisfaction=float(prev_state.client_satisfaction),
+                employee_satisfaction=float(prev_state.employee_satisfaction),
+                investor_confidence=float(prev_state.investor_confidence), esg=float(prev_state.esg),
+                risk=float(prev_state.risk), market_share=float(prev_state.market_share),
+                board_confidence=float(prev_state.board_confidence),
+            )
+
+    # 3. Fetch locks
+    locks = await get_department_locks(company=company, session_row=session_row, db=db)
+
+    # 4. Fetch recent decision events
+    events_res = await db.execute(
+        select(DecisionLog).where(
+            DecisionLog.company_id == company.id,
+        ).order_by(DecisionLog.created_at.desc()).limit(8)
+    )
+    events_raw = events_res.scalars().all()
+    recent_events = [
+        TabletEventOut(
+            quarter=ev.quarter,
+            decision_type=ev.decision_type,
+            summary=ev.summary,
+            stat_deltas={k: float(v) for k, v in ev.stat_deltas.items() if isinstance(v, (int, float))}
+            if isinstance(ev.stat_deltas, dict)
+            else None,
+            created_at=ev.created_at.isoformat() if ev.created_at else "",
+        )
+        for ev in events_raw
+    ]
+
+    # 5. Fetch player name
+    player_name = None
+    if session_row.player_id:
+        player_res = await db.execute(select(Player).where(Player.id == session_row.player_id))
+        player = player_res.scalar_one_or_none()
+        if player:
+            player_name = player.full_name
+
+    return TabletSnapshotOut(
+        quarter=quarter,
+        player_name=player_name,
+        company_name=company.name,
+        sector=company.sector,
+        session_status=session_row.status,
+        state=state_out,
+        previous_state=prev_state_out,
+        locks=locks,
+        recent_events=recent_events,
     )

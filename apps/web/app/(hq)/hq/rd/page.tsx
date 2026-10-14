@@ -47,14 +47,14 @@ export default function ResearchDepartmentPage() {
       return;
     }
 
-    // Check if player had already completed assessment
+    // Check if player had already completed assessment or in Q2+
     const passKey = `rd_assessment_passed_${companyId}_q${quarter}`;
     const assessmentPassed = typeof window !== "undefined" && localStorage.getItem(passKey) === "true";
-    if (assessmentPassed && stage === "cto_briefing") {
-      // Resume to decision stage directly if assessment already passed
+    if ((quarter > 1 || assessmentPassed) && stage === "cto_briefing") {
+      // Resume to decision stage directly in Q2+ or if assessment already passed
       setStage("project_helix_decision");
     }
-  }, [companyId, isRdLocked, quarter]);
+  }, [companyId, isRdLocked, quarter, stage]);
 
   const handleBackToHQ = () => {
     router.push("/hq");
