@@ -35,6 +35,62 @@ def _clamp(val: float, low: float = 0.0, high: float = 100.0) -> float:
     return max(low, min(high, val))
 
 
+async def check_client_prerequisites(
+    db: AsyncSession,
+    company: Company,
+    quarter: int,
+) -> Tuple[bool, str]:
+    """
+    Verifies:
+    1. Quarter is 1 or 2 (Q3 and Q4 do not allow new client negotiations).
+    2. Finance & Operations, Market, and R&D are complete for the current quarter.
+    """
+    if quarter > 2:
+        return False, f"New client negotiations are restricted to Q1 and Q2. Quarter {quarter} clients are passive."
+
+    # Check Operations
+    ops_res = await db.execute(
+        select(DecisionLog).where(
+            DecisionLog.company_id == company.id,
+            DecisionLog.quarter == quarter,
+            DecisionLog.decision_type == "budget",
+        )
+    )
+    if not ops_res.scalar_one_or_none():
+        next_state = await db.execute(
+            select(CompanyStateModel).where(
+                CompanyStateModel.company_id == company.id,
+                CompanyStateModel.quarter == quarter + 1,
+            )
+        )
+        if not next_state.scalar_one_or_none():
+            return False, "Finance & Operations must be committed before negotiating with clients."
+
+    # Check Market
+    market_res = await db.execute(
+        select(DecisionLog).where(
+            DecisionLog.company_id == company.id,
+            DecisionLog.quarter == quarter,
+            DecisionLog.decision_type == "strategic_marketing",
+        )
+    )
+    if not market_res.scalar_one_or_none():
+        return False, "Marketing strategy must be committed before negotiating with clients."
+
+    # Check R&D
+    rd_res = await db.execute(
+        select(DecisionLog).where(
+            DecisionLog.company_id == company.id,
+            DecisionLog.quarter == quarter,
+            DecisionLog.decision_type.in_(["rd", "research_development"]),
+        )
+    )
+    if not rd_res.scalar_one_or_none():
+        return False, "Research & Development must be committed before negotiating with clients."
+
+    return True, ""
+
+
 async def get_or_create_negotiation_session(
     db: AsyncSession,
     company: Company,
@@ -44,6 +100,48 @@ async def get_or_create_negotiation_session(
     Retrieves or initializes the current active client contract for the given quarter.
     Encodes rich negotiation state in the contract model and DecisionLog for idempotency.
     """
+    # 0. Check prerequisites
+    can_access, lock_reason = await check_client_prerequisites(db, company, quarter)
+    if not can_access:
+        return {
+            "contract_id": "",
+            "quarter": quarter,
+            "scenario": {
+                "id": "locked",
+                "client_name": "Clearance Pending",
+                "client_type": "restricted",
+                "executive_contact": "Security Gateway",
+                "executive_title": "Transit Protocol",
+                "headline": "CLIENT OFFICE ACCESS RESTRICTED",
+                "stage_1_requirement": lock_reason,
+                "stage_2_discovery": {
+                    "deliverables": "Clearance Required",
+                    "timeline": "TBD",
+                    "constraints": "Complete Stage A HQ activities first",
+                    "budget_expectation": 0.0,
+                    "budget_range_text": "Locked",
+                    "personality_notes": "Awaiting authorization",
+                },
+                "target_metrics": [],
+                "pitch_hints": [],
+            },
+            "status": "LOCKED",
+            "relationship_score": 50.0,
+            "target_value": 0.0,
+            "is_locked": True,
+            "lock_reason": lock_reason,
+            "decision_summary": None,
+            "decision_stat_deltas": None,
+            "company_capabilities": {
+                "name": company.name,
+                "sector": company.sector,
+                "innovation": 50.0,
+                "brand": 50.0,
+                "risk": 20.0,
+                "unique_strength": company.unique_strength,
+            },
+        }
+
     # Look for existing contract for this company & quarter
     contract_res = await db.execute(
         select(Contract).where(Contract.company_id == company.id, Contract.quarter == quarter)

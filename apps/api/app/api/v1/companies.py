@@ -148,6 +148,7 @@ async def get_department_locks(
         )
     )
     press_log = press_log_result.scalar_one_or_none()
+    press_locked = press_log is not None
     press_deltas = None
     if press_log and isinstance(press_log.stat_deltas, dict):
         press_deltas = {k: float(v) for k, v in press_log.stat_deltas.items() if isinstance(v, (int, float))}

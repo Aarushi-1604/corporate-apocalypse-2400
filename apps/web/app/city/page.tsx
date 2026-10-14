@@ -4,10 +4,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FigmaCityMap } from "@/components/domain/FigmaCityMap";
 import { useSession } from "@/lib/hooks/use-session";
+import { useDepartmentLocks } from "@/lib/hooks/use-company-state";
 
 export default function CityPage() {
   const router = useRouter();
   const { data: session, isLoading, isError } = useSession();
+  const { data: deptLocks } = useDepartmentLocks(session?.company_id);
 
   useEffect(() => {
     if (!isLoading && (!session || isError)) {
@@ -35,6 +37,7 @@ export default function CityPage() {
       onVisitPress={() => {
         router.push("/hq/press");
       }}
+      departmentLocks={deptLocks}
     />
   );
 }

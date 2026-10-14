@@ -69,6 +69,13 @@ interface FigmaCityMapProps {
   onEnterHQ: () => void;
   onVisitClient?: () => void;
   onVisitPress?: () => void;
+  departmentLocks?: {
+    operations?: { locked: boolean } | null;
+    market?: { locked: boolean } | null;
+    rd?: { locked: boolean } | null;
+    client?: { locked: boolean } | null;
+    press?: { locked: boolean } | null;
+  } | null;
 }
 
 export function FigmaCityMap({
@@ -76,24 +83,40 @@ export function FigmaCityMap({
   onEnterHQ,
   onVisitClient,
   onVisitPress,
+  departmentLocks,
 }: FigmaCityMapProps) {
   const [notice, setNotice] = useState("");
 
+  const opsDone = Boolean(departmentLocks?.operations?.locked);
+  const marketDone = Boolean(departmentLocks?.market?.locked);
+  const rdDone = Boolean(departmentLocks?.rd?.locked);
+  const stageAComplete = opsDone && marketDone && rdDone;
+
+  const clientDone = Boolean(departmentLocks?.client?.locked);
+  const pressDone = Boolean(departmentLocks?.press?.locked);
+
+  const clientUnlocked = stageAComplete;
+  const pressUnlocked = stageAComplete;
+
   const handleClientClick = () => {
+    if (!clientUnlocked) {
+      setNotice("CLIENT OFFICE // ACCESS LOCKED — COMPLETE ALL 3 HQ DEPARTMENTS FIRST");
+      window.setTimeout(() => setNotice(""), 3000);
+      return;
+    }
     if (onVisitClient) {
       onVisitClient();
-    } else {
-      setNotice("CLIENT OFFICE // TRANSIT CLEARANCE PENDING");
-      window.setTimeout(() => setNotice(""), 2400);
     }
   };
 
   const handlePressClick = () => {
+    if (!pressUnlocked) {
+      setNotice("PRESS // ACCESS LOCKED — COMPLETE ALL 3 HQ DEPARTMENTS FIRST");
+      window.setTimeout(() => setNotice(""), 3000);
+      return;
+    }
     if (onVisitPress) {
       onVisitPress();
-    } else {
-      setNotice("PRESS // TRANSIT CLEARANCE PENDING");
-      window.setTimeout(() => setNotice(""), 2400);
     }
   };
 
@@ -125,23 +148,55 @@ export function FigmaCityMap({
         </span>
       </button>
       <button
-        className="map-hotspot city-client"
-        aria-label="Visit Client Office"
+        className={`map-hotspot city-client ${
+          clientDone ? "dept-locked" : !clientUnlocked ? "locked" : ""
+        }`}
+        aria-label={
+          clientDone
+            ? "Client Office (Negotiation Completed)"
+            : !clientUnlocked
+            ? "Client Office locked"
+            : "Visit Client Office"
+        }
         onClick={handleClientClick}
         type="button"
       >
         <span>
-          <kbd>E</kbd> VISIT CLIENT OFFICE
+          {clientDone ? (
+            "CLIENT // DONE"
+          ) : !clientUnlocked ? (
+            "CLIENT // LOCKED"
+          ) : (
+            <>
+              <kbd>E</kbd> CLIENT // TO DO
+            </>
+          )}
         </span>
       </button>
       <button
-        className="map-hotspot city-press"
-        aria-label="Visit Press"
+        className={`map-hotspot city-press ${
+          pressDone ? "dept-locked" : !pressUnlocked ? "locked" : ""
+        }`}
+        aria-label={
+          pressDone
+            ? "Press (Conference Completed)"
+            : !pressUnlocked
+            ? "Press locked"
+            : "Visit Press"
+        }
         onClick={handlePressClick}
         type="button"
       >
         <span>
-          <kbd>E</kbd> VISIT PRESS
+          {pressDone ? (
+            "PRESS // DONE"
+          ) : !pressUnlocked ? (
+            "PRESS // LOCKED"
+          ) : (
+            <>
+              <kbd>E</kbd> PRESS // TO DO
+            </>
+          )}
         </span>
       </button>
       <div className="map-hint">

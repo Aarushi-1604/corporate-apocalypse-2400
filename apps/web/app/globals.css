@@ -572,6 +572,24 @@ kbd { padding: 4px 6px; border: 1px solid rgba(255,255,255,.22); color: #c4c5c0;
   box-shadow: 0 0 30px rgba(52, 211, 153, 0.6);
 }
 
+/* Gated / Inaccessible Hotspots */
+.map-hotspot.locked::before {
+  inset: 10%;
+  border-color: rgba(224, 87, 87, 0.3);
+  background: radial-gradient(circle, rgba(224, 87, 87, 0.08), transparent 70%);
+}
+.map-hotspot.locked > span {
+  opacity: 0.85;
+  transform: translate(-50%, 0);
+  border-color: rgba(224, 87, 87, 0.6);
+  color: var(--red-bright);
+  background: rgba(18, 5, 5, 0.92);
+}
+.map-hotspot.locked:hover::before {
+  border-color: rgba(224, 87, 87, 0.55);
+  box-shadow: 0 0 30px rgba(224, 87, 87, 0.25);
+}
+
 @keyframes pulse-emerald {
   from {
     border-color: rgba(16, 185, 129, 0.5);

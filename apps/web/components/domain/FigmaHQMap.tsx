@@ -107,11 +107,11 @@ export function FigmaHQMap({
         <span>
           {opsLocked ? (
             <>
-              <LockIcon size={14} /> FINANCE // COMMITTED
+              <LockIcon size={14} /> FINANCE // DONE
             </>
           ) : (
             <>
-              <kbd>E</kbd> ENTER FINANCE
+              <kbd>E</kbd> FINANCE // TO DO
             </>
           )}
         </span>
@@ -127,11 +127,11 @@ export function FigmaHQMap({
         <span>
           {rdLocked ? (
             <>
-              <LockIcon size={14} /> R&amp;D // COMMITTED
+              <LockIcon size={14} /> R&amp;D // DONE
             </>
           ) : (
             <>
-              <kbd>E</kbd> ENTER R&amp;D
+              <kbd>E</kbd> R&amp;D // TO DO
             </>
           )}
         </span>
@@ -147,11 +147,11 @@ export function FigmaHQMap({
         <span>
           {marketLocked ? (
             <>
-              <LockIcon size={14} /> MARKETING // COMMITTED
+              <LockIcon size={14} /> MARKETING // DONE
             </>
           ) : (
             <>
-              <kbd>E</kbd> ENTER MARKETING
+              <kbd>E</kbd> MARKETING // TO DO
             </>
           )}
         </span>

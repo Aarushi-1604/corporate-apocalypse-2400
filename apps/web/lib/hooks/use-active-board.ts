@@ -7,11 +7,21 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
 export type ActiveBoardExchange = {
   board_session_id: string;
   exchange_id: string;
+  quarter: number;
   speaker: string;
   question: string;
   options: { label: string }[];
   sequence: number;
   total_exchanges: number;
+};
+
+export type BoardRespondResponse = {
+  confidence_delta: number;
+  session_complete: boolean;
+  fired: boolean;
+  new_confidence: number | null;
+  completed_quarter: number | null;
+  next_quarter: number | null;
 };
 
 async function fetchActiveBoard(companyId: string): Promise<ActiveBoardExchange | null> {
@@ -32,7 +42,10 @@ export function useActiveBoard(companyId: string | undefined) {
   });
 }
 
-export async function respondToBoard(exchangeId: string, chosenOptionIndex: number) {
+export async function respondToBoard(
+  exchangeId: string,
+  chosenOptionIndex: number
+): Promise<BoardRespondResponse> {
   const res = await fetch(`${API_BASE}/api/v1/board/exchanges/${exchangeId}/respond`, {
     method: "POST",
     credentials: "include",

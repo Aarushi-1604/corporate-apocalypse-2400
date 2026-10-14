@@ -29,7 +29,7 @@ async def respond(
     company = company_result.scalar_one()
 
     try:
-        delta, complete, fired, new_conf = await respond_to_board_exchange(
+        delta, complete, fired, new_conf, completed_q, next_q = await respond_to_board_exchange(
             db, exchange_id, payload.chosen_option_index, company.id
         )
     except ValueError as e:
@@ -44,5 +44,10 @@ async def respond(
         raise
 
     return BoardRespondResponse(
-        confidence_delta=delta, session_complete=complete, fired=fired, new_confidence=new_conf
+        confidence_delta=delta,
+        session_complete=complete,
+        fired=fired,
+        new_confidence=new_conf,
+        completed_quarter=completed_q,
+        next_quarter=next_q,
     )
