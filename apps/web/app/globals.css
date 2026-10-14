@@ -2418,4 +2418,310 @@ kbd { padding: 4px 6px; border: 1px solid rgba(255,255,255,.22); color: #c4c5c0;
   color: #e2dad1;
   list-style: disc inside;
 }
+
+/* ==========================================================================
+   BOARD ROOM — CINEMATIC EXECUTIVE REDESIGN
+   ========================================================================== */
+
+.board-screen {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #06070a;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.board-environment {
+  position: fixed;
+  inset: 0;
+  background-image: url("/assets/board.png");
+  background-size: cover;
+  background-position: center 30%;
+  filter: contrast(1.1) brightness(0.7) saturate(1.1);
+  transform: scale(1.02);
+  transition: transform 14s ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.board-screen:hover .board-environment {
+  transform: scale(1.04);
+}
+
+.board-vignette {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 32%, rgba(217, 119, 6, 0.08) 0%, rgba(6, 7, 10, 0.72) 65%, #06070a 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.board-scanlines {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgba(18, 14, 10, 0) 50%, rgba(0, 0, 0, 0.28) 50%);
+  background-size: 100% 4px;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.board-content {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 5rem 2rem 2.5rem;
+  max-width: 1350px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 1.5rem;
+}
+
+/* Header & Progress Bar */
+.board-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 1.25rem 1.75rem;
+  background: rgba(12, 10, 9, 0.88);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  border-left: 4px solid #f59e0b;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), inset 0 0 16px rgba(217, 119, 6, 0.06);
+  backdrop-filter: blur(12px);
+  gap: 1.5rem;
+}
+
+.board-speaker-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.board-speaker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: "Syncopate", monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #fbbf24;
+}
+
+.board-speaker-title {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  line-height: 1.15;
+}
+
+.board-speaker-subtitle {
+  font-size: 0.82rem;
+  font-family: monospace;
+  color: #a8a29e;
+  letter-spacing: 0.06em;
+}
+
+.board-progress-tracker {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.board-progress-label {
+  font-family: "Syncopate", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  color: #fbbf24;
+}
+
+.board-progress-bars {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.board-progress-pip {
+  height: 6px;
+  width: 32px;
+  border-radius: 2px;
+  transition: all 0.25s ease;
+}
+
+.board-progress-pip.done {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.board-progress-pip.active {
+  background: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+  animation: beacon-blink 1.4s infinite ease-in-out;
+}
+
+.board-progress-pip.pending {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Central Executive Inquiry Box */
+.board-inquiry-box {
+  background: rgba(14, 11, 9, 0.92);
+  border: 1px solid rgba(217, 119, 6, 0.4);
+  border-left: 4px solid #f59e0b;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), inset 0 0 24px rgba(217, 119, 6, 0.05);
+  backdrop-filter: blur(14px);
+  position: relative;
+}
+
+.board-inquiry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.board-inquiry-tag {
+  font-family: "Syncopate", monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #fbbf24;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.board-inquiry-quote {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 1.45rem;
+  font-style: italic;
+  line-height: 1.45;
+  color: #f5f5f4;
+  padding-left: 0.75rem;
+  border-left: 3px solid rgba(245, 158, 11, 0.6);
+}
+
+/* 2x2 Desktop Grid for CEO Responses pushed to bottom */
+.board-options-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto;
+  margin-bottom: 4.5rem;
+  padding-top: 1.5rem;
+}
+
+.board-options-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: #a8a29e;
+  text-transform: uppercase;
+}
+
+.board-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 860px) {
+  .board-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.board-option-card {
+  background: rgba(12, 10, 9, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  padding: 1.25rem 1.4rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.9rem;
+  min-height: 110px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  transition: all 0.18s ease;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+}
+
+.board-option-card:hover:not(:disabled) {
+  background: rgba(26, 20, 16, 0.95);
+  border-color: rgba(245, 158, 11, 0.7);
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.18);
+  transform: translateY(-2px);
+}
+
+.board-option-card:focus-visible {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4);
+}
+
+.board-option-card.selected {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+}
+
+.board-option-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.board-option-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: #78716c;
+}
+
+.board-option-card:hover:not(:disabled) .board-option-meta {
+  color: #fbbf24;
+}
+
+.board-option-num {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.board-option-text {
+  font-family: sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #e7e5e4;
+  margin: 0;
+}
+
+.board-option-card:hover:not(:disabled) .board-option-text {
+  color: #ffffff;
+}
+
+/* Modals & Outcome Screens */
+.board-card-container {
+  max-width: 680px;
+  margin: auto;
+  width: 100%;
+}
 

@@ -167,7 +167,13 @@ export default function BoardRoomPage() {
   const displayQuarter = completedQuarter ?? meetingQuarter;
 
   return (
-    <main className="screen map-screen" style={{ background: "#06070a", overflowY: "auto" }}>
+    <main className="board-screen" role="region" aria-label="Executive Board Room">
+      {/* Cinematic Full-Viewport Background & Atmosphere */}
+      <div className="board-environment" aria-hidden="true" />
+      <div className="board-vignette" aria-hidden="true" />
+      <div className="board-scanlines" aria-hidden="true" />
+
+      {/* Top HUD/SystemBar identical to Press World conventions */}
       <SystemBar
         section={`EXECUTIVE BOARD ROOM // Q0${displayQuarter} STRATEGIC RATIFICATION`}
         companyName={session?.company?.name}
@@ -176,164 +182,182 @@ export default function BoardRoomPage() {
         onBack={() => router.push("/hq")}
       />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-10 flex flex-col gap-8 min-h-[calc(100vh-56px)] justify-center">
+      <div className="board-content">
         {/* State 1: Gated / Locked screen */}
         {isLocked && !concluded && !fired && (
-          <div className="p-8 border-2 border-red-900/60 bg-red-950/20 backdrop-blur-md rounded flex flex-col gap-6 text-center max-w-2xl mx-auto">
-            <div className="flex items-center justify-center gap-3 text-red-500 font-mono tracking-widest text-sm font-bold">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-              ACCESS RESTRICTED // CLEARANCE INSUFFICIENT
-            </div>
-            <h1 className="text-3xl font-bold font-sans text-white">
-              BOARD MEETING LOCKED
-            </h1>
-            <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
-              The Board of Directors will only convene after ALL FIVE quarterly operational activities have been formally committed and archived:
-            </p>
+          <div className="board-card-container">
+            <div className="p-8 border-2 border-red-900/60 bg-red-950/40 backdrop-blur-md rounded flex flex-col gap-6 text-center shadow-2xl">
+              <div className="flex items-center justify-center gap-3 text-red-500 font-mono tracking-widest text-sm font-bold">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                ACCESS RESTRICTED // CLEARANCE INSUFFICIENT
+              </div>
+              <h1 className="text-3xl font-bold font-sans text-white">
+                BOARD MEETING LOCKED
+              </h1>
+              <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
+                The Board of Directors will only convene after ALL FIVE quarterly operational activities have been formally committed and archived:
+              </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left font-mono text-xs">
-              <div className={`p-3 border ${opsDone ? "border-emerald-500/60 bg-emerald-950/30 text-emerald-300" : "border-neutral-800 bg-neutral-900/50 text-neutral-400"}`}>
-                1. FINANCE &amp; OPERATIONS: {opsDone ? "DONE" : "PENDING"}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left font-mono text-xs">
+                <div className={`p-3 border ${opsDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                  1. FINANCE &amp; OPERATIONS: {opsDone ? "DONE" : "PENDING"}
+                </div>
+                <div className={`p-3 border ${marketDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                  2. MARKETING &amp; ACQUISITIONS: {marketDone ? "DONE" : "PENDING"}
+                </div>
+                <div className={`p-3 border ${rdDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                  3. RESEARCH &amp; DEVELOPMENT: {rdDone ? "DONE" : "PENDING"}
+                </div>
+                <div className={`p-3 border ${clientDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                  4. CLIENT WORLD NEGOTIATION: {clientDone ? "DONE" : "PENDING"}
+                </div>
+                <div className={`p-3 border sm:col-span-2 ${pressDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                  5. PRESS WORLD CONFERENCE: {pressDone ? "DONE" : "PENDING"}
+                </div>
               </div>
-              <div className={`p-3 border ${marketDone ? "border-emerald-500/60 bg-emerald-950/30 text-emerald-300" : "border-neutral-800 bg-neutral-900/50 text-neutral-400"}`}>
-                2. MARKETING &amp; ACQUISITIONS: {marketDone ? "DONE" : "PENDING"}
-              </div>
-              <div className={`p-3 border ${rdDone ? "border-emerald-500/60 bg-emerald-950/30 text-emerald-300" : "border-neutral-800 bg-neutral-900/50 text-neutral-400"}`}>
-                3. RESEARCH &amp; DEVELOPMENT: {rdDone ? "DONE" : "PENDING"}
-              </div>
-              <div className={`p-3 border ${clientDone ? "border-emerald-500/60 bg-emerald-950/30 text-emerald-300" : "border-neutral-800 bg-neutral-900/50 text-neutral-400"}`}>
-                4. CLIENT WORLD NEGOTIATION: {clientDone ? "DONE" : "PENDING"}
-              </div>
-              <div className={`p-3 border sm:col-span-2 ${pressDone ? "border-emerald-500/60 bg-emerald-950/30 text-emerald-300" : "border-neutral-800 bg-neutral-900/50 text-neutral-400"}`}>
-                5. PRESS WORLD CONFERENCE: {pressDone ? "DONE" : "PENDING"}
-              </div>
-            </div>
 
-            <div className="pt-4 flex justify-center gap-4">
-              <button
-                type="button"
-                onClick={() => router.push("/hq")}
-                className="px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-mono text-sm tracking-wider uppercase"
-              >
-                RETURN TO HQ MAP
-              </button>
+              <div className="pt-4 flex justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => router.push("/hq")}
+                  className="px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-mono text-sm tracking-wider uppercase transition-colors"
+                >
+                  RETURN TO HQ MAP
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {/* State 2: Terminated / CEO Fired */}
         {fired && (
-          <div className="p-8 border-2 border-red-600 bg-black/90 backdrop-blur-md rounded flex flex-col gap-6 text-center max-w-xl mx-auto">
-            <h1 className="text-4xl font-bold font-mono tracking-widest text-red-500">
-              TERMINATED
-            </h1>
-            <p className="text-neutral-300 leading-relaxed">
-              The Board of Directors has voted to remove you as Chief Executive Officer effective immediately. Your corporate credentials and discretionary authority have been revoked.
-            </p>
-            <button
-              onClick={handleRestart}
-              className="mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-mono font-bold tracking-widest uppercase rounded"
-            >
-              ACCEPT A NEW APPOINTMENT
-            </button>
+          <div className="board-card-container">
+            <div className="p-8 border-2 border-red-600 bg-black/90 backdrop-blur-md rounded flex flex-col gap-6 text-center shadow-2xl">
+              <h1 className="text-4xl font-bold font-mono tracking-widest text-red-500">
+                TERMINATED
+              </h1>
+              <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
+                The Board of Directors has voted to remove you as Chief Executive Officer effective immediately. Your corporate credentials and discretionary authority have been revoked.
+              </p>
+              <button
+                onClick={handleRestart}
+                className="mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-mono font-bold tracking-widest uppercase rounded transition-colors"
+              >
+                ACCEPT A NEW APPOINTMENT
+              </button>
+            </div>
           </div>
         )}
 
         {/* State 3: Meeting Successfully Concluded -> Advance Quarter */}
         {concluded && !fired && (
-          <div className="p-8 border-2 border-emerald-500/60 bg-black/90 backdrop-blur-md rounded flex flex-col gap-6 text-center max-w-xl mx-auto animate-in fade-in">
-            <div className="flex items-center justify-center gap-2 text-emerald-400 font-mono tracking-widest text-sm font-bold">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              CONFIDENCE RATIFIED // EXECUTIVE MANDATE RENEWED
-            </div>
-            <h1 className="text-3xl font-bold font-sans text-white">
-              QUARTER {completedQuarter ?? meetingQuarter} SURVIVED
-            </h1>
-            <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
-              The Board of Directors has formally approved your strategic execution and ratified your operational governance for the quarter.
-            </p>
-            {finalScore !== null && (
-              <div className="p-4 bg-emerald-950/30 border border-emerald-500/40 font-mono text-sm text-emerald-300">
-                FINAL BOARD CONFIDENCE: <strong>{finalScore.toFixed(0)}%</strong>
+          <div className="board-card-container">
+            <div className="p-8 border-2 border-emerald-500/60 bg-black/90 backdrop-blur-md rounded flex flex-col gap-6 text-center shadow-2xl animate-in fade-in">
+              <div className="flex items-center justify-center gap-2 text-emerald-400 font-mono tracking-widest text-sm font-bold">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+                CONFIDENCE RATIFIED // EXECUTIVE MANDATE RENEWED
               </div>
-            )}
-            <button
-              onClick={handleProceedToNextQuarter}
-              className="mt-2 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-bold tracking-widest uppercase transition-all shadow-lg shadow-emerald-950"
-            >
-              {(completedQuarter ?? meetingQuarter) < 4
-                ? `ENTER QUARTER ${(completedQuarter ?? meetingQuarter) + 1} CITY DISTRICT →`
-                : "PROCEED TO ANNUAL SHAREHOLDER REPORT →"}
-            </button>
+              <h1 className="text-3xl font-bold font-sans text-white">
+                QUARTER {completedQuarter ?? meetingQuarter} SURVIVED
+              </h1>
+              <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
+                The Board of Directors has formally approved your strategic execution and ratified your operational governance for the quarter.
+              </p>
+              {finalScore !== null && (
+                <div className="p-4 bg-emerald-950/40 border border-emerald-500/40 font-mono text-sm text-emerald-300">
+                  FINAL BOARD CONFIDENCE: <strong>{finalScore.toFixed(0)}%</strong>
+                </div>
+              )}
+              <button
+                onClick={handleProceedToNextQuarter}
+                className="mt-2 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-bold tracking-widest uppercase transition-all shadow-lg shadow-emerald-950 hover:shadow-emerald-900"
+              >
+                {(completedQuarter ?? meetingQuarter) < 4
+                  ? `ENTER QUARTER ${(completedQuarter ?? meetingQuarter) + 1} CITY DISTRICT →`
+                  : "PROCEED TO ANNUAL SHAREHOLDER REPORT →"}
+              </button>
+            </div>
           </div>
         )}
 
         {/* State 4: Active Board Meeting in Progress */}
         {!isLocked && !concluded && !fired && activeBoard && speakerMeta && (
-          <div className="flex flex-col gap-6 animate-in fade-in duration-200">
-            {/* Board Header & Progress */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-neutral-800 gap-4">
-              <div>
-                <span className="font-mono text-xs tracking-widest text-amber-500 uppercase">
-                  {speakerMeta.badge} // EXCHANGE {activeBoard.sequence + 1} OF {activeBoard.total_exchanges}
-                </span>
-                <h1 className="text-2xl md:text-3xl font-bold font-sans text-white tracking-wide mt-1">
-                  {speakerMeta.title}
-                </h1>
-                <p className="text-xs font-mono text-neutral-400 mt-0.5">
-                  {speakerMeta.subtitle}
+          <div className="flex flex-col flex-1 min-h-[calc(100vh-125px)] justify-between gap-6 animate-in fade-in duration-200">
+            {/* Top Section: Speaker Header + Executive Inquiry Box */}
+            <div className="flex flex-col gap-5">
+              {/* Header with speaker badge and compact meeting progress tracker */}
+              <div className="board-header-bar">
+                <div className="board-speaker-identity">
+                  <span className="board-speaker-badge">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_6px_#fbbf24]" />
+                    {speakerMeta.badge} // DIRECTORATE DELIBERATION
+                  </span>
+                  <h1 className="board-speaker-title">
+                    {speakerMeta.title}
+                  </h1>
+                  <p className="board-speaker-subtitle">
+                    {speakerMeta.subtitle}
+                  </p>
+                </div>
+
+                <div className="board-progress-tracker">
+                  <span className="board-progress-label">
+                    EXCHANGE 0{activeBoard.sequence + 1} / 0{activeBoard.total_exchanges}
+                  </span>
+                  <div className="board-progress-bars">
+                    {Array.from({ length: activeBoard.total_exchanges }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`board-progress-pip ${
+                          i < activeBoard.sequence
+                            ? "done"
+                            : i === activeBoard.sequence
+                            ? "active"
+                            : "pending"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Inquisitor Dialogue Card */}
+              <div className="board-inquiry-box">
+                <div className="board-inquiry-header">
+                  <span className="board-inquiry-tag">
+                    OFFICIAL EXECUTIVE INQUIRY // ON THE RECORD
+                  </span>
+                  <span className="text-xs font-mono text-neutral-500">
+                    REF: EX-{activeBoard.sequence + 1}
+                  </span>
+                </div>
+                <p className="board-inquiry-quote">
+                  “{activeBoard.question}”
                 </p>
               </div>
+            </div>
 
-              <div className="flex items-center gap-2">
-                {Array.from({ length: activeBoard.total_exchanges }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-2.5 w-8 rounded-sm ${
-                      i < activeBoard.sequence
-                        ? "bg-emerald-500"
-                        : i === activeBoard.sequence
-                        ? "bg-amber-500 animate-pulse"
-                        : "bg-neutral-800"
-                    }`}
-                  />
-                ))}
+            {/* Bottom Section: 4 Response Cards in 2x2 Grid Desktop */}
+            <div className="board-options-section">
+              <div className="board-options-label">
+                <span>SELECT STRATEGIC EXECUTIVE POSITION</span>
+                <span>{activeBoard.options.length} OPTIONS PRESENTED</span>
               </div>
-            </div>
 
-            {/* Inquisitor Dialogue Card */}
-            <div className="p-6 md:p-8 bg-black/80 border border-amber-900/40 rounded-sm relative shadow-2xl">
-              <span className="text-xs font-mono text-amber-400/80 uppercase tracking-widest font-bold">
-                DIRECT INQUIRY // EXECUTIVE CHAMBER:
-              </span>
-              <p className="mt-3 text-lg md:text-2xl text-slate-100 font-sans italic leading-relaxed border-l-4 border-amber-500 pl-4 py-1">
-                “{activeBoard.question}”
-              </p>
-            </div>
-
-            {/* Response Options (Exactly 4 Distinct Options) */}
-            <div className="flex flex-col gap-3.5 pt-2">
-              <span className="text-xs font-mono text-neutral-400 tracking-wider">
-                SELECT AUTHORITATIVE CEO RESPONSE ({activeBoard.options.length} OPTIONS PRESENTED):
-              </span>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <div className="board-options-grid">
                 {activeBoard.options.map((opt, i) => (
                   <button
                     key={i}
+                    type="button"
                     disabled={submitting}
                     onClick={() => handleRespond(i)}
-                    className={`p-5 text-left border rounded transition-all duration-150 flex flex-col justify-between gap-3 ${
-                      selectedIdx === i
-                        ? "border-amber-400 bg-amber-950/40 text-white"
-                        : "border-neutral-800 bg-neutral-950 hover:border-amber-500/60 hover:bg-neutral-900 text-neutral-200"
-                    } ${submitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`board-option-card ${selectedIdx === i ? "selected" : ""}`}
                   >
-                    <div className="flex items-center justify-between text-xs font-mono text-neutral-500">
-                      <span>RESPONSE PROTOCOL 0{i + 1}</span>
-                      <span className="text-amber-500/70">OPTION #{i + 1}</span>
+                    <div className="board-option-meta">
+                      <span>PROTOCOL 0{i + 1}</span>
+                      <span className="board-option-num">OPTION #{i + 1}</span>
                     </div>
-                    <p className="text-sm md:text-base font-sans font-medium text-white leading-snug">
+                    <p className="board-option-text">
                       {opt.label}
                     </p>
                   </button>
