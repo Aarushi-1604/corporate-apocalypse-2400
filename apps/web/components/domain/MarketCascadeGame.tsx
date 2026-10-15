@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { API_BASE } from "@/lib/api-config";
 import {
   MarketCascadeScenario,
   ScenarioCard,
   CascadeEvaluationResult,
 } from "@/lib/hooks/use-market";
+
 import { soundManager } from "@/lib/audio";
 
 interface DisplayItem {
@@ -89,7 +91,7 @@ export function MarketCascadeGame({
     soundManager.playClick();
 
     try {
-      const res = await fetch("http://localhost:8000/api/v1/market/training/evaluate", {
+      const res = await fetch(`${API_BASE}/api/v1/market/training/evaluate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -98,7 +100,10 @@ export function MarketCascadeGame({
           submitted_order: orderedItems.map((item) => item.card.id),
         }),
       });
-      if (!res.ok) throw new Error("Evaluation failed");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail ?? "Evaluation failed");
+      }
       const data: CascadeEvaluationResult = await res.json();
       setEvaluation(data);
       onEvaluationComplete(data);
@@ -107,11 +112,14 @@ export function MarketCascadeGame({
       } else {
         soundManager.playAlert();
       }
-    } catch {
-      // Offline fallback
+    } catch (err) {
+      console.error("[MarketCascade] Prediction evaluation error:", err);
+      soundManager.playAlert();
     } finally {
       setEvaluating(false);
     }
+
+
   };
 
   return (
