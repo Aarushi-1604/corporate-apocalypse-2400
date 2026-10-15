@@ -78,4 +78,3 @@ jobs:
           app-name: 'Corporate-Apocalypse-2400'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7D603785924046E1BA949E65604C4E9D }}
-          startup-command: './startup.sh'
