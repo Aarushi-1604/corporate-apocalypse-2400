@@ -70,6 +70,7 @@ async def test_full_three_step_press_interview_flow():
     )
 
     db = AsyncMock()
+    db.add = MagicMock()
 
     # Clear active sessions cache
     session_key = f"{company_id}:1"

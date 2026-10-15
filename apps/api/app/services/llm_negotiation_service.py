@@ -263,14 +263,17 @@ Evaluate this pitch according to the instructions and return pure JSON.
 
     # Step 1: Attempt Groq
     groq_fn = groq_caller or _call_groq
-    groq_key = settings.groq_api_key
+    groq_key = settings.groq_api_key or ("mock-groq-key" if groq_caller else None)
     groq_model = settings.groq_model or "openai/gpt-oss-20b"
 
-    if groq_key:
+    if groq_key or groq_caller:
         try:
-            res = await groq_fn(user_prompt, groq_key, groq_model, timeout=6.0)
+            res = await groq_fn(user_prompt, groq_key or "", groq_model, timeout=6.0)
+            # Normalize assessment to guarantee standard schema
+            if isinstance(res, dict) and "provider" not in res:
+                res["provider"] = "groq"
             dur = round((time.time() - t_start) * 1000, 2)
-            logger.info("Pitch evaluated via Groq in %sms with score %s", dur, res["score"])
+            logger.info("Pitch evaluated via Groq in %sms with score %s", dur, res.get("score"))
             res["latency_ms"] = dur
             return res
         except Exception as e:
@@ -281,15 +284,17 @@ Evaluate this pitch according to the instructions and return pure JSON.
 
     # Step 2: Immediate Gemini Fallback
     gemini_fn = gemini_caller or _call_gemini
-    gemini_key = settings.gemini_api_key
+    gemini_key = settings.gemini_api_key or ("mock-gemini-key" if gemini_caller else None)
     gemini_model = settings.gemini_model or "gemini-3.5-flash-lite"
 
-    if gemini_key:
+    if gemini_key or gemini_caller:
         try:
             t_gemini = time.time()
-            res = await gemini_fn(user_prompt, gemini_key, gemini_model, timeout=7.0)
+            res = await gemini_fn(user_prompt, gemini_key or "", gemini_model, timeout=7.0)
+            if isinstance(res, dict) and "provider" not in res:
+                res["provider"] = "gemini"
             dur = round((time.time() - t_gemini) * 1000, 2)
-            logger.info("Pitch evaluated via Gemini fallback in %sms with score %s", dur, res["score"])
+            logger.info("Pitch evaluated via Gemini fallback in %sms with score %s", dur, res.get("score"))
             res["latency_ms"] = dur
             return res
         except Exception as e:

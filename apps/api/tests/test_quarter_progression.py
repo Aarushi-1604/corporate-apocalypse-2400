@@ -191,6 +191,7 @@ async def test_all_five_complete_unlocks_board():
 async def test_board_meeting_advances_quarter_on_survival():
     """Test 5: Completing final board exchange with positive score advances the quarter."""
     db = AsyncMock()
+    db.add = MagicMock()
     company_id = uuid.uuid4()
     session_id = uuid.uuid4()
     company = Company(id=company_id, session_id=session_id, name="Apex Dynamics")
@@ -318,6 +319,7 @@ async def test_q3_q4_board_prerequisites_unlock_with_hq_activities():
 async def test_regression_bug_1_completed_quarter_payload_and_q4():
     """Regression Test for BUG 1: Explicit completed-quarter payload across quarters including Q4."""
     db = AsyncMock()
+    db.add = MagicMock()
     company_id = uuid.uuid4()
     session_id = uuid.uuid4()
     company = Company(id=company_id, session_id=session_id, name="Continental Vantage Air")
@@ -403,6 +405,7 @@ async def test_regression_bug_2_cash_balance_preserved_across_client_and_board()
        NEVER reverting back to the stale ₹55,326 pre-client snapshot.
     """
     db = AsyncMock()
+    db.add = MagicMock()
     company_id = uuid.uuid4()
     session_id = uuid.uuid4()
     company = Company(id=company_id, session_id=session_id, name="Continental Vantage Air")
