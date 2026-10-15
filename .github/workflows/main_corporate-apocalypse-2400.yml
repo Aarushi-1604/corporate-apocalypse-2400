@@ -36,6 +36,12 @@ jobs:
           npm ci
           npm run build
 
+      - name: Copy built static assets to root static folders
+        run: |
+          mkdir -p static apps/api/static
+          cp -r apps/web/out/* static/
+          cp -r apps/web/out/* apps/api/static/
+
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:

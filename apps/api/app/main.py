@@ -79,17 +79,25 @@ async def health_check_db(db: AsyncSession = Depends(get_db)) -> dict:
 
 
 # Serve statically exported frontend from Next.js (apps/web/out or ./static or ./web_out)
-import os
+import logging
 from pathlib import Path
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-# Possible locations for built frontend
+logger = logging.getLogger("frontend_server")
+
+# Look in all possible locations where the frontend export might reside
+base_dir = Path(__file__).resolve().parent  # app/
+api_dir = base_dir.parent                  # apps/api/
+root_dir = api_dir.parent                  # repository root /
+
 STATIC_CANDIDATE_PATHS = [
-    Path(__file__).resolve().parent.parent.parent / "web" / "out",
-    Path(__file__).resolve().parent.parent / "static",
-    Path("apps/web/out"),
-    Path("static"),
+    api_dir / "static",
+    root_dir / "static",
+    root_dir / "apps" / "web" / "out",
+    Path("static").resolve(),
+    Path("apps/api/static").resolve(),
+    Path("apps/web/out").resolve(),
 ]
 
 frontend_dir = None
@@ -99,6 +107,7 @@ for candidate in STATIC_CANDIDATE_PATHS:
         break
 
 if frontend_dir:
+    print(f"[Frontend] Serving static frontend from: {frontend_dir}")
     # Mount _next static assets
     next_static_dir = frontend_dir / "_next"
     if next_static_dir.is_dir():
@@ -107,8 +116,8 @@ if frontend_dir:
     # Catch-all router to serve static pages and html files
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_frontend(full_path: str):
-        # Don't intercept /api routes
-        if full_path.startswith("api/") or full_path == "api":
+        # Don't intercept /api routes or docs
+        if full_path.startswith("api/") or full_path == "api" or full_path in ("docs", "redoc", "openapi.json"):
             return {"error": "Not found"}
 
         requested_file = frontend_dir / full_path
@@ -132,4 +141,7 @@ if frontend_dir:
         if fallback_index.is_file():
             return FileResponse(fallback_index)
 
-        return FileResponse(frontend_dir / "404.html") if (frontend_dir / "404.html").is_file() else {"error": "Not found"}
+        return FileResponse(frontend_dir / "404.html") if (frontend_dir / "404.html").is_file() else {"error": "Not found"}
+else:
+    print("[Frontend] No built static frontend directory found. Searched:", [str(p) for p in STATIC_CANDIDATE_PATHS])
+
