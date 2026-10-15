@@ -30,6 +30,8 @@ jobs:
         working-directory: apps/web
         env:
           NEXT_PUBLIC_API_BASE_URL: ''
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://zwslnzogtsvhzuodpncc.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3c2xuem9ndHN2aHp1b2RwbmNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNjMxNjUsImV4cCI6MjEwMDYzOTE2NX0.o53lvSV_QIBz6aXogSPwko_R5JVUP9N5HU_zTwPFKAM' }}
         run: |
           npm ci
           npm run build

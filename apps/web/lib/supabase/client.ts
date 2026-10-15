@@ -1,12 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Clean Supabase URL: remove trailing /rest/v1 if included in URL env var
+const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const cleanUrl = rawUrl.replace(/\/rest\/v1\/?$/, "");
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing Supabase environment variables. Check apps/web/.env.local exists and is filled in."
-  );
-}
+// Create client if keys are present; otherwise provide a dummy client to avoid crashing during SSR / build
+export const supabase: SupabaseClient = (cleanUrl && supabaseAnonKey)
+  ? createClient(cleanUrl, supabaseAnonKey)
+  : (createClient("https://placeholder.supabase.co", "placeholder-anon-key") as unknown as SupabaseClient);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
