@@ -15,6 +15,29 @@ export type LeaderboardRow = {
 };
 
 async function fetchLeaderboard(): Promise<LeaderboardRow[]> {
+  // BaaS pattern: directly query Supabase publishable API
+  try {
+    const { data, error } = await supabase
+      .from("leaderboard")
+      .select("id, company_name, sector, final_score")
+      .eq("excluded", false)
+      .not("final_score", "is", null)
+      .order("final_score", { ascending: false })
+      .limit(25);
+
+    if (!error && data) {
+      return data.map((row, index) => ({
+        id: row.id,
+        company_name: row.company_name,
+        sector: row.sector,
+        final_score: Number(row.final_score),
+        rank: index + 1,
+      }));
+    }
+  } catch {
+    // Graceful fallback to API_BASE if Supabase direct client encounters network/CORS issues
+  }
+
   const res = await fetch(`${API_BASE}/api/v1/leaderboard`);
   if (!res.ok) throw new Error("Failed to load leaderboard");
   return res.json();

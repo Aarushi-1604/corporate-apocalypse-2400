@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase/client";
 
 export type CompanyStateOut = {
   company_id: string;
@@ -25,6 +26,40 @@ export type CompanyStateOut = {
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 async function fetchCompanyState(companyId: string, quarter: number): Promise<CompanyStateOut> {
+  // BaaS pattern: directly query Supabase publishable API
+  try {
+    const { data, error } = await supabase
+      .from("company_states")
+      .select("*")
+      .eq("company_id", companyId)
+      .eq("quarter", quarter)
+      .maybeSingle();
+
+    if (!error && data) {
+      return {
+        company_id: data.company_id,
+        quarter: Number(data.quarter),
+        cash: Number(data.cash),
+        revenue: Number(data.revenue),
+        profit: Number(data.profit),
+        debt: Number(data.debt),
+        stock_price: Number(data.stock_price),
+        employees: Number(data.employees),
+        innovation: Number(data.innovation),
+        brand: Number(data.brand),
+        client_satisfaction: Number(data.client_satisfaction),
+        employee_satisfaction: Number(data.employee_satisfaction),
+        investor_confidence: Number(data.investor_confidence),
+        esg: Number(data.esg),
+        risk: Number(data.risk),
+        market_share: Number(data.market_share),
+        board_confidence: Number(data.board_confidence),
+      };
+    }
+  } catch {
+    // Graceful fallback to API_BASE if Supabase direct client fails
+  }
+
   const res = await fetch(
     `${API_BASE}/api/v1/companies/${companyId}/state?quarter=${quarter}`,
     { credentials: "include" }
