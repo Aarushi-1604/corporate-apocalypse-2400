@@ -23,7 +23,7 @@ export type CompanyStateOut = {
   board_confidence: number;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import { API_BASE } from "@/lib/api-config";
 
 async function fetchCompanyState(companyId: string, quarter: number): Promise<CompanyStateOut> {
   // BaaS pattern: directly query Supabase publishable API

@@ -23,7 +23,7 @@ export interface TabletSnapshot {
   recent_events: TabletEvent[];
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import { API_BASE } from "@/lib/api-config";
 
 async function fetchTabletSnapshot(companyId: string): Promise<TabletSnapshot> {
   const res = await fetch(`${API_BASE}/api/v1/companies/${companyId}/tablet/snapshot`, {

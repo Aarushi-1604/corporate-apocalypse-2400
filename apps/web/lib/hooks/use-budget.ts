@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import { API_BASE } from "@/lib/api-config";
 
 export type BudgetAllocation = { category: string; amount: number };
 export type BudgetDraft = { allocations: BudgetAllocation[]; available_capital: number };

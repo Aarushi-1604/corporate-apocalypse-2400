@@ -76,3 +76,60 @@ def health_check(settings: Settings = Depends(get_settings)) -> dict:
 async def health_check_db(db: AsyncSession = Depends(get_db)) -> dict:
     result = await db.execute(text("SELECT 1"))
     return {"status": "ok", "database_reachable": result.scalar_one() == 1}
+
+
+# Serve statically exported frontend from Next.js (apps/web/out or ./static or ./web_out)
+import os
+from pathlib import Path
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+# Possible locations for built frontend
+STATIC_CANDIDATE_PATHS = [
+    Path(__file__).resolve().parent.parent.parent / "web" / "out",
+    Path(__file__).resolve().parent.parent / "static",
+    Path("apps/web/out"),
+    Path("static"),
+]
+
+frontend_dir = None
+for candidate in STATIC_CANDIDATE_PATHS:
+    if candidate.is_dir() and (candidate / "index.html").exists():
+        frontend_dir = candidate
+        break
+
+if frontend_dir:
+    # Mount _next static assets
+    next_static_dir = frontend_dir / "_next"
+    if next_static_dir.is_dir():
+        app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
+
+    # Catch-all router to serve static pages and html files
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_frontend(full_path: str):
+        # Don't intercept /api routes
+        if full_path.startswith("api/") or full_path == "api":
+            return {"error": "Not found"}
+
+        requested_file = frontend_dir / full_path
+
+        # Exact file match (e.g. favicon.ico, images)
+        if requested_file.is_file():
+            return FileResponse(requested_file)
+
+        # Match as an html file (e.g. /login -> login.html, /city -> city.html)
+        html_file = frontend_dir / f"{full_path}.html"
+        if html_file.is_file():
+            return FileResponse(html_file)
+
+        # Match as a directory with index.html (e.g. /hq -> /hq/index.html)
+        dir_index = requested_file / "index.html"
+        if dir_index.is_file():
+            return FileResponse(dir_index)
+
+        # Default fallback to index.html (SPA routing)
+        fallback_index = frontend_dir / "index.html"
+        if fallback_index.is_file():
+            return FileResponse(fallback_index)
+
+        return FileResponse(frontend_dir / "404.html") if (frontend_dir / "404.html").is_file() else {"error": "Not found"}
