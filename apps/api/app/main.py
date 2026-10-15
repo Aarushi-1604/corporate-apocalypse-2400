@@ -32,11 +32,17 @@ async def lifespan(app: FastAPI):
     every future server start is safe to run, even against a fresh
     database, without a separate manual seeding step.
     """
-    async with async_session_maker() as db:
-        await ensure_templates_seeded(db)
-        await ensure_event_templates_seeded(db)
-        await ensure_hr_templates_seeded(db)
+    try:
+        async with async_session_maker() as db:
+            await ensure_templates_seeded(db)
+            await ensure_event_templates_seeded(db)
+            await ensure_hr_templates_seeded(db)
+    except Exception as e:
+        import traceback
+        print(f"[Lifespan Warning] Database seeding skipped or failed during startup: {e}")
+        traceback.print_exc()
     yield
+
 
 
 app = FastAPI(
