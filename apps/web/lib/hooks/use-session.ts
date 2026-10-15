@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type CompanyOut = {
   name: string;
@@ -35,5 +35,24 @@ export function useSession() {
     queryKey: ["session"],
     queryFn: fetchSession,
     retry: false,
+  });
+}
+
+export async function logoutSession(): Promise<void> {
+  await fetch(`${API_BASE}/api/v1/sessions/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: logoutSession,
+    onSuccess: () => {
+      queryClient.setQueryData(["session"], null);
+      queryClient.clear();
+    },
   });
 }

@@ -1,10 +1,21 @@
-export type RegisterPayload = {
+export type SITRegisterPayload = {
+  registration_type: "SIT";
   full_name: string;
-  prn: string;
   email: string;
+  prn: string;
   department: string;
   year_of_study: string;
 };
+
+export type NonSITRegisterPayload = {
+  registration_type: "NON_SIT";
+  full_name: string;
+  phone_number: string;
+  institution_name: string;
+};
+
+export type RegisterPayload = SITRegisterPayload | NonSITRegisterPayload;
+
 
 export type CompanyOut = {
   name: string;
@@ -20,9 +31,12 @@ export type CompanyOut = {
 export type RegisterResponse = {
   player_id: string;
   session_id: string;
+  company_id: string;
+  current_quarter: number;
   resumed: boolean;
   company: CompanyOut;
 };
+
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 

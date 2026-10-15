@@ -33,22 +33,45 @@ async def _build_response(
 
 
 async def register_or_resume(db: AsyncSession, payload: RegisterRequest) -> RegisterResponse:
-    result = await db.execute(select(Player).where(Player.prn == payload.prn))
-    player = result.scalar_one_or_none()
+    reg_type = (payload.registration_type or "SIT").upper()
 
-    if player is not None and (player.full_name != payload.full_name or player.email != payload.email):
-        raise ValueError("PRN_MISMATCH")
+    if reg_type == "SIT":
+        result = await db.execute(select(Player).where(Player.prn == payload.prn))
+        player = result.scalar_one_or_none()
 
-    if player is None:
-        player = Player(
-            full_name=payload.full_name,
-            prn=payload.prn,
-            email=payload.email,
-            department=payload.department,
-            year_of_study=payload.year_of_study,
+        if player is not None and (player.full_name != payload.full_name or player.email != payload.email):
+            raise ValueError("PRN_MISMATCH")
+
+        if player is None:
+            player = Player(
+                full_name=payload.full_name,
+                registration_type="SIT",
+                prn=payload.prn,
+                email=payload.email,
+                department=payload.department,
+                year_of_study=payload.year_of_study,
+            )
+            db.add(player)
+            await db.flush()
+    else:  # NON_SIT
+        result = await db.execute(
+            select(Player).where(
+                Player.registration_type == "NON_SIT",
+                Player.phone_number == payload.phone_number,
+            )
         )
-        db.add(player)
-        await db.flush()
+        player = result.scalar_one_or_none()
+
+        if player is None:
+            player = Player(
+                full_name=payload.full_name,
+                registration_type="NON_SIT",
+                phone_number=payload.phone_number,
+                institution_name=payload.institution_name,
+            )
+            db.add(player)
+            await db.flush()
+
 
     if player.id is not None:
         session_result = await db.execute(

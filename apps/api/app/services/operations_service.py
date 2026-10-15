@@ -151,6 +151,11 @@ async def lock_decisions(
             raise HTTPException(status_code=409, detail="This Session has already ended.")
         raise ValueError("OVERSPENT") from e
 
+    # Deduct spent budget immediately from active quarter liquid cash
+    # so that liquid cash reduces synchronously across the system bar, HQ map, and ledger.
+    total_spent = sum(d.amount for d in decisions)
+    current.cash = float(current.cash) - total_spent
+
     new_state_row = CompanyStateModel(
         company_id=company.id, quarter=quarter + 1,
         cash=result.new_state.cash, revenue=result.new_state.revenue, profit=result.new_state.profit,
@@ -178,7 +183,8 @@ async def lock_decisions(
         )
     )
 
-    session_row.current_quarter = quarter + 1
+    # Do not advance quarter here; quarter progresses after completing departments & board meeting.
+    # session_row.current_quarter stays as quarter for the remainder of this quarter's operations.
 
     if result.bankruptcy:
         session_row.status = "bankrupt"

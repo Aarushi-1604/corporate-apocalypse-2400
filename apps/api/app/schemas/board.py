@@ -10,6 +10,7 @@ class BoardOptionOut(BaseModel):
 class ActiveBoardExchangeOut(BaseModel):
     board_session_id: uuid.UUID
     exchange_id: uuid.UUID
+    quarter: int
     speaker: str
     question: str
     options: list[BoardOptionOut]
@@ -26,3 +27,5 @@ class BoardRespondResponse(BaseModel):
     session_complete: bool
     fired: bool
     new_confidence: float | None = None
+    completed_quarter: int | None = None
+    next_quarter: int | None = None
