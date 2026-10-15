@@ -26,8 +26,10 @@ def test_access_gate_invalid_code():
 
 
 def test_access_gate_valid_code():
+    from app.core.config import get_settings
     client = TestClient(app)
-    resp = client.post("/api/v1/access-gate/verify", json={"access_code": "SYMBITECH2026"})
+    valid_code = get_settings().event_access_code
+    resp = client.post("/api/v1/access-gate/verify", json={"access_code": valid_code})
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True
