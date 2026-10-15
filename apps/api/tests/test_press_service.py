@@ -133,3 +133,109 @@ async def test_full_three_step_press_interview_flow():
         # State was modified and db.add(DecisionLog) was called
         db.add.assert_called()
         db.commit.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_passive_press_q3_deterministic_news_generation():
+    company_id = uuid.uuid4()
+    company = Company(id=company_id, name="Apex Dynamics", sector="Technology")
+    company_state = CompanyStateModel(
+        company_id=company_id,
+        quarter=3,
+        cash=70000.0,
+        revenue=40000.0,
+        brand=65.0,
+        investor_confidence=60.0,
+        risk=25.0,
+        board_confidence=60.0,
+        market_share=8.0,
+    )
+
+    ops_log = DecisionLog(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        quarter=3,
+        decision_type="budget",
+        summary="Automated warehouse workforce restructuring",
+    )
+    mkt_log = DecisionLog(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        quarter=3,
+        decision_type="strategic_marketing",
+        summary="Aggressive market expansion directive",
+    )
+    rd_log = DecisionLog(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        quarter=3,
+        decision_type="rd",
+        summary="Next-gen neural routing core deployed",
+    )
+
+    db = AsyncMock()
+    db.add = MagicMock()
+
+    def make_mock_res(val):
+        res = MagicMock()
+        res.scalar_one_or_none.return_value = val
+        scalars_mock = MagicMock()
+        scalars_mock.all.return_value = val if isinstance(val, list) else ([val] if val is not None else [])
+        res.scalars.return_value = scalars_mock
+        return res
+
+    # 1st call: No existing press log, so it generates and saves
+    existing_press_log = None
+
+    def side_effect(stmt):
+        nonlocal existing_press_log
+        stmt_str = str(stmt).lower()
+        if "decision_log" in stmt_str or "decision_logs" in stmt_str:
+            if "decision_type = :decision_type_1" in stmt_str or "'press'" in stmt_str:
+                return make_mock_res(existing_press_log)
+            # Prior logs query for quarter 3
+            return make_mock_res([ops_log, mkt_log, rd_log])
+        elif "company_state" in stmt_str:
+            return make_mock_res(company_state)
+        elif "corporate_times" in stmt_str:
+            return make_mock_res(None)
+        return make_mock_res(None)
+
+    db.execute.side_effect = side_effect
+
+    # Step 1: Initial call in Q3 generates passive news
+    session = await get_or_create_press_session(db, company, 3)
+
+    assert session["status"] == "COMPLETED"
+    assert len(session["headline"]) > 10
+    # Headline reflects actual decisions
+    assert "APEX DYNAMICS" in session["headline"].upper()
+    assert "Aggressive market expansion" in session["article_body"] or "Next-gen neural routing core" in session["article_body"]
+    assert "media_verdict" in session
+    # Verify no questions were created (no interactive interview)
+    assert len(session.get("questions", [])) == 0
+
+    # Ensure it persisted a DecisionLog
+    db.add.assert_called()
+    db.commit.assert_called()
+
+    # Step 2: Idempotency test - calling again with existing log returns the same without reapplying deltas
+    saved_press_log = DecisionLog(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        quarter=3,
+        decision_type="press",
+        summary=session["headline"],
+        stat_deltas={
+            "headline": session["headline"],
+            "article_body": session["article_body"],
+            "media_verdict": session["media_verdict"],
+            "is_passive": True,
+        },
+    )
+    existing_press_log = saved_press_log
+
+    session2 = await get_or_create_press_session(db, company, 3)
+    assert session2["status"] == "COMPLETED"
+    assert session2["headline"] == session["headline"]
+    assert session2["article_body"] == session["article_body"]

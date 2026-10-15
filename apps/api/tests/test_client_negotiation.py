@@ -215,3 +215,83 @@ def test_deterministic_deal_resolution_walked_away():
     assert outcome == "WALKED_AWAY"
     assert final_revenue == 0.0
     assert deltas["client_satisfaction"] < 0
+
+
+@pytest.mark.asyncio
+async def test_passive_client_portfolio_carry_forward_q3():
+    import uuid
+    from unittest.mock import MagicMock
+    from app.models import Company, Contract, DecisionLog
+    from app.services.client_negotiation_service import get_or_create_negotiation_session
+
+    company_id = uuid.uuid4()
+    company = Company(id=company_id, name="Apex Dynamics", sector="Technology")
+
+    c1 = Contract(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        quarter=1,
+        client_name="Halden Industrial Group",
+        client_type="enterprise",
+        value=20000.0,
+        status="closed_won",
+        relationship_score=75.0,
+    )
+    c2 = Contract(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        quarter=2,
+        client_name="Meridian Civic Authority",
+        client_type="civic",
+        value=30000.0,
+        status="closed_won",
+        relationship_score=30.0,  # Below 35 -> formal dispute
+    )
+
+    log1 = DecisionLog(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        quarter=1,
+        decision_type="client_deal",
+        summary="Deal closed won for ₹20,000",
+    )
+
+    db = AsyncMock()
+
+    def make_scalars_mock(val):
+        res = MagicMock()
+        scalars_mock = MagicMock()
+        scalars_mock.all.return_value = val
+        res.scalars.return_value = scalars_mock
+        return res
+
+    def side_effect(stmt):
+        stmt_str = str(stmt)
+        if "contracts" in stmt_str:
+            return make_scalars_mock([c1, c2])
+        elif "decision_logs" in stmt_str or "decision_log" in stmt_str:
+            return make_scalars_mock([log1])
+        return make_scalars_mock([])
+
+    db.execute.side_effect = side_effect
+
+    # Fetch Q3 negotiation session
+    session = await get_or_create_negotiation_session(db, company, 3)
+
+    assert session["status"] == "PASSIVE_PORTFOLIO"
+    assert session["total_active_contracts"] == 2
+    assert session["total_contract_value"] == 50000.0
+    assert session["total_ongoing_quarterly_revenue"] == 7500.0  # 15% of 50000
+    assert len(session["active_portfolio"]) == 2
+
+    # Check contract 1
+    p1 = session["active_portfolio"][0]
+    assert p1["client_name"] == "Halden Industrial Group"
+    assert p1["ongoing_quarterly_revenue"] == 3000.0
+    assert "NOMINAL" in p1["dispute_status"]
+
+    # Check contract 2 (relationship score 30 -> formal contract dispute)
+    p2 = session["active_portfolio"][1]
+    assert p2["client_name"] == "Meridian Civic Authority"
+    assert p2["ongoing_quarterly_revenue"] == 4500.0
+    assert "FORMAL CONTRACT DISPUTE" in p2["dispute_status"]

@@ -17,6 +17,7 @@ interface StrategicDecisionStageProps {
   onReturnToHQ: () => void;
   existingResult?: DecisionResult | null;
   isAlreadyCommitted?: boolean;
+  currentCash?: number;
 }
 
 export function StrategicDecisionStage({
@@ -27,6 +28,7 @@ export function StrategicDecisionStage({
   onReturnToHQ,
   existingResult = null,
   isAlreadyCommitted = false,
+  currentCash,
 }: StrategicDecisionStageProps) {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(
     existingResult?.option_id ?? null
@@ -127,9 +129,16 @@ export function StrategicDecisionStage({
                   <span className="text-xs font-mono tracking-widest text-red-400 font-bold uppercase">
                     STRATEGIC MANDATE
                   </span>
-                  <span className="font-mono text-sm font-bold text-slate-200">
-                    COST: {option.cost_cash > 0 ? `₹${option.cost_cash.toLocaleString()}` : "₹0 (RESERVE)"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {currentCash !== undefined && option.cost_cash > currentCash && (
+                      <span className="text-[10px] font-mono text-red-400 bg-red-950/80 border border-red-500/50 px-1.5 py-0.5 font-bold animate-pulse">
+                        INSOLVENCY RISK
+                      </span>
+                    )}
+                    <span className={`font-mono text-sm font-bold ${currentCash !== undefined && option.cost_cash > currentCash ? "text-red-400" : "text-slate-200"}`}>
+                      COST: {option.cost_cash > 0 ? `₹${option.cost_cash.toLocaleString()}` : "₹0 (RESERVE)"}
+                    </span>
+                  </div>
                 </div>
 
                 <h3 className="text-lg font-bold font-sans text-white tracking-wide m-0">
@@ -174,66 +183,145 @@ export function StrategicDecisionStage({
 
       {/* Committed Results & Consequence Screen */}
       {committedResult ? (
-        <div className="border border-emerald-500/40 bg-neutral-950 p-5 flex flex-col gap-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <div>
-              <span className="text-[10px] font-mono tracking-widest text-emerald-400 font-bold uppercase">
-                DIRECTIVE RATIFIED // STATE DELTAS COMMITTED
+        committedResult.bankruptcy || committedResult.status === "bankrupt" ? (
+          <div className="border-2 border-red-500 bg-neutral-950 p-6 flex flex-col gap-4 animate-in fade-in duration-300 shadow-[0_0_35px_rgba(239,68,68,0.4)]">
+            <div className="flex items-center justify-between pb-3 border-b border-red-900/60">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded bg-red-950 border border-red-500 flex items-center justify-center text-red-400 font-bold text-lg">
+                  ⚠
+                </div>
+                <div>
+                  <span className="text-[11px] font-mono tracking-widest text-red-400 font-bold uppercase">
+                    CORPORATE INSOLVENCY PROCEEDINGS // RUN TERMINATED
+                  </span>
+                  <h3 className="text-xl font-bold font-sans text-red-100 mt-0.5 m-0">
+                    {committedResult.press_headline}
+                  </h3>
+                </div>
+              </div>
+              <span className="px-3 py-1 bg-red-950 border border-red-500 text-xs font-mono text-red-400 font-bold">
+                BANKRUPT // RUN OVER
               </span>
-              <h3 className="text-lg font-bold font-sans text-white mt-1 m-0">
-                {committedResult.press_headline}
-              </h3>
             </div>
-            <span className="px-2.5 py-1 bg-emerald-950/60 border border-emerald-500 text-[10px] font-mono text-emerald-400 font-bold">
-              COMMITTED TO RECORD
-            </span>
-          </div>
 
-          <p className="text-xs text-slate-300 leading-relaxed font-mono m-0">
-            {committedResult.press_body}
-          </p>
+            <p className="text-sm text-slate-300 leading-relaxed font-mono m-0 bg-red-950/20 border border-red-950 p-4">
+              {committedResult.press_body}
+            </p>
 
-          {/* New Company State Summary */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-black border border-slate-800 font-mono text-xs">
-            <div className="flex flex-col">
-              <span className="text-[9px] text-slate-400">NEW LIQUID CASH</span>
-              <strong className="text-sm font-bold text-amber-400">
-                ₹{committedResult.new_cash.toLocaleString()}
-              </strong>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-black border border-red-900/60 font-mono text-xs">
+              <div className="flex flex-col">
+                <span className="text-[9px] text-red-400 font-bold">TERMINAL LIQUID CASH</span>
+                <strong className="text-base font-bold text-red-500">
+                  ₹{committedResult.new_cash.toLocaleString()} (DEFICIT)
+                </strong>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] text-slate-400">FINAL MARKET SHARE</span>
+                <strong className="text-sm font-bold text-white">
+                  {committedResult.new_market_share.toFixed(1)}%
+                </strong>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] text-slate-400">BRAND PRESTIGE</span>
+                <strong className="text-sm font-bold text-white">
+                  {committedResult.new_brand.toFixed(1)} pts
+                </strong>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] text-slate-400">SYSTEMIC RISK</span>
+                <strong className="text-sm font-bold text-red-400">
+                  {committedResult.new_risk.toFixed(1)} pts
+                </strong>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[9px] text-slate-400">NEW MARKET SHARE</span>
-              <strong className="text-sm font-bold text-white">
-                {committedResult.new_market_share.toFixed(1)}%
-              </strong>
+
+            <div className="p-3 bg-red-950/40 border border-red-500/50 text-red-300 text-xs font-mono">
+              Cash reserves have been exhausted below zero. Operations cannot continue under your administration. The run is concluded and your score has been finalized in the corporate archives.
             </div>
-            <div className="flex flex-col">
-              <span className="text-[9px] text-slate-400">BRAND PRESTIGE</span>
-              <strong className="text-sm font-bold text-white">
-                {committedResult.new_brand.toFixed(1)} pts
-              </strong>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[9px] text-slate-400">SYSTEMIC RISK</span>
-              <strong className="text-sm font-bold text-slate-200">
-                {committedResult.new_risk.toFixed(1)} pts
-              </strong>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") window.location.href = "/hq/reports/annual";
+                }}
+                className="game-button gold px-6 py-2.5 text-xs font-mono font-bold tracking-widest cursor-pointer"
+              >
+                <span>[ VIEW FINAL REPORT ]</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") window.location.href = "/hq/leaderboard";
+                }}
+                className="game-button px-6 py-2.5 text-xs font-mono font-bold tracking-widest cursor-pointer text-amber-400 border border-amber-500/50 bg-neutral-900 hover:bg-neutral-800"
+              >
+                <span>[ VIEW LEADERBOARD ]</span>
+              </button>
             </div>
           </div>
+        ) : (
+          <div className="border border-emerald-500/40 bg-neutral-950 p-5 flex flex-col gap-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div>
+                <span className="text-[10px] font-mono tracking-widest text-emerald-400 font-bold uppercase">
+                  DIRECTIVE RATIFIED // STATE DELTAS COMMITTED
+                </span>
+                <h3 className="text-lg font-bold font-sans text-white mt-1 m-0">
+                  {committedResult.press_headline}
+                </h3>
+              </div>
+              <span className="px-2.5 py-1 bg-emerald-950/60 border border-emerald-500 text-[10px] font-mono text-emerald-400 font-bold">
+                COMMITTED TO RECORD
+              </span>
+            </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-xs font-mono text-emerald-400">
-              DISPATCH TRANSMITTED TO THE CORPORATE TIMES WIRE // QUARTERLY ACTION LOCKED
-            </span>
-            <button
-              type="button"
-              onClick={onReturnToHQ}
-              className="game-button gold px-6 py-2.5 text-xs font-mono font-bold tracking-widest cursor-pointer"
-            >
-              <span>RETURN TO HQ →</span>
-            </button>
+            <p className="text-xs text-slate-300 leading-relaxed font-mono m-0">
+              {committedResult.press_body}
+            </p>
+
+            {/* New Company State Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-black border border-slate-800 font-mono text-xs">
+              <div className="flex flex-col">
+                <span className="text-[9px] text-slate-400">NEW LIQUID CASH</span>
+                <strong className="text-sm font-bold text-amber-400">
+                  ₹{committedResult.new_cash.toLocaleString()}
+                </strong>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] text-slate-400">NEW MARKET SHARE</span>
+                <strong className="text-sm font-bold text-white">
+                  {committedResult.new_market_share.toFixed(1)}%
+                </strong>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] text-slate-400">BRAND PRESTIGE</span>
+                <strong className="text-sm font-bold text-white">
+                  {committedResult.new_brand.toFixed(1)} pts
+                </strong>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] text-slate-400">SYSTEMIC RISK</span>
+                <strong className="text-sm font-bold text-slate-200">
+                  {committedResult.new_risk.toFixed(1)} pts
+                </strong>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs font-mono text-emerald-400">
+                DISPATCH TRANSMITTED TO THE CORPORATE TIMES WIRE // QUARTERLY ACTION LOCKED
+              </span>
+              <button
+                type="button"
+                onClick={onReturnToHQ}
+                className="game-button gold px-6 py-2.5 text-xs font-mono font-bold tracking-widest cursor-pointer"
+              >
+                <span>RETURN TO HQ →</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )
       ) : isAlreadyCommitted ? (
         <div className="flex items-center justify-between p-4 border border-emerald-500/40 bg-neutral-950 font-mono text-xs">
           <span className="text-emerald-400">
@@ -248,19 +336,36 @@ export function StrategicDecisionStage({
           </button>
         </div>
       ) : (
-        <div className="flex justify-end pt-2">
-          <button
-            type="button"
-            disabled={!selectedOptionId || executeMutation.isPending}
-            onClick={handleCommit}
-            className="game-button gold px-8 py-3 text-xs font-mono font-bold tracking-widest disabled:opacity-40 cursor-pointer"
-          >
-            <span>
-              {executeMutation.isPending
-                ? "TRANSMITTING EXECUTIVE ORDER..."
-                : `COMMIT DIRECTIVE ${selectedOption ? `(₹${selectedOption.cost_cash.toLocaleString()})` : ""}`}
-            </span>
-          </button>
+        <div className="flex flex-col gap-3 pt-2">
+          {selectedOption && currentCash !== undefined && selectedOption.cost_cash > currentCash && (
+            <div className="p-3 bg-red-950/80 border border-red-500 text-red-200 text-xs font-mono flex items-center gap-2.5 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+              <span className="text-red-400 font-bold text-base">⚠️</span>
+              <div className="flex flex-col">
+                <span className="font-bold text-red-400 uppercase tracking-wider">
+                  CRITICAL DEFICIT WARNING // IMMEDIATE INSOLVENCY MANDATE
+                </span>
+                <span>
+                  Option requires ₹{selectedOption.cost_cash.toLocaleString()} against ₹{currentCash.toLocaleString()} available. Authorizing this directive will drive cash below zero (-₹{(selectedOption.cost_cash - currentCash).toLocaleString()}) and trigger immediate CORPORATE BANKRUPTCY &amp; TERMINATION.
+                </span>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end">
+            <button
+              type="button"
+              disabled={!selectedOptionId || executeMutation.isPending}
+              onClick={handleCommit}
+              className={`game-button ${selectedOption && currentCash !== undefined && selectedOption.cost_cash > currentCash ? "border-red-500 text-red-400 hover:bg-red-950/50" : "gold"} px-8 py-3 text-xs font-mono font-bold tracking-widest disabled:opacity-40 cursor-pointer`}
+            >
+              <span>
+                {executeMutation.isPending
+                  ? "TRANSMITTING EXECUTIVE ORDER..."
+                  : selectedOption && currentCash !== undefined && selectedOption.cost_cash > currentCash
+                  ? `AUTHORIZE MANDATE // TRIGGER BANKRUPTCY (₹${selectedOption.cost_cash.toLocaleString()})`
+                  : `COMMIT DIRECTIVE ${selectedOption ? `(₹${selectedOption.cost_cash.toLocaleString()})` : ""}`}
+              </span>
+            </button>
+          </div>
         </div>
       )}
     </div>

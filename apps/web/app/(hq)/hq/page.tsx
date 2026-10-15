@@ -27,6 +27,11 @@ export default function HQPage() {
     );
   }
 
+  const isBankrupt =
+    session?.status === "bankrupt" ||
+    deptLocks?.session_status === "bankrupt" ||
+    (session?.company?.cash ?? 0) < 0;
+
   return (
     <FigmaHQMap
       data={session}
@@ -34,6 +39,7 @@ export default function HQPage() {
         router.push("/city");
       }}
       onEnterFinance={() => {
+        if (isBankrupt) return;
         const q = session?.current_quarter ?? 1;
         if (q > 1 || deptLocks?.operations?.locked) {
           router.push("/hq/operations");
@@ -42,12 +48,15 @@ export default function HQPage() {
         }
       }}
       onEnterMarketing={() => {
+        if (isBankrupt) return;
         router.push("/hq/market");
       }}
       onEnterResearch={() => {
+        if (isBankrupt) return;
         router.push("/hq/rd");
       }}
       onEnterBoard={() => {
+        if (isBankrupt) return;
         router.push("/hq/board");
       }}
       boardUnlocked={

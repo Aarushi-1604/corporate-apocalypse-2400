@@ -100,7 +100,118 @@ async def get_or_create_negotiation_session(
     Retrieves or initializes the current active client contract for the given quarter.
     Encodes rich negotiation state in the contract model and DecisionLog for idempotency.
     """
-    # 0. Check prerequisites
+    # 0. If quarter > 2: Passive Client Experience with carried forward contracts & obligations
+    if quarter > 2:
+        contracts_res = await db.execute(
+            select(Contract).where(Contract.company_id == company.id).order_by(Contract.quarter.asc())
+        )
+        existing_contracts = contracts_res.scalars().all()
+
+        logs_res = await db.execute(
+            select(DecisionLog).where(
+                DecisionLog.company_id == company.id,
+                DecisionLog.decision_type.in_(["client_negotiation", "client_deal"]),
+            ).order_by(DecisionLog.quarter.asc())
+        )
+        client_logs = {l.quarter: l for l in logs_res.scalars().all()}
+
+        active_portfolio = []
+        total_contract_value = 0.0
+        total_ongoing_rev = 0.0
+
+        for c in existing_contracts:
+            val = float(c.value)
+            rel = float(c.relationship_score)
+            is_won = c.status == "closed_won"
+            if is_won:
+                total_contract_value += val
+                ongoing_rev = round(val * 0.15, 2)
+                total_ongoing_rev += ongoing_rev
+            else:
+                ongoing_rev = 0.0
+
+            log_entry = client_logs.get(c.quarter)
+            summary = log_entry.summary if log_entry else f"Contract in Quarter {c.quarter} ({c.status.replace('_', ' ').upper()})"
+
+            obligation = (
+                "Active Multi-Quarter SLA // Dedicated Enterprise Account Support"
+                if is_won
+                else "Negotiations Concluded // No Active Commitments"
+            )
+            dispute = (
+                "NOMINAL // NO ACTIVE BREACH"
+                if rel >= 50
+                else ("AUDIT SCRUTINY // ESCALATION RISK" if rel >= 35 else "FORMAL CONTRACT DISPUTE // LEGAL REVIEW")
+            )
+
+            active_portfolio.append({
+                "id": str(c.id),
+                "quarter_signed": c.quarter,
+                "client_name": c.client_name,
+                "client_type": c.client_type,
+                "status": c.status,
+                "value": val,
+                "relationship_score": rel,
+                "ongoing_quarterly_revenue": ongoing_rev,
+                "obligation": obligation,
+                "dispute_status": dispute,
+                "deliverable_status": "ACTIVE_FULFILLMENT" if is_won else "CLOSED",
+                "summary": summary,
+            })
+
+        avg_rel = (
+            sum(c["relationship_score"] for c in active_portfolio) / len(active_portfolio)
+            if active_portfolio
+            else 50.0
+        )
+
+        return {
+            "contract_id": "",
+            "quarter": quarter,
+            "scenario": {
+                "id": f"passive_portfolio_q{quarter}",
+                "client_name": "ACTIVE ENTERPRISE CLIENT PORTFOLIO",
+                "client_type": "Enterprise Accounts (Q1/Q2 Retention)",
+                "executive_contact": "Strategic Accounts Directorate",
+                "executive_title": "Head of Strategic Accounts",
+                "headline": f"QUARTER 0{quarter} ENTERPRISE CLIENT PORTFOLIO & COMMITMENTS",
+                "stage_1_requirement": (
+                    f"New client negotiations are concluded for the fiscal year. Operations in Quarter {quarter} "
+                    f"are focused on executing active enterprise SLA deliverables and maintaining established client relationships."
+                ),
+                "stage_2_discovery": {
+                    "deliverables": "Ongoing SLA Fulfillment & Dedicated Enterprise Maintenance",
+                    "timeline": f"Quarter {quarter} Maintenance Cycle",
+                    "constraints": "Strict compliance with agreed delivery milestones",
+                    "budget_expectation": total_ongoing_rev,
+                    "budget_range_text": f"₹{total_ongoing_rev:,.0f} Ongoing Revenue",
+                    "personality_notes": "Established commercial relationships requiring disciplined delivery",
+                },
+                "target_metrics": [],
+                "pitch_hints": [],
+            },
+            "status": "PASSIVE_PORTFOLIO",
+            "relationship_score": avg_rel,
+            "target_value": total_contract_value,
+            "is_locked": False,
+            "lock_reason": None,
+            "active_portfolio": active_portfolio,
+            "total_active_contracts": len([c for c in active_portfolio if c["status"] == "closed_won"]),
+            "total_contract_value": total_contract_value,
+            "total_ongoing_quarterly_revenue": total_ongoing_rev,
+            "decision_summary": f"Passive client portfolio active with {len([c for c in active_portfolio if c['status'] == 'closed_won'])} accounts.",
+            "decision_stat_deltas": None,
+            "company_capabilities": {
+                "name": company.name,
+                "sector": company.sector,
+                "innovation": 50.0,
+                "brand": 50.0,
+                "risk": 20.0,
+                "unique_strength": company.unique_strength,
+            },
+        }
+
+    # 0. Check prerequisites for Q1/Q2
     can_access, lock_reason = await check_client_prerequisites(db, company, quarter)
     if not can_access:
         return {

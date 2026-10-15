@@ -159,7 +159,112 @@ async def get_or_create_press_session(
             "total_exchanges": 3,
         }
 
-    # 2. Check prerequisites
+    # 2. If quarter > 2: Passive Press Coverage (Corporate Times news generation based on real decisions)
+    if quarter > 2:
+        quarter_logs_res = await db.execute(
+            select(DecisionLog).where(
+                DecisionLog.company_id == company.id,
+                DecisionLog.quarter == quarter,
+            )
+        )
+        quarter_logs = {l.decision_type: l for l in quarter_logs_res.scalars().all()}
+        budget_log = quarter_logs.get("budget")
+        market_log = quarter_logs.get("strategic_marketing")
+        rd_log = quarter_logs.get("rd", quarter_logs.get("research_development"))
+
+        state_res = await db.execute(
+            select(CompanyStateModel).where(
+                CompanyStateModel.company_id == company.id,
+                CompanyStateModel.quarter == quarter,
+            )
+        )
+        state = state_res.scalar_one_or_none()
+        cash_val = float(state.cash) if state else 0.0
+        risk_val = float(state.risk) if state else 20.0
+        mkt_share_val = float(state.market_share) if state else 10.0
+
+        if market_log:
+            headline = f"{company.name.upper()} RATIFIES STRATEGIC DIRECTIVE IN Q{quarter}"
+        elif rd_log:
+            headline = f"{company.name.upper()} ADVANCES R&D INITIATIVE IN Q{quarter}"
+        elif budget_log:
+            headline = f"{company.name.upper()} CONCLUDES Q{quarter} BUDGET ALLOCATIONS"
+        else:
+            headline = f"{company.name.upper()} CONSOLIDATES STABILITY IN Q{quarter}"
+
+        article_paragraphs = [
+            f"NEW KALKI CITY (CORPORATE TIMES WIRE) — In a decisive Quarter {quarter} reporting cycle, {company.name} maintained its operational footprint across the metropolis without summoning an interactive podium conference, transmitting corporate disclosures directly through official statutory channels."
+        ]
+        if market_log:
+            article_paragraphs.append(
+                f"Commercial intelligence confirms the ratification of a pivotal market mandate: {market_log.summary}."
+            )
+        if rd_log:
+            article_paragraphs.append(
+                f"In engineering and technology development, research directors committed capital to critical pipeline advancements: {rd_log.summary}."
+            )
+        if budget_log:
+            article_paragraphs.append(
+                f"On the balance sheet, executive management concluded comprehensive department allocations: {budget_log.summary}."
+            )
+
+        article_paragraphs.append(
+            f"Corporate surveillance records liquid reserves at ₹{cash_val:,.0f} with systemic risk rated at {risk_val:.1f} points and market share standing at {mkt_share_val:.1f}%. Financial observers characterize the passive press posture as disciplined execution in anticipation of board audit scrutiny."
+        )
+
+        article_body = "\n\n".join(article_paragraphs)
+        media_verdict = (
+            f"Corporate Times market editors view {company.name}'s Q{quarter} posture as orderly, risk-conscious, and compliant with enterprise governance standards."
+        )
+
+        press_log = DecisionLog(
+            company_id=company.id,
+            quarter=quarter,
+            decision_type="press",
+            summary=f"Corporate Times: {headline}",
+            stat_deltas={
+                "headline": headline,
+                "article_body": article_body,
+                "media_verdict": media_verdict,
+                "passive": True,
+                "quarter": quarter,
+            },
+        )
+        db.add(press_log)
+
+        issue_res = await db.execute(
+            select(CorporateTimesIssue).where(
+                CorporateTimesIssue.session_id == company.session_id,
+                CorporateTimesIssue.quarter == quarter,
+            )
+        )
+        issue = issue_res.scalar_one_or_none()
+        if issue:
+            events = list(issue.market_events) if isinstance(issue.market_events, list) else []
+            events.append(f"PRESS DISPATCH: {headline} - {media_verdict}")
+            issue.market_events = events
+
+        await db.commit()
+        await db.refresh(press_log)
+
+        return {
+            "quarter": quarter,
+            "status": "COMPLETED",
+            "summary": press_log.summary,
+            "stat_deltas": {},
+            "headline": headline,
+            "article_body": article_body,
+            "media_verdict": media_verdict,
+            "tone": "ANALYTICAL",
+            "commitments": [],
+            "statements": [],
+            "questions": [],
+            "score": 75,
+            "current_exchange_index": 3,
+            "total_exchanges": 3,
+        }
+
+    # 2. Check prerequisites for Q1/Q2
     can_access, reason = await check_press_prerequisites(db, company, quarter)
     if not can_access:
         return {

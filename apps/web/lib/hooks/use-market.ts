@@ -147,6 +147,7 @@ export interface DecisionResult {
   new_market_share: number;
   new_brand: number;
   new_risk: number;
+  bankruptcy?: boolean;
 }
 
 export function useStrategicDilemmas(companyId: string | undefined, quarter?: number) {

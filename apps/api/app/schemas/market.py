@@ -99,3 +99,4 @@ class ExecuteMarketDecisionResponse(BaseModel):
     new_market_share: float
     new_brand: float
     new_risk: float
+    bankruptcy: bool = False

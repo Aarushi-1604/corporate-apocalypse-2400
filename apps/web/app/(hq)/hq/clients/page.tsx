@@ -210,20 +210,181 @@ export default function ClientsNegotiationPage() {
         {/* ====================================================================
             LOCKED OR PASSIVE STATE (e.g. Q3/Q4 or missing prerequisites)
            ==================================================================== */}
-        {status === "LOCKED" && (
+        {/* ====================================================================
+            PASSIVE PORTFOLIO DASHBOARD (Q3 & Q4)
+           ==================================================================== */}
+        {(status === "PASSIVE_PORTFOLIO" || (quarter > 2 && Boolean(negSession.active_portfolio))) && (
+          <div className="flex flex-col gap-6 w-full py-4 max-w-5xl mx-auto animate-in fade-in duration-200">
+            {/* Header Cluster */}
+            <div className="client-content-cluster !m-0 !max-w-none w-full border border-purple-500/50 bg-black/95 p-6 flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-purple-900/50">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-purple-300 bg-purple-950/80 border border-purple-500/50 px-2.5 py-1 font-bold tracking-wider">
+                      PASSIVE CLIENT EXPERIENCE // Q0{quarter}
+                    </span>
+                    <span className="font-mono text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 font-bold">
+                      SLA FULFILLMENT &amp; MAINTENANCE
+                    </span>
+                  </div>
+                  <h1 className="text-2xl font-bold font-mono text-white mt-2 m-0 tracking-wide">
+                    ACTIVE ENTERPRISE CLIENT PORTFOLIO
+                  </h1>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleBackToCity}
+                    className="game-button px-5 py-2 text-xs font-mono font-bold tracking-widest text-slate-300 border border-slate-700 bg-neutral-900 cursor-pointer"
+                  >
+                    <span>DISTRICT MAP</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/hq")}
+                    className="game-button gold px-6 py-2 text-xs font-mono font-bold tracking-widest cursor-pointer"
+                  >
+                    <span>RETURN TO HQ →</span>
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-300 font-sans leading-relaxed m-0">
+                New commercial client negotiations are closed for Quarter 0{quarter}. All enterprise revenue is driven passively by active multi-quarter agreements secured during Q1 and Q2. Operational focus is directed toward ongoing SLA compliance, client trust retention, and dispute mitigation.
+              </p>
+
+              {/* Portfolio Key Metrics Summary */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-purple-950/20 border border-purple-900/40 font-mono text-xs">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-purple-400 font-bold">ACTIVE CONTRACTS</span>
+                  <strong className="text-lg font-bold text-white">
+                    {negSession.total_active_contracts ?? (negSession.active_portfolio?.filter((c) => c.status === "closed_won").length ?? 0)}
+                  </strong>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-purple-400 font-bold">TOTAL CONTRACT VALUE</span>
+                  <strong className="text-lg font-bold text-amber-400">
+                    ₹{(negSession.total_contract_value ?? 0).toLocaleString()}
+                  </strong>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-purple-400 font-bold">PASSIVE QUARTERLY REVENUE</span>
+                  <strong className="text-lg font-bold text-emerald-400">
+                    +₹{(negSession.total_ongoing_quarterly_revenue ?? 0).toLocaleString()} / QTR
+                  </strong>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-purple-400 font-bold">PORTFOLIO HEALTH</span>
+                  <strong className="text-lg font-bold text-purple-300">
+                    {negSession.relationship_score ? `${negSession.relationship_score.toFixed(0)}% TRUST` : "NOMINAL"}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Individual Carried Forward Client Cards */}
+            <div className="flex flex-col gap-4">
+              <span className="font-mono text-xs text-purple-400 uppercase tracking-widest font-bold">
+                PERSISTED CLIENT CONTRACTS ON RECORD
+              </span>
+
+              {negSession.active_portfolio && negSession.active_portfolio.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {negSession.active_portfolio.map((contract) => {
+                    const isWon = contract.status === "closed_won";
+                    return (
+                      <div
+                        key={contract.id || contract.client_name}
+                        className={`p-5 border flex flex-col justify-between gap-4 bg-neutral-950/90 ${
+                          isWon ? "border-purple-500/50" : "border-slate-800 opacity-60"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-[10px] text-purple-300 bg-purple-950/70 border border-purple-500/40 px-2 py-0.5 font-bold uppercase tracking-wider">
+                              SIGNED Q0{contract.quarter_signed} • {contract.client_type}
+                            </span>
+                            <span
+                              className={`font-mono text-[10px] px-2 py-0.5 font-bold uppercase ${
+                                isWon
+                                  ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/40"
+                                  : "bg-red-950/70 text-red-300 border border-red-500/40"
+                              }`}
+                            >
+                              {isWon ? "ACTIVE ACCOUNT" : "CLOSED / TERMINATED"}
+                            </span>
+                          </div>
+
+                          <h3 className="text-lg font-bold font-sans text-white m-0">
+                            {contract.client_name}
+                          </h3>
+
+                          <p className="text-xs text-slate-300 font-mono leading-relaxed m-0">
+                            {contract.summary}
+                          </p>
+
+                          <div className="p-3 bg-black/80 border border-slate-800 flex flex-col gap-1.5 text-xs font-mono">
+                            <div className="flex justify-between items-center text-slate-400">
+                              <span>BASE DEAL VALUE:</span>
+                              <strong className="text-white">₹{contract.value.toLocaleString()}</strong>
+                            </div>
+                            {isWon && (
+                              <div className="flex justify-between items-center text-slate-400">
+                                <span>ONGOING Q{quarter} REVENUE:</span>
+                                <strong className="text-emerald-400">+₹{contract.ongoing_quarterly_revenue.toLocaleString()}</strong>
+                              </div>
+                            )}
+                            <div className="flex justify-between items-center text-slate-400">
+                              <span>CLIENT TRUST SCORE:</span>
+                              <strong className={contract.relationship_score >= 50 ? "text-purple-300" : "text-amber-400"}>
+                                {contract.relationship_score.toFixed(0)}%
+                              </strong>
+                            </div>
+                          </div>
+
+                          {/* Obligations & Disputes */}
+                          <div className="flex flex-col gap-1 text-[11px] font-mono">
+                            <div className="flex items-center gap-1.5 text-slate-300">
+                              <span className="text-purple-400 font-bold">OBLIGATION:</span>
+                              <span>{contract.obligation}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-slate-300">
+                              <span className="text-amber-400 font-bold">DISPUTE STATUS:</span>
+                              <span className={contract.dispute_status.includes("NOMINAL") ? "text-emerald-400" : "text-red-400 font-bold"}>
+                                {contract.dispute_status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-8 border border-slate-800 bg-neutral-950 text-center font-mono text-sm text-slate-400">
+                  NO PREVIOUS CLIENT AGREEMENTS WERE SECURED IN QUARTERS 1 OR 2.
+                  <p className="text-xs text-slate-500 mt-2">
+                    Commercial accounts remain idle for Quarter 0{quarter}.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* LOCKED STATE (e.g. Q1/Q2 missing prerequisites) */}
+        {status === "LOCKED" && quarter <= 2 && (
           <div className="flex flex-col gap-6 w-full py-8 max-w-2xl mx-auto animate-in fade-in duration-200">
             <div className="client-content-cluster !m-0 !max-w-none w-full border border-purple-500/40 bg-black/90 p-8 flex flex-col gap-6 text-center items-center">
               <span className="font-mono text-sm text-amber-400 bg-amber-950/60 border border-amber-500/40 px-4 py-2 font-bold tracking-wider">
                 ACCESS RESTRICTED // CLIENT PORTAL
               </span>
               <h2 className="text-2xl font-bold font-mono text-white tracking-wide">
-                {quarter > 2 ? `QUARTER 0${quarter} PASSIVE STATUS` : "CLIENT OFFICE RESTRICTED"}
+                CLIENT OFFICE RESTRICTED
               </h2>
               <p className="text-slate-300 font-sans text-base leading-relaxed max-w-lg">
                 {negSession.lock_reason ??
-                  (quarter > 2
-                    ? "New client commercial negotiations are concluded for the fiscal year. Client relations are maintained passively via existing enterprise agreements."
-                    : "Complete Finance & Operations, Marketing, and R&D before negotiating with clients.")}
+                  "Complete Finance & Operations, Marketing, and R&D before negotiating with clients."}
               </p>
               <button
                 type="button"

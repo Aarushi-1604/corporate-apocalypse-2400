@@ -158,6 +158,8 @@ async def get_active_board_exchange(
         select(SessionModel).where(SessionModel.id == company.session_id)
     )
     session_row = session_row_res.scalar_one_or_none()
+    if session_row and hasattr(session_row, "status") and session_row.status in ["bankrupt", "fired", "completed"]:
+        return None
     current_q = session_row.current_quarter if session_row else 1
 
     result = await db.execute(

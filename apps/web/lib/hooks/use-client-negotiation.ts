@@ -47,6 +47,23 @@ export interface NegotiationSessionResponse {
   decision_summary?: string | null;
   decision_stat_deltas?: Record<string, number> | null;
   company_capabilities: CompanyCapabilities;
+  active_portfolio?: Array<{
+    id: string;
+    quarter_signed: number;
+    client_name: string;
+    client_type: string;
+    status: string;
+    value: number;
+    relationship_score: number;
+    ongoing_quarterly_revenue: number;
+    obligation: string;
+    dispute_status: string;
+    deliverable_status: string;
+    summary: string;
+  }>;
+  total_active_contracts?: number;
+  total_contract_value?: number;
+  total_ongoing_quarterly_revenue?: number;
 }
 
 export interface PitchEvaluationResult {
