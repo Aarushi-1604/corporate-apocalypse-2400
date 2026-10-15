@@ -51,15 +51,10 @@ export function HolographicTablet() {
     }
   };
 
-  // If on login/auth screens or no active session, do not render tablet launcher
-  if (isAuthRoute || isSessionLoading || !session) {
-    return null;
-  }
-
-  const currentQ = tabletData?.quarter ?? session.current_quarter ?? 1;
-  const companyName = tabletData?.company_name ?? session.company?.name ?? "APEX DYNAMICS";
+  const currentQ = tabletData?.quarter ?? session?.current_quarter ?? 1;
+  const companyName = tabletData?.company_name ?? session?.company?.name ?? "APEX DYNAMICS";
   const ceoName = tabletData?.player_name ?? "Executive CEO";
-  const sector = tabletData?.sector ?? session.company?.sector ?? "Corporate Sector";
+  const sector = tabletData?.sector ?? session?.company?.sector ?? "Corporate Sector";
   const sessionStatus = tabletData?.session_status ?? "active";
 
   const state = tabletData?.state;
@@ -67,7 +62,7 @@ export function HolographicTablet() {
   const locks = tabletData?.locks;
   const recentEvents = tabletData?.recent_events ?? [];
 
-  // Accumulate in-quarter decision deltas for live KPI badges
+  // Accumulate in-quarter decision deltas for live KPI badges (Hook called unconditionally)
   const quarterDeltas = useMemo(() => {
     const deltas: Record<string, number> = {};
     const events = tabletData?.recent_events ?? [];
@@ -110,6 +105,11 @@ export function HolographicTablet() {
     if (diff > 0) return { direction: "up", text: isCurrency ? `+₹${Math.round(diff).toLocaleString()}` : `+${diff.toFixed(1)}` };
     return { direction: "down", text: isCurrency ? `-₹${Math.abs(Math.round(diff)).toLocaleString()}` : `${diff.toFixed(1)}` };
   };
+
+  // If on login/auth screens or no active session, do not render tablet launcher
+  if (isAuthRoute || isSessionLoading || !session) {
+    return null;
+  }
 
   return (
     <>
