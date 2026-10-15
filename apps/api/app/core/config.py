@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     You never need to change this file between environments.
     '''
     environment: str = "development"
-    database_url: str #if DATABASE_URL is missing in .env, app won't start. 
-    jwt_secret: str #if JWT_SECRET is missing in .env, app won't start.
+    database_url: str = "postgresql+asyncpg://postgres.zwslnzogtsvhzuodpncc:SECSymbitech2026@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
+    jwt_secret: str = "f10cd33d85b66f91a9b20db5e5a582754d7cb1e2e8f86d5f92a68fd9854fddf9"
     cors_origin: str = "http://localhost:3000" #default for local dev. In production, the real env variable will override this.
     ollama_host: str = "http://localhost:11434" #default
     chroma_host: str = "localhost"
@@ -25,10 +25,12 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-3.5-flash-lite"
     model_config = SettingsConfigDict(
-        env_file='.env',
+        env_file=('.env', 'apps/api/.env', '../apps/api/.env'),
         env_file_encoding = 'utf-8',
         extra='ignore'
     )
+
+
 
 @lru_cache #decorator. wrapps the function so python remembers the return value
 def get_settings() -> Settings:
