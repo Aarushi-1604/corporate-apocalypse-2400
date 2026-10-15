@@ -149,9 +149,9 @@ export interface DecisionResult {
   new_risk: number;
 }
 
-export function useStrategicDilemmas(companyId: string | undefined) {
+export function useStrategicDilemmas(companyId: string | undefined, quarter?: number) {
   return useQuery<StrategicDilemma[]>({
-    queryKey: ["market-dilemmas", companyId],
+    queryKey: ["market-dilemmas", companyId, quarter],
     queryFn: async () => {
       const res = await fetch(
         `${API_BASE}/api/v1/companies/${companyId}/market/dilemmas`,

@@ -199,7 +199,9 @@ export default function BoardRoomPage() {
                 BOARD MEETING LOCKED
               </h1>
               <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
-                The Board of Directors will only convene after ALL FIVE quarterly operational activities have been formally committed and archived:
+                {displayQuarter <= 2
+                  ? "The Board of Directors will only convene after ALL FIVE quarterly operational activities have been formally committed and archived:"
+                  : "The Board of Directors will convene after ALL THREE Headquarters strategic decisions have been formally committed and archived:"}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left font-mono text-xs">
@@ -209,15 +211,19 @@ export default function BoardRoomPage() {
                 <div className={`p-3 border ${marketDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
                   2. MARKETING &amp; ACQUISITIONS: {marketDone ? "DONE" : "PENDING"}
                 </div>
-                <div className={`p-3 border ${rdDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                <div className={`p-3 border sm:col-span-${displayQuarter <= 2 ? "1" : "2"} ${rdDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
                   3. RESEARCH &amp; DEVELOPMENT: {rdDone ? "DONE" : "PENDING"}
                 </div>
-                <div className={`p-3 border ${clientDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
-                  4. CLIENT WORLD NEGOTIATION: {clientDone ? "DONE" : "PENDING"}
-                </div>
-                <div className={`p-3 border sm:col-span-2 ${pressDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
-                  5. PRESS WORLD CONFERENCE: {pressDone ? "DONE" : "PENDING"}
-                </div>
+                {displayQuarter <= 2 && (
+                  <>
+                    <div className={`p-3 border ${clientDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                      4. CLIENT WORLD NEGOTIATION: {clientDone ? "DONE" : "PENDING"}
+                    </div>
+                    <div className={`p-3 border sm:col-span-2 ${pressDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                      5. PRESS WORLD CONFERENCE: {pressDone ? "DONE" : "PENDING"}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="pt-4 flex justify-center gap-4">

@@ -46,7 +46,7 @@ export default function MarketDepartmentPage() {
   // Queries
   const { data: scenarios, isLoading: isScenariosLoading } = useMarketCascadeScenarios();
   const { data: marketData, isLoading: isMarketLoading } = useMarket(companyId);
-  const { data: dilemmas, isLoading: isDilemmasLoading } = useStrategicDilemmas(companyId);
+  const { data: dilemmas, isLoading: isDilemmasLoading } = useStrategicDilemmas(companyId, quarter);
 
   // Check if player already completed cascade training this quarter or locked
   useEffect(() => {

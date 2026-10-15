@@ -131,8 +131,11 @@ async def get_market_view(
 @router.get("/companies/{company_id}/market/dilemmas", response_model=list[StrategicDilemmaOut])
 async def get_strategic_dilemmas(
     company: Company = Depends(get_owned_company),
+    session_row: SessionModel = Depends(get_current_session),
 ) -> list[StrategicDilemmaOut]:
-    """Returns available strategic marketing dilemmas."""
+    """Returns available strategic marketing dilemmas scaled by current quarter."""
+    from app.services.market_dilemma_service import get_dilemmas_for_quarter
+    quarter_dilemmas = get_dilemmas_for_quarter(session_row.current_quarter)
     return [
         StrategicDilemmaOut(
             id=d["id"],
@@ -140,7 +143,7 @@ async def get_strategic_dilemmas(
             context_brief=d["context_brief"],
             options=[DecisionOptionOut(**o) for o in d["options"]],
         )
-        for d in MARKETING_STRATEGIC_DILEMMAS
+        for d in quarter_dilemmas
     ]
 
 

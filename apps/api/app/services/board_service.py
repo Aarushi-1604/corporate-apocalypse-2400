@@ -107,7 +107,7 @@ async def trigger_board_session(
     if active:
         return active
 
-    script = load_board_script()
+    script = load_board_script(quarter)
 
     # Load contextual activities to enrich the questions
     logs_result = await db.execute(
@@ -188,7 +188,7 @@ async def get_active_board_exchange(
     if unanswered is None:
         return None
 
-    script = load_board_script()
+    script = load_board_script(board_session.quarter)
     script_entry = script[unanswered.sequence]
 
     return ActiveBoardExchangeOut(
@@ -223,7 +223,7 @@ async def respond_to_board_exchange(
     if exchange.chosen_response is not None:
         raise ValueError("ALREADY_ANSWERED")
 
-    script = load_board_script()
+    script = load_board_script(board_session.quarter)
     script_entry = script[exchange.sequence]
 
     if not (0 <= chosen_option_index < len(script_entry["options"])):
