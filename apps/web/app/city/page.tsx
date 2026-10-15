@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FigmaCityMap } from "@/components/domain/FigmaCityMap";
+import { WorldTourTutorial } from "@/components/domain/WorldTourTutorial";
 import { useSession } from "@/lib/hooks/use-session";
 import { useDepartmentLocks } from "@/lib/hooks/use-company-state";
 
@@ -26,18 +27,24 @@ export default function CityPage() {
   }
 
   return (
-    <FigmaCityMap
-      data={session}
-      onEnterHQ={() => {
-        router.push("/hq");
-      }}
-      onVisitClient={() => {
-        router.push("/hq/clients");
-      }}
-      onVisitPress={() => {
-        router.push("/hq/press");
-      }}
-      departmentLocks={deptLocks}
-    />
+    <>
+      <FigmaCityMap
+        data={session}
+        onEnterHQ={() => {
+          router.push("/hq");
+        }}
+        onVisitClient={() => {
+          router.push("/hq/clients");
+        }}
+        onVisitPress={() => {
+          router.push("/hq/press");
+        }}
+        departmentLocks={deptLocks}
+      />
+      <WorldTourTutorial
+        companyId={session.company_id}
+        quarter={session.current_quarter ?? 1}
+      />
+    </>
   );
 }

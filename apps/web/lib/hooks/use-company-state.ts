@@ -93,6 +93,7 @@ export type DepartmentLocks = {
   rd: DepartmentStatus;
   client?: DepartmentStatus | null;
   press?: DepartmentStatus | null;
+  session_status?: string | null;
 };
 
 async function fetchDepartmentLocks(companyId: string): Promise<DepartmentLocks> {

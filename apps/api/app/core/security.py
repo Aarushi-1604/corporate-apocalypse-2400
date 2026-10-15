@@ -26,3 +26,24 @@ def decode_access_token(token: str) -> dict | None:
         return jwt.decode(token, settings.jwt_secret, algorithms=[ALGORITHM])
     except JWTError:
         return None
+
+
+def create_venue_token() -> str:
+    settings = get_settings()
+    expire = datetime.now(timezone.utc) + timedelta(hours=8)
+    payload = {
+        "venue_access": True,
+        "exp": expire,
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=ALGORITHM)
+
+
+def decode_venue_token(token: str) -> dict | None:
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[ALGORITHM])
+        if payload.get("venue_access") is True:
+            return payload
+        return None
+    except JWTError:
+        return None
