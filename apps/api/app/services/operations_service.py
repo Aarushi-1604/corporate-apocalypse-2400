@@ -208,11 +208,6 @@ async def lock_decisions(
         session_row.current_stage = "board"
         await db.flush()
         await trigger_board_session(db, company, quarter + 1, trigger_reason="low_board_confidence")
-    elif quarter >= 4:
-        session_row.status = "completed"
-        session_row.ended_at = datetime.now(timezone.utc)
-        session_row.current_stage = "report"
-        await finalize_game(db, company)
     else:
         session_row.current_stage = "planning"
 
