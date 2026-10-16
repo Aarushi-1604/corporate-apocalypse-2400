@@ -9,6 +9,7 @@ import {
   usePursueOrReject,
   useSubmitPitch,
   useSubmitPriceQuote,
+  useSubmitClientRemediation,
   PitchEvaluationResult,
   DealResolutionResult,
 } from "@/lib/hooks/use-client-negotiation";
@@ -30,11 +31,17 @@ export default function ClientsNegotiationPage() {
   const [resolution, setResolution] = useState<DealResolutionResult | null>(null);
   const [showDossier, setShowDossier] = useState(true);
 
+  // Q3 SLA Remediation state
+  const [compensationAmount, setCompensationAmount] = useState<number>(0);
+  const [ceoUpdate, setCeoUpdate] = useState<string>("");
+  const [remediationError, setRemediationError] = useState<string | null>(null);
+
   // Mutations
   const advanceDiscoveryMutation = useAdvanceDiscovery(negSession?.contract_id ?? "", companyId);
   const pursueOrRejectMutation = usePursueOrReject(negSession?.contract_id ?? "", companyId);
   const submitPitchMutation = useSubmitPitch(negSession?.contract_id ?? "", companyId);
   const submitPriceQuoteMutation = useSubmitPriceQuote(negSession?.contract_id ?? "", companyId);
+  const submitRemediationMutation = useSubmitClientRemediation(companyId);
 
   // Pre-fill suggested price quote once budget or multiplier is known
   useEffect(() => {
@@ -42,6 +49,13 @@ export default function ClientsNegotiationPage() {
       setPriceInput(negSession.scenario.stage_2_discovery.budget_expectation.toString());
     }
   }, [negSession?.scenario]);
+
+  // Pre-fill base compensation for Q3 remediation
+  useEffect(() => {
+    if (negSession?.remediation && !negSession.remediation.settled && compensationAmount === 0) {
+      setCompensationAmount(negSession.remediation.base_amount);
+    }
+  }, [negSession?.remediation, compensationAmount]);
 
   const handleBackToCity = () => {
     router.push("/city");
@@ -111,6 +125,38 @@ export default function ClientsNegotiationPage() {
     }
   };
 
+  const handleAuthorizeRemediation = async () => {
+    if (!negSession?.remediation) return;
+    const base = negSession.remediation.base_amount;
+    const amount = Number(compensationAmount);
+    const treasury = session?.company?.cash ?? 0;
+
+    if (amount < base) {
+      setRemediationError(`Compensation cannot be lower than the base demand of ₹${base.toLocaleString()}.`);
+      soundManager.playAlert();
+      return;
+    }
+    if (amount > treasury) {
+      setRemediationError(`Insufficient treasury capital. Treasury holds ₹${treasury.toLocaleString()}, but ₹${amount.toLocaleString()} was allocated.`);
+      soundManager.playAlert();
+      return;
+    }
+
+    setRemediationError(null);
+    soundManager.playClick();
+    try {
+      await submitRemediationMutation.mutateAsync({
+        contract_id: negSession.remediation.contract_id,
+        compensation_amount: amount,
+        status_update: ceoUpdate.trim(),
+      });
+      soundManager.playSuccess();
+    } catch (err: any) {
+      setRemediationError(err?.message ?? "Failed to settle SLA remediation");
+      soundManager.playAlert();
+    }
+  };
+
   if (isSessionLoading || isNegLoading || !negSession) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#040308] text-purple-400 font-mono tracking-widest">
@@ -127,6 +173,18 @@ export default function ClientsNegotiationPage() {
   const isPitchStage = status === "stage_4_pitch";
   const isReactionStage = status === "stage_5_reaction" || Boolean(evaluation);
   const isClosed = status === "closed_won" || status === "closed_lost" || Boolean(resolution);
+  // Q3 Remediation calculations
+  const rem = negSession.remediation;
+  const remBase = rem?.base_amount ?? 5000;
+  const remMax = Math.max(rem?.max_amount ?? 20000, remBase * 2);
+  const activeCompensation = Math.max(remBase, compensationAmount || remBase);
+  const treasuryCash = session?.company?.cash ?? 0;
+
+  const extraPaid = activeCompensation - remBase;
+  const generosityRatio = remBase > 0 ? extraPaid / remBase : 0;
+  const projectedTrustDelta = Math.min(16.0, 4.0 + (generosityRatio * 5.0));
+  const projectedBrandDelta = Math.min(6.0, 1.5 + (generosityRatio * 2.0));
+  const projectedRiskDelta = Math.min(5.0, 2.0 + (generosityRatio * 1.5));
 
   return (
     <main className="client-screen-container">
@@ -282,6 +340,250 @@ export default function ClientsNegotiationPage() {
               </div>
             </div>
 
+            {/* ====================================================================
+                Q3 ENTERPRISE SLA AUDIT & COMPENSATION SETTLEMENT MODULE
+               ==================================================================== */}
+            {rem && (
+              <div className="client-content-cluster !m-0 !max-w-none w-full border border-purple-500/60 bg-neutral-950/95 p-6 flex flex-col gap-6 shadow-[0_0_30px_rgba(168,85,247,0.12)]">
+                {/* Header Cluster */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-purple-900/40">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs text-purple-300 bg-purple-950/80 border border-purple-500/50 px-2.5 py-1 font-bold tracking-wider">
+                        Q0{quarter} SLA AUDIT INQUIRY
+                      </span>
+                      {rem.settled ? (
+                        <span className="font-mono text-xs text-emerald-400 bg-emerald-950/70 border border-emerald-500/50 px-2.5 py-1 font-bold">
+                          ✓ REMEDIATION SETTLED
+                        </span>
+                      ) : (
+                        <span className="font-mono text-xs text-amber-300 bg-amber-950/80 border border-amber-500/50 px-2.5 py-1 font-bold animate-pulse">
+                          ACTION REQUIRED // REBATE DEMAND
+                        </span>
+                      )}
+                    </div>
+                    <h2 className="text-xl font-bold font-mono text-white m-0 tracking-wide">
+                      {rem.client_name} // SLA COMPLIANCE &amp; PERFORMANCE REVIEW
+                    </h2>
+                    <span className="font-mono text-xs text-slate-400">
+                      Contract Value: ₹{rem.contract_value.toLocaleString()} • Status: Active Enterprise Account
+                    </span>
+                  </div>
+
+                  {rem.settled && (
+                    <button
+                      type="button"
+                      onClick={() => router.push("/hq/press")}
+                      className="game-button gold px-6 py-2.5 text-xs font-mono font-bold tracking-widest cursor-pointer"
+                    >
+                      <span>PROCEED TO PRESS WIRE →</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Client Audit Feedback Dispatch */}
+                <div className="p-4 bg-purple-950/25 border-l-4 border-l-purple-500 border border-purple-500/20 flex flex-col gap-2">
+                  <div className="flex items-center justify-between font-mono text-xs text-purple-300 font-bold uppercase tracking-wider">
+                    <span>CLIENT GOVERNANCE DESK FEEDBACK</span>
+                    <span className="text-amber-400">SLA VARIANCE DETECTED</span>
+                  </div>
+                  <p className="text-sm font-sans text-slate-200 leading-relaxed m-0 italic">
+                    "{rem.audit_feedback}"
+                  </p>
+                </div>
+
+                {/* If Settled: Show Settlement Summary */}
+                {rem.settled ? (
+                  <div className="p-5 bg-emerald-950/20 border border-emerald-500/40 flex flex-col gap-3 font-mono text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-emerald-400 font-bold uppercase tracking-wider text-sm">
+                        ✓ SLA RESTITUTION RATIFIED BY EXECUTIVE PROCUREMENT
+                      </span>
+                      <span className="text-slate-400">
+                        Quarter 0{quarter} Statutory Filing
+                      </span>
+                    </div>
+                    <p className="text-slate-300 text-xs leading-relaxed m-0">
+                      {rem.summary ?? `SLA Remediation concluded with ${rem.client_name}. Restitution rebate disbursed.`}
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-emerald-900/40">
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">REBATE COMPENSATED</span>
+                        <strong className="text-amber-400 text-base">
+                          -₹{(rem.compensation_paid ?? rem.stat_deltas?.compensation_paid ?? 0).toLocaleString()}
+                        </strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">CLIENT TRUST DELTA</span>
+                        <strong className="text-purple-300 text-base">
+                          +{rem.stat_deltas?.client_satisfaction ?? 0}%
+                        </strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">BRAND PRESTIGE</span>
+                        <strong className="text-cyan-400 text-base">
+                          +{rem.stat_deltas?.brand ?? 0}%
+                        </strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">RISK MITIGATION</span>
+                        <strong className="text-emerald-400 text-base">
+                          {rem.stat_deltas?.risk ?? 0}%
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* If Pending: Interactive Compensation and Update Console */
+                  <div className="flex flex-col gap-6">
+                    {/* Guidance & Floor Constraint Banner */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 bg-black/60 border border-slate-800 text-xs font-mono">
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <span className="text-amber-400 font-bold">MANDATORY BASE FLOOR:</span>
+                        <span>₹{remBase.toLocaleString()} minimum compensation</span>
+                      </div>
+                      <div className="text-purple-300 text-[11px]">
+                        ★ You cannot compensate lower than base, but offering higher rebate directly multiplies client trust &amp; brand score.
+                      </div>
+                    </div>
+
+                    {/* Interactive Slider & Manual Amount Input */}
+                    <div className="p-5 bg-black/80 border border-purple-500/30 flex flex-col gap-4">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex flex-col">
+                          <label className="font-mono text-xs text-purple-300 font-bold uppercase tracking-wider">
+                            ALLOCATED SLA COMPENSATION REBATE
+                          </label>
+                          <span className="font-mono text-[11px] text-slate-400">
+                            Adjust restitution payout from treasury reserves (Current: ₹{treasuryCash.toLocaleString()})
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-slate-400 text-sm">₹</span>
+                          <input
+                            type="number"
+                            min={remBase}
+                            step={500}
+                            value={compensationAmount || ""}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value) || 0;
+                              setCompensationAmount(val);
+                              setRemediationError(null);
+                            }}
+                            className="bg-neutral-900 border border-purple-500/50 text-white font-mono text-lg font-bold px-3 py-1.5 w-40 text-right focus:outline-none focus:border-purple-400"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Slider Control */}
+                      <input
+                        type="range"
+                        min={remBase}
+                        max={remMax}
+                        step={250}
+                        value={activeCompensation}
+                        onChange={(e) => {
+                          setCompensationAmount(parseFloat(e.target.value));
+                          setRemediationError(null);
+                        }}
+                        className="w-full accent-purple-500 cursor-pointer h-2 bg-neutral-800 rounded"
+                      />
+
+                      <div className="flex justify-between font-mono text-[10px] text-slate-500">
+                        <span>MIN BASE: ₹{remBase.toLocaleString()}</span>
+                        <span>MODERATE: ₹{Math.round((remBase + remMax) / 2).toLocaleString()}</span>
+                        <span>MAX GENEROSITY: ₹{remMax.toLocaleString()}</span>
+                      </div>
+
+                      {/* Warning if typed below floor */}
+                      {compensationAmount > 0 && compensationAmount < remBase && (
+                        <div className="p-2.5 bg-red-950/50 border border-red-500/40 text-xs font-mono text-red-300 font-bold">
+                          ⚠️ OFFER BELOW FLOOR: The client demands at least ₹{remBase.toLocaleString()}. Any offer lower will be formally rejected.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Live KPI & Balance Sheet Impact Preview */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-purple-950/20 border border-purple-900/40 font-mono text-xs">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-slate-400 font-bold">TREASURY CASH DELTA</span>
+                        <strong className="text-lg font-bold text-red-400">
+                          -₹{activeCompensation.toLocaleString()}
+                        </strong>
+                        <span className="text-[10px] text-slate-500">
+                          Remaining: ₹{Math.max(0, treasuryCash - activeCompensation).toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-purple-400 font-bold">CLIENT SATISFACTION / TRUST</span>
+                        <strong className="text-lg font-bold text-purple-300">
+                          +{projectedTrustDelta.toFixed(1)}%
+                        </strong>
+                        <span className="text-[10px] text-purple-400/70">
+                          {extraPaid > 0 ? "Includes generosity bonus" : "Standard restitution floor"}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-cyan-400 font-bold">BRAND PRESTIGE</span>
+                        <strong className="text-lg font-bold text-cyan-300">
+                          +{projectedBrandDelta.toFixed(1)}%
+                        </strong>
+                        <span className="text-[10px] text-cyan-400/70">Market goodwill</span>
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-emerald-400 font-bold">RISK REDUCTION</span>
+                        <strong className="text-lg font-bold text-emerald-300">
+                          -{projectedRiskDelta.toFixed(1)}%
+                        </strong>
+                        <span className="text-[10px] text-emerald-400/70">Prevents legal escalation</span>
+                      </div>
+                    </div>
+
+                    {/* CEO Operational Status Update field */}
+                    <div className="flex flex-col gap-2">
+                      <label className="font-mono text-xs text-purple-300 font-bold uppercase tracking-wider flex items-center justify-between">
+                        <span>CEO EXECUTIVE STATUS UPDATE &amp; CORRECTIVE PLAN</span>
+                        <span className="text-slate-400 text-[11px] font-normal">Transmitted directly to client executive board</span>
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={ceoUpdate}
+                        onChange={(e) => setCeoUpdate(e.target.value)}
+                        placeholder={`e.g., We have committed specialized engineering squads and automated monitoring to resolve milestone latency on the ${rem.client_name} account...`}
+                        className="w-full bg-black/90 border border-purple-500/40 text-slate-100 p-3 font-sans text-sm focus:outline-none focus:border-purple-400 leading-relaxed"
+                      />
+                    </div>
+
+                    {remediationError && (
+                      <div className="p-3 bg-red-950/80 border border-red-500 text-red-200 font-mono text-xs font-bold">
+                        {remediationError}
+                      </div>
+                    )}
+
+                    {/* Authorize Action Button */}
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="button"
+                        disabled={submitRemediationMutation.isPending || activeCompensation < remBase}
+                        onClick={handleAuthorizeRemediation}
+                        className="game-button gold px-8 py-3 text-xs font-mono font-bold tracking-widest cursor-pointer disabled:opacity-50"
+                      >
+                        <span>
+                          {submitRemediationMutation.isPending
+                            ? "PROCESSING RESTITUTION WIRE..."
+                            : `AUTHORIZE SLA COMPENSATION REBATE (₹${activeCompensation.toLocaleString()}) →`}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Individual Carried Forward Client Cards */}
             <div className="flex flex-col gap-4">
               <span className="font-mono text-xs text-purple-400 uppercase tracking-widest font-bold">
@@ -372,8 +674,8 @@ export default function ClientsNegotiationPage() {
           </div>
         )}
 
-        {/* LOCKED STATE (e.g. Q1/Q2 missing prerequisites) */}
-        {status === "LOCKED" && quarter <= 2 && (
+        {/* LOCKED STATE (e.g. missing prerequisites) */}
+        {status === "LOCKED" && (
           <div className="flex flex-col gap-6 w-full py-8 max-w-2xl mx-auto animate-in fade-in duration-200">
             <div className="client-content-cluster !m-0 !max-w-none w-full border border-purple-500/40 bg-black/90 p-8 flex flex-col gap-6 text-center items-center">
               <span className="font-mono text-sm text-amber-400 bg-amber-950/60 border border-amber-500/40 px-4 py-2 font-bold tracking-wider">
@@ -384,14 +686,14 @@ export default function ClientsNegotiationPage() {
               </h2>
               <p className="text-slate-300 font-sans text-base leading-relaxed max-w-lg">
                 {negSession.lock_reason ??
-                  "Complete Finance & Operations, Marketing, and R&D before negotiating with clients."}
+                  "Complete Finance & Operations budget allocations before reviewing enterprise client accounts."}
               </p>
               <button
                 type="button"
-                onClick={handleBackToCity}
+                onClick={() => router.push(quarter > 2 ? "/hq/operations" : "/city")}
                 className="game-button gold px-8 py-3 text-sm font-mono font-bold tracking-widest cursor-pointer mt-4"
               >
-                <span>RETURN TO CITY MAP →</span>
+                <span>{quarter > 2 ? "GO TO HQ OPERATIONS →" : "RETURN TO CITY MAP →"}</span>
               </button>
             </div>
           </div>

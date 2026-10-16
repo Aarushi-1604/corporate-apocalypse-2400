@@ -295,3 +295,144 @@ async def test_passive_client_portfolio_carry_forward_q3():
     assert p2["client_name"] == "Meridian Civic Authority"
     assert p2["ongoing_quarterly_revenue"] == 4500.0
     assert "FORMAL CONTRACT DISPUTE" in p2["dispute_status"]
+
+    # Verify remediation inquiry presence and base floor calculation
+    assert "remediation" in session
+    assert session["remediation"]["base_amount"] >= 5000.0
+    assert session["remediation"]["client_name"] == "Meridian Civic Authority"
+    assert "remediation compensation rebate" in session["remediation"]["audit_feedback"]
+
+
+@pytest.mark.asyncio
+async def test_submit_client_remediation_validation_below_floor():
+    import uuid
+    from unittest.mock import MagicMock
+    from app.models import Company, Contract, CompanyState
+    from app.services.client_negotiation_service import submit_client_remediation
+
+    company_id = uuid.uuid4()
+    company = Company(id=company_id, name="Skyward Aero", sector="Aerospace")
+    contract_id = uuid.uuid4()
+    contract = Contract(
+        id=contract_id,
+        company_id=company_id,
+        quarter=1,
+        client_name="Starline Transport",
+        client_type="aviation",
+        value=30000.0,
+        status="closed_won",
+        relationship_score=70.0,
+    )
+    state = CompanyState(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        quarter=3,
+        cash=50000.0,
+        client_satisfaction=60.0,
+        brand=55.0,
+        risk=25.0,
+        esg=50.0,
+    )
+
+    db = AsyncMock()
+
+    # Base floor for 30,000 contract is 20% = 6,000.
+    # Trying to compensate 4,000 should raise ValueError.
+    def mock_scalar_one_or_none(val):
+        res = MagicMock()
+        res.scalar_one_or_none.return_value = val
+        return res
+
+    def side_effect(stmt):
+        stmt_str = str(stmt).lower()
+        if "decision_logs" in stmt_str or "decision_log" in stmt_str:
+            return mock_scalar_one_or_none(None)  # not settled yet
+        elif "company_states" in stmt_str or "company_state" in stmt_str:
+            return mock_scalar_one_or_none(state)
+        elif "contracts" in stmt_str or "contract" in stmt_str:
+            return mock_scalar_one_or_none(contract)
+        return mock_scalar_one_or_none(None)
+
+    db.execute.side_effect = side_effect
+
+    with pytest.raises(ValueError, match="cannot be lower than the base demand"):
+        await submit_client_remediation(
+            db=db,
+            company=company,
+            quarter=3,
+            contract_id=str(contract_id),
+            compensation_amount=4000.0,
+            status_update="Testing below floor",
+        )
+
+
+@pytest.mark.asyncio
+async def test_submit_client_remediation_success():
+    import uuid
+    from unittest.mock import MagicMock
+    from app.models import Company, Contract, CompanyState
+    from app.services.client_negotiation_service import submit_client_remediation
+
+    company_id = uuid.uuid4()
+    company = Company(id=company_id, name="Skyward Aero", sector="Aerospace")
+    contract_id = uuid.uuid4()
+    contract = Contract(
+        id=contract_id,
+        company_id=company_id,
+        quarter=1,
+        client_name="Starline Transport",
+        client_type="aviation",
+        value=30000.0,
+        status="closed_won",
+        relationship_score=70.0,
+    )
+    state = CompanyState(
+        id=uuid.uuid4(),
+        company_id=company_id,
+        quarter=3,
+        cash=50000.0,
+        client_satisfaction=60.0,
+        brand=55.0,
+        risk=25.0,
+        esg=50.0,
+    )
+
+    db = AsyncMock()
+    db.add = MagicMock()
+
+    def mock_scalar_one_or_none(val):
+        res = MagicMock()
+        res.scalar_one_or_none.return_value = val
+        return res
+
+    def side_effect(stmt):
+        stmt_str = str(stmt).lower()
+        if "decision_logs" in stmt_str or "decision_log" in stmt_str:
+            return mock_scalar_one_or_none(None)
+        elif "company_states" in stmt_str or "company_state" in stmt_str:
+            return mock_scalar_one_or_none(state)
+        elif "contracts" in stmt_str or "contract" in stmt_str:
+            return mock_scalar_one_or_none(contract)
+        return mock_scalar_one_or_none(None)
+
+    db.execute.side_effect = side_effect
+
+    # Base is 6,000. Compensate 10,000 (higher than base)
+    result = await submit_client_remediation(
+        db=db,
+        company=company,
+        quarter=3,
+        contract_id=str(contract_id),
+        compensation_amount=10000.0,
+        status_update="Dedicated engineers deployed to guarantee SLA milestones.",
+    )
+
+    assert result["status"] == "SETTLED"
+    assert result["compensation_amount"] == 10000.0
+    assert result["base_amount"] == 6000.0
+    assert result["new_cash"] == 40000.0
+    assert result["new_client_satisfaction"] > 60.0
+    assert result["new_brand"] > 55.0
+    assert result["new_risk"] < 25.0
+    assert "SLA Audit Settlement with Starline Transport" in result["summary"]
+

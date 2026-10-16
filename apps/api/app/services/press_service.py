@@ -9,6 +9,8 @@ Handles:
 - Appending headlines to CorporateTimesIssue.
 """
 
+import json
+from pathlib import Path
 import re
 from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import select
@@ -27,9 +29,28 @@ from app.services.llm_press_service import evaluate_press_step_llm
 
 MAX_WORDS_PER_RESPONSE = 50
 
-# In-memory session tracker for the active conference in-progress prior to final commit
-# Keyed by (company_id_str, quarter)
+# Cache file to survive backend reloads
+CACHE_FILE = Path(__file__).parent.parent / "data" / "press_sessions_cache.json"
+
 ACTIVE_PRESS_SESSIONS: Dict[str, Dict[str, Any]] = {}
+
+def _load_cache():
+    try:
+        if CACHE_FILE.exists():
+            with open(CACHE_FILE, "r", encoding="utf-8") as f:
+                ACTIVE_PRESS_SESSIONS.update(json.load(f))
+    except Exception:
+        pass
+
+def _save_cache():
+    try:
+        CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(ACTIVE_PRESS_SESSIONS, f)
+    except Exception:
+        pass
+
+_load_cache()
 
 
 def _clamp(val: float, low: float = 0.0, high: float = 100.0) -> float:
@@ -159,7 +180,7 @@ async def get_or_create_press_session(
             "total_exchanges": 3,
         }
 
-    # 2. If quarter > 2: Passive Press Coverage (Corporate Times news generation based on real decisions)
+    # 2. If quarter > 2: Passive Press Coverage (Corporate Times news generation based directly on HQ Ops and Client Negos)
     if quarter > 2:
         quarter_logs_res = await db.execute(
             select(DecisionLog).where(
@@ -169,8 +190,33 @@ async def get_or_create_press_session(
         )
         quarter_logs = {l.decision_type: l for l in quarter_logs_res.scalars().all()}
         budget_log = quarter_logs.get("budget")
+        client_log = quarter_logs.get("client_negotiation") or quarter_logs.get("client_remediation") or quarter_logs.get("client_deal")
         market_log = quarter_logs.get("strategic_marketing")
         rd_log = quarter_logs.get("rd", quarter_logs.get("research_development"))
+
+        if not budget_log:
+            return {
+                "quarter": quarter,
+                "status": "LOCKED",
+                "lock_reason": "HQ Operations budget must be committed before Corporate Times can publish Quarter 3 analysis.",
+                "headline": "CLEARANCE RESTRICTED // OPERATIONS PENDING",
+                "article_body": "Corporate Times news desks await statutory budget disclosures from HQ Operations.",
+                "media_verdict": "Awaiting operational data.",
+                "current_exchange_index": 0,
+                "total_exchanges": 0,
+            }
+
+        if not client_log:
+            return {
+                "quarter": quarter,
+                "status": "LOCKED",
+                "lock_reason": "Client SLA audit review and negotiations must be finalized before Corporate Times can publish Quarter 3 analysis.",
+                "headline": "CLEARANCE RESTRICTED // CLIENT NEGOTIATIONS PENDING",
+                "article_body": "Corporate Times news desks await commercial SLA resolution disclosures from the Strategic Accounts desk.",
+                "media_verdict": "Awaiting client negotiation data.",
+                "current_exchange_index": 0,
+                "total_exchanges": 0,
+            }
 
         state_res = await db.execute(
             select(CompanyStateModel).where(
@@ -183,7 +229,11 @@ async def get_or_create_press_session(
         risk_val = float(state.risk) if state else 20.0
         mkt_share_val = float(state.market_share) if state else 10.0
 
-        if market_log:
+        if budget_log and client_log:
+            headline = f"{company.name.upper()} ORCHESTRATES Q{quarter} BUDGET & SETTLES ENTERPRISE CLIENT AUDIT"
+        elif client_log:
+            headline = f"{company.name.upper()} RATIFIES KEY CLIENT SLA TERMS IN Q{quarter}"
+        elif market_log:
             headline = f"{company.name.upper()} RATIFIES STRATEGIC DIRECTIVE IN Q{quarter}"
         elif rd_log:
             headline = f"{company.name.upper()} ADVANCES R&D INITIATIVE IN Q{quarter}"
@@ -193,28 +243,52 @@ async def get_or_create_press_session(
             headline = f"{company.name.upper()} CONSOLIDATES STABILITY IN Q{quarter}"
 
         article_paragraphs = [
-            f"NEW KALKI CITY (CORPORATE TIMES WIRE) — In a decisive Quarter {quarter} reporting cycle, {company.name} maintained its operational footprint across the metropolis without summoning an interactive podium conference, transmitting corporate disclosures directly through official statutory channels."
+            f"NEW KALKI CITY (CORPORATE TIMES WIRE) — In a decisive Quarter {quarter} corporate cycle, {company.name} navigated market scrutiny without convening an open podium press conference, transmitting statutory operational and commercial disclosures directly to municipal financial desks."
         ]
+
+        # 1. HQ Operations Budget
+        if budget_log:
+            article_paragraphs.append(
+                f"HEADQUARTERS OPERATIONS // Balance sheet records verify that executive leadership concluded comprehensive department allocations: {budget_log.summary}. Internal audits indicate disciplined liquidity management aimed at sustaining core operations and maintaining working capital."
+            )
+
+        # 2. Client Negotiations & SLA Remediation
+        if client_log:
+            comp_paid = (
+                client_log.stat_deltas.get("compensation_paid")
+                or client_log.stat_deltas.get("compensation_amount")
+            ) if isinstance(client_log.stat_deltas, dict) else None
+            client_name = client_log.stat_deltas.get("client_name") if isinstance(client_log.stat_deltas, dict) else "enterprise account partners"
+            status_update = client_log.stat_deltas.get("status_update") if isinstance(client_log.stat_deltas, dict) else ""
+            if comp_paid:
+                update_quote = f' In executive communications, the CEO affirmed: "{status_update}".' if status_update else ""
+                article_paragraphs.append(
+                    f"COMMERCIAL ACCOUNTS // Following HQ operations, {company.name} concluded crucial SLA remediation negotiations with {client_name}. "
+                    f"Facing audit scrutiny over deliverable benchmarks, executive leadership authorized a ₹{comp_paid:,.0f} restitution rebate to settle variances and protect key enterprise account retention.{update_quote} "
+                    f"Corporate audit desks confirm the settlement effectively mitigates legal escalation risks and restores institutional client trust."
+                )
+            else:
+                article_paragraphs.append(
+                    f"COMMERCIAL ACCOUNTS // In corporate procurement, {company.name} maintained direct alignment with key clients: {client_log.summary}. Contract directors confirmed ongoing SLA compliance and relationship stability across primary partner accounts."
+                )
+
+        # 3. Market & R&D directives
         if market_log:
             article_paragraphs.append(
-                f"Commercial intelligence confirms the ratification of a pivotal market mandate: {market_log.summary}."
+                f"MARKET INTELLIGENCE // Commercial watchers note the ratification of a pivotal macroeconomic directive: {market_log.summary}."
             )
         if rd_log:
             article_paragraphs.append(
-                f"In engineering and technology development, research directors committed capital to critical pipeline advancements: {rd_log.summary}."
-            )
-        if budget_log:
-            article_paragraphs.append(
-                f"On the balance sheet, executive management concluded comprehensive department allocations: {budget_log.summary}."
+                f"ENGINEERING DIRECTIVE // In technology development, {company.name}'s engineering arm advanced strategic pipeline milestones: {rd_log.summary}."
             )
 
         article_paragraphs.append(
-            f"Corporate surveillance records liquid reserves at ₹{cash_val:,.0f} with systemic risk rated at {risk_val:.1f} points and market share standing at {mkt_share_val:.1f}%. Financial observers characterize the passive press posture as disciplined execution in anticipation of board audit scrutiny."
+            f"FINANCIAL DOSSIER // Corporate telemetry registers liquid treasury reserves at ₹{cash_val:,.0f} with corporate risk rated at {risk_val:.1f}% and market share at {mkt_share_val:.1f}%. Observers characterize executive performance as methodical and well-positioned ahead of upcoming board inquiries."
         )
 
         article_body = "\n\n".join(article_paragraphs)
         media_verdict = (
-            f"Corporate Times market editors view {company.name}'s Q{quarter} posture as orderly, risk-conscious, and compliant with enterprise governance standards."
+            f"The Corporate Times editorial desk rates {company.name}'s Q{quarter} operations as accountable, client-responsive, and commercially stable."
         )
 
         press_log = DecisionLog(

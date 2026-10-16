@@ -135,7 +135,7 @@ async def get_department_locks(
         select(DecisionLog).where(
             DecisionLog.company_id == company.id,
             DecisionLog.quarter == quarter,
-            DecisionLog.decision_type == "client_negotiation",
+            DecisionLog.decision_type.in_(["client_negotiation", "client_remediation"]),
         )
     )
     client_log = client_log_result.scalar_one_or_none()
