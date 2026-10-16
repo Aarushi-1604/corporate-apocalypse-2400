@@ -401,6 +401,14 @@ export function ActualOperationsScreen({
       const res = await lockDecisions(companyId, quarter);
       if (res.bankruptcy) {
         setBankrupt(true);
+        handleBankruptcyRedirect({
+          bankruptcy: true,
+          action_attempted: res.action_attempted || `Operations Q${quarter} Budget Allocation`,
+          required_amount: res.required_amount ?? totalAllocated,
+          available_cash: res.available_cash ?? availableCapital,
+          final_score: res.final_score,
+        });
+        return;
       } else {
         onLockComplete();
       }

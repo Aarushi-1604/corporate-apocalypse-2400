@@ -52,6 +52,8 @@ class SolvencyResult:
     action_label: str = ""
     press_headline: Optional[str] = None
     press_body: Optional[str] = None
+    is_exact_zero: bool = False
+    deficit: float = 0.0
 
 
 async def enforce_solvency(
@@ -67,13 +69,17 @@ async def enforce_solvency(
     """
     Authoritative global solvency check.
     Returns SolvencyResult.
-    If required_cash > available_cash:
-      - Does NOT execute or deduct the unaffordable amount
-      - Sets session status to 'bankrupt', current_stage to 'report', ended_at to now
-      - Idempotently calls finalize_game() to persist leaderboard score
-      - Adds insolvency DecisionLog and QuarterReport if needed
-      - Commits transaction
-      - Returns SolvencyResult with is_solvent=False, is_bankrupt=True
+    Under CORE GAME RULE:
+      - CASE A (All money spent): req_cash == available_cash (leaving ₹0) -> Bankruptcy.
+      - CASE B (Insufficient money): req_cash > available_cash -> Bankruptcy.
+      - Zero remaining liquid cash is terminal bankruptcy.
+    When bankruptcy is triggered:
+      - Does NOT execute or deduct the unaffordable amount (preserves last valid cash balance).
+      - Sets session status to 'bankrupt', current_stage to 'report', ended_at to now.
+      - Idempotently calls finalize_game() to persist leaderboard score.
+      - Adds insolvency DecisionLog and QuarterReport narrative.
+      - Commits transaction.
+      - Returns SolvencyResult with is_solvent=False, is_bankrupt=True.
     """
     # 1. Check if session was already terminated
     if session_row.status == "bankrupt":
@@ -97,6 +103,8 @@ async def enforce_solvency(
             action_label=action_label,
             press_headline=f"INSOLVENCY DEFAULT: {company.name.upper()} BANKRUPT",
             press_body="Corporate operations remain terminated following insolvency default.",
+            is_exact_zero=False,
+            deficit=max(0.0, required_cash - avail_cash),
         )
 
     # 2. Retrieve state if not passed, applying row lock where supported
@@ -124,8 +132,12 @@ async def enforce_solvency(
     available_cash = float(current_state.cash) if current_state else 0.0
     req_cash = float(required_cash)
 
-    # 3. Solvency evaluation: required cash exceeding available liquid cash triggers bankruptcy
-    if req_cash <= available_cash:
+    # 3. Solvency evaluation under CORE GAME RULE:
+    # CASE A: Ratified expenditure leaves exactly ₹0 cash (req_cash == available_cash) -> BANKRUPTCY.
+    # CASE B: Ratified expenditure exceeds available cash (req_cash > available_cash) -> BANKRUPTCY.
+    # Only if remaining_cash = available_cash - req_cash > 0 can the transaction proceed.
+    remaining_cash = round(available_cash - req_cash, 2)
+    if remaining_cash > 0.0 and available_cash > 0.0:
         return SolvencyResult(
             is_solvent=True,
             is_bankrupt=False,
@@ -133,20 +145,33 @@ async def enforce_solvency(
             required_cash=req_cash,
             current_state=current_state,
             action_label=action_label,
+            is_exact_zero=False,
+            deficit=0.0,
         )
 
-    # 4. Insolvency Rule Triggered:
+    # 4. Insolvency Rule Triggered (Case A or Case B or Zero Cash):
     # Do NOT execute the transaction; do NOT deduct cash (cash remains at available_cash).
     session_row.status = "bankrupt"
     session_row.ended_at = datetime.now(timezone.utc)
     session_row.current_stage = "report"
 
-    headline = f"INSOLVENCY DEFAULT: {company.name.upper()} DECLARES BANKRUPTCY IN Q{quarter}"
-    body = (
-        f"{company.name} attempted {action_label} requiring ₹{req_cash:,.0f}, "
-        f"exceeding available liquid reserves of ₹{available_cash:,.0f}. "
-        f"Operations terminated under emergency insolvency proceedings."
-    )
+    is_exact_zero = (req_cash == available_cash) or (remaining_cash == 0.0)
+    deficit = max(0.0, req_cash - available_cash)
+
+    if is_exact_zero:
+        headline = f"LIQUIDITY EXHAUSTION: {company.name.upper()} BANKRUPT IN Q{quarter}"
+        body = (
+            f"{company.name} ratified {action_label} costing ₹{req_cash:,.0f}, "
+            f"completely exhausting available liquid reserves (leaving exactly ₹0 cash). "
+            f"Under Corporate Apocalypse statutory rules, zero remaining cash triggers immediate bankruptcy."
+        )
+    else:
+        headline = f"INSOLVENCY DEFAULT: {company.name.upper()} DECLARES BANKRUPTCY IN Q{quarter}"
+        body = (
+            f"{company.name} attempted {action_label} requiring ₹{req_cash:,.0f}, "
+            f"exceeding available liquid reserves of ₹{available_cash:,.0f} (shortfall of ₹{deficit:,.0f}). "
+            f"Operations terminated under emergency insolvency proceedings."
+        )
 
     # Persist DecisionLog for insolvency default
     db.add(
@@ -160,6 +185,8 @@ async def enforce_solvency(
                 "insolvent": 1.0,
                 "required_amount": req_cash,
                 "available_cash": available_cash,
+                "deficit": deficit,
+                "is_exact_zero": 1.0 if is_exact_zero else 0.0,
             },
         )
     )
@@ -222,4 +249,6 @@ async def enforce_solvency(
         action_label=action_label,
         press_headline=headline,
         press_body=body,
+        is_exact_zero=is_exact_zero,
+        deficit=deficit,
     )

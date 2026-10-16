@@ -242,7 +242,9 @@ async def lock_decisions(
     # Do not advance quarter here; quarter progresses after completing departments & board meeting.
     # session_row.current_quarter stays as quarter for the remainder of this quarter's operations.
 
-    if result.bankruptcy:
+    is_bankrupt = result.bankruptcy or float(result.new_state.cash) <= 0
+
+    if is_bankrupt:
         session_row.status = "bankrupt"
         session_row.ended_at = datetime.now(timezone.utc)
         session_row.current_stage = "report"
@@ -260,6 +262,6 @@ async def lock_decisions(
     return LockResponse(
         new_quarter=quarter + 1, deltas=result.deltas,
         board_session_required=result.board_session_required,
-        bankruptcy=result.bankruptcy, already_locked=False,
+        bankruptcy=is_bankrupt, already_locked=False,
         new_state=_to_state_out(new_state_row),
     )

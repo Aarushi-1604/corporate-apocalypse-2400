@@ -166,7 +166,7 @@ export default function BankruptcyPage() {
               </span>
 
               <div className="flex items-center justify-between border-b border-neutral-900 pb-1.5 text-xs sm:text-sm">
-                <span className="text-slate-400">LIQUID CASH AT DEFAULT:</span>
+                <span className="text-slate-400">CASH AVAILABLE BEFORE RATIFICATION:</span>
                 <span className="font-bold text-slate-100">
                   ₹{Number(cashAtBankruptcy).toLocaleString()}
                 </span>
@@ -174,21 +174,34 @@ export default function BankruptcyPage() {
 
               {requiredAmount !== null && (
                 <div className="flex items-center justify-between border-b border-neutral-900 pb-1.5 text-xs sm:text-sm">
-                  <span className="text-red-400 font-bold">MANDATORY CAPITAL OBLIGATION:</span>
+                  <span className="text-red-400 font-bold">REQUIRED FINANCIAL COST:</span>
                   <span className="font-bold text-red-300">
                     ₹{Number(requiredAmount).toLocaleString()}
                   </span>
                 </div>
               )}
 
-              {deficit !== null && deficit > 0 && (
-                <div className="flex items-center justify-between border-b border-red-950 pb-1.5 text-xs sm:text-sm bg-red-950/30 px-2 py-1">
-                  <span className="text-red-400 font-bold">SOLVENCY CAPITAL DEFICIT:</span>
-                  <span className="font-bold text-red-400">
-                    -₹{Number(deficit).toLocaleString()}
+              {deficit !== null && deficit > 0 ? (
+                <div className="flex flex-col gap-1 border border-red-900/60 bg-red-950/40 p-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-red-400 font-bold uppercase">SOLVENCY CAPITAL SHORTFALL:</span>
+                    <span className="font-bold text-red-300">-₹{Number(deficit).toLocaleString()}</span>
+                  </div>
+                  <span className="text-[11px] text-red-200/80 font-sans leading-tight">
+                    Mandatory financial cost exceeded available liquid cash by ₹{Number(deficit).toLocaleString()}. Transaction rejected; cash preserved at ₹{Number(cashAtBankruptcy).toLocaleString()}; operations terminated.
                   </span>
                 </div>
-              )}
+              ) : requiredAmount !== null && Number(requiredAmount) >= Number(availableCash) ? (
+                <div className="flex flex-col gap-1 border border-amber-900/60 bg-amber-950/40 p-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-amber-400 font-bold uppercase">LIQUIDITY EXHAUSTION (ZERO CASH):</span>
+                    <span className="font-bold text-amber-300">₹0 REMAINING CASH</span>
+                  </div>
+                  <span className="text-[11px] text-amber-200/80 font-sans leading-tight">
+                    Committed financial action would leave company with exactly ₹0 cash. Under Corporate Apocalypse governance rules, zero remaining cash triggers immediate statutory bankruptcy.
+                  </span>
+                </div>
+              ) : null}
             </div>
 
             {/* CEO Final Score Badge */}

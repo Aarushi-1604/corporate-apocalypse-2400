@@ -993,10 +993,10 @@ async def _evaluate_remediation_response(
     good_keywords = {"remediate", "protocol", "deliver", "commit", "sla", "team", "resolve", "apology", "enhance", "remedy", "assure", "priority", "upgrade", "guarantee", "execute"}
     matches = len(clean_words.intersection(good_keywords))
 
-    if matches >= 3:
+    if matches >= 2:
         score = 75
         reaction = f"{client_name} director accepted the proactive executive remediation plan."
-        sat = 5.0
+        sat = 6.0
         brand = 1.5
         risk = -1.0
     elif matches >= 1:

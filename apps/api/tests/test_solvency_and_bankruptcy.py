@@ -142,7 +142,7 @@ async def test_market_investment_greater_than_available_cash():
 
 
 # -----------------------------------------------------------------------------
-# 2. Market investment exactly equal to available cash (Zero-Cash Rule)
+# 2. Market investment exactly equal to available cash (Zero-Cash Rule -> Bankruptcy)
 # -----------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_market_investment_equal_to_available_cash_zero_cash_rule():
@@ -158,13 +158,86 @@ async def test_market_investment_equal_to_available_cash_zero_cash_rule():
         option_id="q4_emergency_market_sustainment",
     )
 
-    res = await execute_strategic_decision(payload=payload, company=company, session_row=session_row, db=db)
+    with patch("app.services.solvency_service.finalize_game", new_callable=AsyncMock) as mock_finalize:
+        res = await execute_strategic_decision(payload=payload, company=company, session_row=session_row, db=db)
 
-    assert res.bankruptcy is False
-    assert res.status == "committed"
-    assert res.new_cash == 0.0  # Exactly 0 is allowed and solvent!
-    assert state.cash == 0.0
+        assert res.bankruptcy is True
+        assert res.status == "bankrupt"
+        assert res.new_cash == 20000.0  # Last valid non-negative cash preserved!
+        assert state.cash == 20000.0
+        assert session_row.status == "bankrupt"
+        assert session_row.current_stage == "report"
+        mock_finalize.assert_awaited_once_with(db, company)
+
+
+# -----------------------------------------------------------------------------
+# 2b. Core Rule Suite: ₹50,000 exact / excess / affordable expenditures
+# -----------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_core_rule_exact_cash_50k_triggers_bankruptcy():
+    """Cash ₹50,000; ratified expenditure ₹50,000 -> bankruptcy (₹0 remaining)."""
+    company = Company(id=uuid.uuid4(), session_id=uuid.uuid4(), name="FiftyKCorp", sector="Technology")
+    session_row = SessionModel(id=company.session_id, player_id=uuid.uuid4(), current_quarter=1, status="active")
+    state = CompanyStateModel(company_id=company.id, quarter=1, cash=50000.0)
+
+    db = _mock_db_with_state(company, session_row, state)
+    solvency = await enforce_solvency(
+        db=db, session_row=session_row, company=company, quarter=1,
+        action_type="market", action_label="Exact 50k Capital Directive",
+        required_cash=50000.0, state=state
+    )
+
+    assert solvency.is_solvent is False
+    assert solvency.is_bankrupt is True
+    assert solvency.is_exact_zero is True
+    assert solvency.available_cash == 50000.0
+    assert state.cash == 50000.0  # Cash preserved non-negative!
+    assert session_row.status == "bankrupt"
+
+
+@pytest.mark.asyncio
+async def test_core_rule_excess_cash_60k_triggers_bankruptcy():
+    """Cash ₹50,000; ratified expenditure ₹60,000 -> bankruptcy."""
+    company = Company(id=uuid.uuid4(), session_id=uuid.uuid4(), name="FiftyKCorp", sector="Technology")
+    session_row = SessionModel(id=company.session_id, player_id=uuid.uuid4(), current_quarter=1, status="active")
+    state = CompanyStateModel(company_id=company.id, quarter=1, cash=50000.0)
+
+    db = _mock_db_with_state(company, session_row, state)
+    solvency = await enforce_solvency(
+        db=db, session_row=session_row, company=company, quarter=1,
+        action_type="market", action_label="Excess 60k Capital Directive",
+        required_cash=60000.0, state=state
+    )
+
+    assert solvency.is_solvent is False
+    assert solvency.is_bankrupt is True
+    assert solvency.deficit == 10000.0
+    assert solvency.available_cash == 50000.0
+    assert state.cash == 50000.0  # Cash preserved non-negative!
+    assert session_row.status == "bankrupt"
+
+
+@pytest.mark.asyncio
+async def test_core_rule_affordable_cash_40k_proceeds_normally():
+    """Cash ₹50,000; ratified expenditure ₹40,000 -> proceeds leaving ₹10,000."""
+    company = Company(id=uuid.uuid4(), session_id=uuid.uuid4(), name="FiftyKCorp", sector="Technology")
+    session_row = SessionModel(id=company.session_id, player_id=uuid.uuid4(), current_quarter=1, status="active")
+    state = CompanyStateModel(company_id=company.id, quarter=1, cash=50000.0)
+
+    db = _mock_db_with_state(company, session_row, state)
+    solvency = await enforce_solvency(
+        db=db, session_row=session_row, company=company, quarter=1,
+        action_type="market", action_label="Affordable 40k Capital Directive",
+        required_cash=40000.0, state=state
+    )
+
+    assert solvency.is_solvent is True
+    assert solvency.is_bankrupt is False
+    assert solvency.available_cash == 50000.0
     assert session_row.status == "active"
+    # When caller proceeds, remaining cash is 10,000:
+    state.cash = float(state.cash) - 40000.0
+    assert state.cash == 10000.0
 
 
 # -----------------------------------------------------------------------------
