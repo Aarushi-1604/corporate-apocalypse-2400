@@ -62,15 +62,11 @@ export default function HQPage() {
       boardUnlocked={
         Boolean(activeBoard) ||
         Boolean(
-          (session?.current_quarter ?? 1) <= 2
-            ? deptLocks?.operations?.locked &&
-              deptLocks?.market?.locked &&
-              deptLocks?.rd?.locked &&
-              deptLocks?.client?.locked &&
-              deptLocks?.press?.locked
-            : deptLocks?.operations?.locked &&
-              deptLocks?.market?.locked &&
-              deptLocks?.rd?.locked
+          deptLocks?.operations?.locked &&
+          deptLocks?.market?.locked &&
+          deptLocks?.rd?.locked &&
+          deptLocks?.client?.locked &&
+          deptLocks?.press?.locked
         )
       }
       departmentLocks={deptLocks}

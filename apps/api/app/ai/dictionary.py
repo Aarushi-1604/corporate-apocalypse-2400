@@ -3,7 +3,7 @@ from app.ai.intent_guard import (
     is_competitive_framing,
     is_direct_answer_request,
 )
-from app.ai.ollama_client import generate_completion
+from app.ai.llm_client import request_llm_completion
 from app.ai.retrieval import retrieve_concepts
 
 SYSTEM_PROMPT = """You are the Corporate Dictionary, a neutral business-concept
@@ -36,7 +36,7 @@ async def get_dictionary_response(query: str) -> tuple[str, str, bool]:
     top_concept = concepts[0]
     user_prompt = f"Concept: {top_concept['title']}\nDefinition: {top_concept['body']}\n\nQuestion: {query}"
 
-    generated = await generate_completion(SYSTEM_PROMPT, user_prompt)
+    generated = await request_llm_completion(SYSTEM_PROMPT, user_prompt)
 
     if generated is None:
         return top_concept["body"], "rag_fallback", False

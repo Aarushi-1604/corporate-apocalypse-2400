@@ -140,9 +140,9 @@ export default function LeaderboardPage() {
                           )}
                         </span>
 
-                        {row.masked_prn && (
-                          <span className="text-[11px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                            {row.masked_prn}
+                        {row.branch && (
+                          <span className="text-[11px] font-mono text-cyan-300 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-500/30">
+                            {row.branch}
                           </span>
                         )}
 

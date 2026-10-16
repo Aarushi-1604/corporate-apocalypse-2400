@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/hooks/use-session";
 import {
@@ -35,6 +35,13 @@ export default function ClientsNegotiationPage() {
   const [compensationAmount, setCompensationAmount] = useState<number>(0);
   const [ceoUpdate, setCeoUpdate] = useState<string>("");
   const [remediationError, setRemediationError] = useState<string | null>(null);
+
+  const ceoWords = useMemo(() => {
+    const trimmed = ceoUpdate.trim();
+    return trimmed ? trimmed.split(/\s+/) : [];
+  }, [ceoUpdate]);
+  const ceoWordCount = ceoWords.length;
+  const isCeoWordCountValid = ceoWordCount > 0 && ceoWordCount <= 50;
 
   // Mutations
   const advanceDiscoveryMutation = useAdvanceDiscovery(negSession?.contract_id ?? "", companyId);
@@ -131,6 +138,16 @@ export default function ClientsNegotiationPage() {
     const amount = Number(compensationAmount);
     const treasury = session?.company?.cash ?? 0;
 
+    if (!isCeoWordCountValid) {
+      setRemediationError(
+        ceoWordCount === 0
+          ? "Executive status update cannot be empty."
+          : `Response exceeds maximum limit of 50 words (${ceoWordCount}/50 words).`
+      );
+      soundManager.playAlert();
+      return;
+    }
+
     if (amount < base) {
       setRemediationError(`Compensation cannot be lower than the base demand of ₹${base.toLocaleString()}.`);
       soundManager.playAlert();
@@ -165,7 +182,26 @@ export default function ClientsNegotiationPage() {
     );
   }
 
-  const { scenario, status, relationship_score, is_locked } = negSession;
+  const { status, relationship_score, is_locked } = negSession;
+  const scenario = negSession.scenario ?? {
+    id: "none",
+    client_name: "COMMERCIAL CLIENT",
+    client_type: "Standard",
+    executive_contact: "Account Representative",
+    executive_title: "Client Contact",
+    headline: "NO ACTIVE COMMERCIAL NEGOTIATION",
+    stage_1_requirement: "No active requirement.",
+    stage_2_discovery: {
+      deliverables: "None",
+      timeline: "None",
+      constraints: "None",
+      budget_expectation: 0,
+      budget_range_text: "0",
+      personality_notes: "None",
+    },
+    target_metrics: [],
+    pitch_hints: [],
+  };
 
   // Determine active visual stage
   const isRequirementStage = status === "stage_1_requirement" || status === "incoming";
@@ -340,8 +376,33 @@ export default function ClientsNegotiationPage() {
               </div>
             </div>
 
+            {/* Case: No follow-up deal scheduled for this quarter */}
+            {quarter > 2 && negSession.has_followup === false && (
+              <div className="client-content-cluster !m-0 !max-w-none w-full border border-purple-500/40 bg-neutral-950/90 p-8 flex flex-col gap-4 text-center shadow-[0_0_20px_rgba(168,85,247,0.1)]">
+                <div className="flex items-center justify-center gap-2 text-emerald-400 font-mono text-xs font-bold tracking-widest uppercase">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+                  NO PENDING CLIENT FOLLOW-UP // COMPLETED
+                </div>
+                <h2 className="text-2xl font-bold font-mono text-white m-0">
+                  ALL COMMERCIAL ACCOUNTS CONCLUDED
+                </h2>
+                <p className="text-slate-300 max-w-xl mx-auto text-sm leading-relaxed m-0">
+                  No accepted client deals require follow-up in Quarter 0{quarter}. Client department operations for this quarter are concluded and marked complete.
+                </p>
+                <div className="pt-2 flex justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => router.push("/hq/press")}
+                    className="game-button gold px-8 py-3 text-xs font-mono font-bold tracking-widest cursor-pointer"
+                  >
+                    <span>PROCEED TO PRESS WIRE →</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* ====================================================================
-                Q3 ENTERPRISE SLA AUDIT & COMPENSATION SETTLEMENT MODULE
+                Q3/Q4 ENTERPRISE SLA AUDIT & COMPENSATION SETTLEMENT MODULE
                ==================================================================== */}
             {rem && (
               <div className="client-content-cluster !m-0 !max-w-none w-full border border-purple-500/60 bg-neutral-950/95 p-6 flex flex-col gap-6 shadow-[0_0_30px_rgba(168,85,247,0.12)]">
@@ -546,15 +607,17 @@ export default function ClientsNegotiationPage() {
                     {/* CEO Operational Status Update field */}
                     <div className="flex flex-col gap-2">
                       <label className="font-mono text-xs text-purple-300 font-bold uppercase tracking-wider flex items-center justify-between">
-                        <span>CEO EXECUTIVE STATUS UPDATE &amp; CORRECTIVE PLAN</span>
-                        <span className="text-slate-400 text-[11px] font-normal">Transmitted directly to client executive board</span>
+                        <span>CEO EXECUTIVE STATUS UPDATE &amp; CORRECTIVE PLAN (MAX 50 WORDS)</span>
+                        <span className={`text-[11px] font-mono font-bold ${ceoWordCount > 50 ? "text-red-400" : "text-purple-300"}`}>
+                          {ceoWordCount} / 50 WORDS {ceoWordCount > 50 ? "— EXCEEDED" : ""}
+                        </span>
                       </label>
                       <textarea
                         rows={3}
                         value={ceoUpdate}
                         onChange={(e) => setCeoUpdate(e.target.value)}
-                        placeholder={`e.g., We have committed specialized engineering squads and automated monitoring to resolve milestone latency on the ${rem.client_name} account...`}
-                        className="w-full bg-black/90 border border-purple-500/40 text-slate-100 p-3 font-sans text-sm focus:outline-none focus:border-purple-400 leading-relaxed"
+                        placeholder={`e.g., We have deployed engineering squads and active automated telemetry to ensure milestone reliability on the ${rem.client_name} account.`}
+                        className={`w-full bg-black/90 border ${ceoWordCount > 50 ? "border-red-500" : "border-purple-500/40"} text-slate-100 p-3 font-sans text-sm focus:outline-none focus:border-purple-400 leading-relaxed`}
                       />
                     </div>
 
@@ -568,7 +631,7 @@ export default function ClientsNegotiationPage() {
                     <div className="flex justify-end pt-2">
                       <button
                         type="button"
-                        disabled={submitRemediationMutation.isPending || activeCompensation < remBase}
+                        disabled={submitRemediationMutation.isPending || activeCompensation < remBase || !isCeoWordCountValid}
                         onClick={handleAuthorizeRemediation}
                         className="game-button gold px-8 py-3 text-xs font-mono font-bold tracking-widest cursor-pointer disabled:opacity-50"
                       >

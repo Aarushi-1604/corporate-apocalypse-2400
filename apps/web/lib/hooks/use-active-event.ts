@@ -27,8 +27,7 @@ export function useActiveEvent(companyId: string | undefined) {
   return useQuery({
     queryKey: ["active-event", companyId],
     queryFn: () => fetchActiveEvent(companyId as string),
-    enabled: !!companyId,
-    refetchInterval: 4000,
+    enabled: false,
   });
 }
 

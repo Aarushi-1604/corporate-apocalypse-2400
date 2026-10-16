@@ -299,7 +299,7 @@ async def test_passive_client_portfolio_carry_forward_q3():
     # Verify remediation inquiry presence and base floor calculation
     assert "remediation" in session
     assert session["remediation"]["base_amount"] >= 5000.0
-    assert session["remediation"]["client_name"] == "Meridian Civic Authority"
+    assert session["remediation"]["client_name"] == "Halden Industrial Group"
     assert "remediation compensation rebate" in session["remediation"]["audit_feedback"]
 
 

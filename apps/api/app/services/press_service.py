@@ -26,6 +26,7 @@ from app.models import (
 )
 from app.services.press_scenarios import build_press_crisis_context
 from app.services.llm_press_service import evaluate_press_step_llm
+from app.ai.llm_client import request_llm_completion
 
 MAX_WORDS_PER_RESPONSE = 50
 
@@ -91,11 +92,11 @@ async def check_press_prerequisites(
 ) -> Tuple[bool, str]:
     """
     Verifies:
-    1. Quarter is 1 or 2 (Q3 and Q4 do not allow interactive press conferences).
+    1. Quarter is 1 or 2 (interactive journalist interviews are restricted to Q1 and Q2).
     2. F&O, Market, and R&D are complete for the current quarter.
     """
     if quarter > 2:
-        return False, f"Press conferences are restricted to Q1 and Q2. Quarter {quarter} coverage is passive."
+        return False, "Press conferences are restricted to Q1 and Q2 in this campaign."
 
     # Check Operations
     ops_res = await db.execute(
@@ -114,7 +115,7 @@ async def check_press_prerequisites(
             )
         )
         if not next_state.scalar_one_or_none():
-            return False, "Finance & Operations must be committed before attending the Press Conference."
+            return False, "Finance & Operations must be committed before accessing Press World."
 
     # Check Market
     market_res = await db.execute(
@@ -125,7 +126,7 @@ async def check_press_prerequisites(
         )
     )
     if not market_res.scalar_one_or_none():
-        return False, "Marketing strategy must be committed before attending the Press Conference."
+        return False, "Marketing strategy must be committed before accessing Press World."
 
     # Check R&D
     rd_res = await db.execute(
@@ -136,7 +137,7 @@ async def check_press_prerequisites(
         )
     )
     if not rd_res.scalar_one_or_none():
-        return False, "Research & Development must be committed before attending the Press Conference."
+        return False, "Research & Development must be committed before accessing Press World."
 
     return True, ""
 
@@ -194,26 +195,37 @@ async def get_or_create_press_session(
         market_log = quarter_logs.get("strategic_marketing")
         rd_log = quarter_logs.get("rd", quarter_logs.get("research_development"))
 
-        if not budget_log:
-            return {
-                "quarter": quarter,
-                "status": "LOCKED",
-                "lock_reason": "HQ Operations budget must be committed before Corporate Times can publish Quarter 3 analysis.",
-                "headline": "CLEARANCE RESTRICTED // OPERATIONS PENDING",
-                "article_body": "Corporate Times news desks await statutory budget disclosures from HQ Operations.",
-                "media_verdict": "Awaiting operational data.",
-                "current_exchange_index": 0,
-                "total_exchanges": 0,
-            }
+        has_ops = budget_log is not None
+        has_market = market_log is not None
+        has_rd = rd_log is not None
 
-        if not client_log:
+        from app.services.client_negotiation_service import get_scheduled_followup_deal
+        try:
+            scheduled_deal = await get_scheduled_followup_deal(db, company, quarter)
+        except Exception:
+            scheduled_deal = None
+
+        has_client = True if scheduled_deal is None else (client_log is not None)
+
+        if not (has_ops and has_market and has_rd and has_client):
+            reasons = []
+            if not has_ops:
+                reasons.append("Finance & Operations")
+            if not has_market:
+                reasons.append("Strategic Marketing")
+            if not has_rd:
+                reasons.append("Research & Development")
+            if not has_client:
+                reasons.append("Client World follow-up")
+            reason_str = f"Complete required quarter activities first: {', '.join(reasons)}."
             return {
                 "quarter": quarter,
                 "status": "LOCKED",
-                "lock_reason": "Client SLA audit review and negotiations must be finalized before Corporate Times can publish Quarter 3 analysis.",
-                "headline": "CLEARANCE RESTRICTED // CLIENT NEGOTIATIONS PENDING",
-                "article_body": "Corporate Times news desks await commercial SLA resolution disclosures from the Strategic Accounts desk.",
-                "media_verdict": "Awaiting client negotiation data.",
+                "is_locked": True,
+                "lock_reason": reason_str,
+                "headline": "CLEARANCE RESTRICTED // PREREQUISITES PENDING",
+                "article_body": f"Corporate Times journalists require completion of all Quarter {quarter} HQ departments and Client World reviews.",
+                "media_verdict": "Clearance pending.",
                 "current_exchange_index": 0,
                 "total_exchanges": 0,
             }
@@ -229,18 +241,57 @@ async def get_or_create_press_session(
         risk_val = float(state.risk) if state else 20.0
         mkt_share_val = float(state.market_share) if state else 10.0
 
-        if budget_log and client_log:
-            headline = f"{company.name.upper()} ORCHESTRATES Q{quarter} BUDGET & SETTLES ENTERPRISE CLIENT AUDIT"
-        elif client_log:
-            headline = f"{company.name.upper()} RATIFIES KEY CLIENT SLA TERMS IN Q{quarter}"
-        elif market_log:
-            headline = f"{company.name.upper()} RATIFIES STRATEGIC DIRECTIVE IN Q{quarter}"
-        elif rd_log:
-            headline = f"{company.name.upper()} ADVANCES R&D INITIATIVE IN Q{quarter}"
-        elif budget_log:
-            headline = f"{company.name.upper()} CONCLUDES Q{quarter} BUDGET ALLOCATIONS"
-        else:
-            headline = f"{company.name.upper()} CONSOLIDATES STABILITY IN Q{quarter}"
+        # Attempt report generation via Groq -> Gemini -> Fallback
+        prompt_events = (
+            f"Company: {company.name} (Sector: {company.sector})\n"
+            f"Quarter: {quarter}\n"
+            f"Operations Budget: {budget_log.summary if budget_log else 'Standard department operations'}\n"
+            f"Marketing Directive: {market_log.summary if market_log else 'Ongoing marketing campaigns'}\n"
+            f"R&D Choice: {rd_log.summary if rd_log else 'Ongoing research development'}\n"
+            f"Client Accounts: {client_log.summary if client_log else 'No pending client disputes'}\n"
+            f"Liquid Cash: ₹{cash_val:,.0f}, Corporate Risk: {risk_val:.1f}%, Market Share: {mkt_share_val:.1f}%\n"
+        )
+        sys_prompt = (
+            "You are the senior financial journalist for The Corporate Times in Corporate Apocalypse 2400.\n"
+            "Write a truthful frontpage news dispatch based ONLY on the actual company decisions provided in context.\n"
+            "Never invent false events, numbers, or actions. Respond strictly in JSON:\n"
+            "{\n"
+            '  "headline": "PUNCHY CAPITALIZED HEADLINE UNDER 12 WORDS",\n'
+            '  "article_body": "2 to 3 concise journalistic paragraphs reporting the exact events and fiscal standing",\n'
+            '  "media_verdict": "1-2 sentence editorial verdict from New Kalki Financial Press"\n'
+            "}"
+        )
+        llm_parsed = False
+        try:
+            llm_raw = await request_llm_completion(sys_prompt, prompt_events, temperature=0.3, max_tokens=500)
+            if llm_raw:
+                cleaned = llm_raw.strip()
+                if "```json" in cleaned:
+                    cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+                elif "```" in cleaned:
+                    cleaned = cleaned.split("```")[1].split("```")[0].strip()
+                data = json.loads(cleaned)
+                if data.get("headline") and data.get("article_body"):
+                    headline = str(data["headline"]).strip().upper()
+                    article_body = str(data["article_body"]).strip()
+                    media_verdict = str(data.get("media_verdict", f"The Corporate Times monitors {company.name}'s ongoing governance.")).strip()
+                    llm_parsed = True
+        except Exception:
+            pass
+
+        if not llm_parsed:
+            if budget_log and client_log:
+                headline = f"{company.name.upper()} ORCHESTRATES Q{quarter} BUDGET & SETTLES ENTERPRISE CLIENT AUDIT"
+            elif client_log:
+                headline = f"{company.name.upper()} RATIFIES KEY CLIENT SLA TERMS IN Q{quarter}"
+            elif market_log:
+                headline = f"{company.name.upper()} RATIFIES STRATEGIC DIRECTIVE IN Q{quarter}"
+            elif rd_log:
+                headline = f"{company.name.upper()} ADVANCES R&D INITIATIVE IN Q{quarter}"
+            elif budget_log:
+                headline = f"{company.name.upper()} CONCLUDES Q{quarter} BUDGET ALLOCATIONS"
+            else:
+                headline = f"{company.name.upper()} CONSOLIDATES STABILITY IN Q{quarter}"
 
         article_paragraphs = [
             f"NEW KALKI CITY (CORPORATE TIMES WIRE) — In a decisive Quarter {quarter} corporate cycle, {company.name} navigated market scrutiny without convening an open podium press conference, transmitting statutory operational and commercial disclosures directly to municipal financial desks."

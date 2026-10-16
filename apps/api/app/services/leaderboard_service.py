@@ -37,8 +37,6 @@ async def get_leaderboard(db: AsyncSession, limit: int = 10) -> list[Leaderboard
             if player_row
             else "Executive Board"
         )
-        masked = _mask_prn(player_row.prn if player_row else None)
-
         entry = LeaderboardRowOut(
             id=board_row.id,
             company_name=board_row.company_name,
@@ -46,7 +44,7 @@ async def get_leaderboard(db: AsyncSession, limit: int = 10) -> list[Leaderboard
             final_score=float(board_row.final_score),
             rank=i + 1,
             participant_name=part_name,
-            masked_prn=masked,
+            masked_prn=None,
             branch=branch_name,
             status="Completed Run",
             revenue_score=float(board_row.revenue_score) if board_row.revenue_score is not None else None,

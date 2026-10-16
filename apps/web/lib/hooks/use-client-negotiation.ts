@@ -38,7 +38,8 @@ export interface CompanyCapabilities {
 export interface NegotiationSessionResponse {
   contract_id: string;
   quarter: number;
-  scenario: ClientScenario;
+  has_followup?: boolean;
+  scenario?: ClientScenario | null;
   status: string;
   relationship_score: number;
   target_value: number;

@@ -96,17 +96,11 @@ export function FigmaCityMap({
   const pressDone = Boolean(departmentLocks?.press?.locked);
 
   const quarter = data.current_quarter ?? 1;
-  const isPassiveQuarter = quarter > 2;
 
   const clientUnlocked = stageAComplete;
-  const pressUnlocked = stageAComplete;
+  const pressUnlocked = quarter <= 2 ? stageAComplete : stageAComplete && clientDone;
 
   const handleClientClick = () => {
-    if (isPassiveQuarter) {
-      setNotice(`CLIENT RELATIONS // Q0${quarter} PASSIVE STATUS: NO ACTIVE NEGOTIATIONS SCHEDULED`);
-      window.setTimeout(() => setNotice(""), 3500);
-      return;
-    }
     if (!clientUnlocked) {
       setNotice("CLIENT OFFICE // ACCESS LOCKED — COMPLETE ALL 3 HQ DEPARTMENTS FIRST");
       window.setTimeout(() => setNotice(""), 3000);
@@ -118,13 +112,12 @@ export function FigmaCityMap({
   };
 
   const handlePressClick = () => {
-    if (isPassiveQuarter) {
-      setNotice(`CORPORATE TIMES // Q0${quarter} PASSIVE COVERAGE: PRESS CONFERENCES CONCLUDED`);
-      window.setTimeout(() => setNotice(""), 3500);
-      return;
-    }
     if (!pressUnlocked) {
-      setNotice("PRESS // ACCESS LOCKED — COMPLETE ALL 3 HQ DEPARTMENTS FIRST");
+      if (!stageAComplete) {
+        setNotice("PRESS // ACCESS LOCKED — COMPLETE ALL 3 HQ DEPARTMENTS FIRST");
+      } else {
+        setNotice("PRESS // ACCESS LOCKED — COMPLETE CLIENT WORLD ACTIVITIES FIRST");
+      }
       window.setTimeout(() => setNotice(""), 3000);
       return;
     }
@@ -166,7 +159,7 @@ export function FigmaCityMap({
         }`}
         aria-label={
           clientDone
-            ? "Client Office (Negotiation Completed)"
+            ? "Client Office (Completed)"
             : !clientUnlocked
             ? "Client Office locked"
             : "Visit Client Office"
@@ -175,9 +168,7 @@ export function FigmaCityMap({
         type="button"
       >
         <span>
-          {isPassiveQuarter ? (
-            "CLIENT // PASSIVE"
-          ) : clientDone ? (
+          {clientDone ? (
             "CLIENT // DONE"
           ) : !clientUnlocked ? (
             "CLIENT // LOCKED"
@@ -190,13 +181,11 @@ export function FigmaCityMap({
       </button>
       <button
         className={`map-hotspot city-press ${
-          isPassiveQuarter || pressDone ? "dept-locked" : !pressUnlocked ? "locked" : ""
+          pressDone ? "dept-locked" : !pressUnlocked ? "locked" : ""
         }`}
         aria-label={
-          isPassiveQuarter
-            ? "Press (Passive Coverage Only)"
-            : pressDone
-            ? "Press (Conference Completed)"
+          pressDone
+            ? "Press (Report Completed)"
             : !pressUnlocked
             ? "Press locked"
             : "Visit Press"
@@ -205,9 +194,7 @@ export function FigmaCityMap({
         type="button"
       >
         <span>
-          {isPassiveQuarter ? (
-            "PRESS // PASSIVE"
-          ) : pressDone ? (
+          {pressDone ? (
             "PRESS // DONE"
           ) : !pressUnlocked ? (
             "PRESS // LOCKED"

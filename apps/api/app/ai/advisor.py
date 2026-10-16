@@ -5,7 +5,7 @@ from app.ai.intent_guard import (
     is_direct_answer_request,
     scan_response_for_direct_advice,
 )
-from app.ai.ollama_client import generate_completion
+from app.ai.llm_client import request_llm_completion
 from app.ai.retrieval import retrieve_concepts
 from app.core.config import get_settings
 from app.models import Company, CompanyState
@@ -122,10 +122,7 @@ async def get_advisor_response(
         f"Player question/draft: {query}"
     )
 
-    generated = await generate_completion(current_system_prompt, user_prompt)
-
-    if not generated or not generated.strip():
-        generated = await _fallback_llm_completion(current_system_prompt, user_prompt)
+    generated = await request_llm_completion(current_system_prompt, user_prompt)
 
     if not generated or not generated.strip():
         if is_rephrase:
