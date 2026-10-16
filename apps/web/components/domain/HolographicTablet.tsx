@@ -84,15 +84,13 @@ export function HolographicTablet() {
     // 1. If we have active in-quarter decision deltas, show them!
     const activeDelta = quarterDeltas[metricKey];
     if (activeDelta !== undefined && Math.abs(activeDelta) >= 0.01) {
-      if (activeDelta > 0) {
-        return {
-          direction: "up",
-          text: isCurrency ? `+₹${Math.round(activeDelta).toLocaleString()}` : `+${activeDelta.toFixed(1)}`,
-        };
-      }
+      const formatted = isCurrency
+        ? (activeDelta > 0 ? `+₹${Math.round(activeDelta).toLocaleString()}` : `-₹${Math.abs(Math.round(activeDelta)).toLocaleString()}`)
+        : (activeDelta > 0 ? `+${activeDelta.toFixed(1)}` : `${activeDelta.toFixed(1)}`);
       return {
-        direction: "down",
-        text: isCurrency ? `-₹${Math.abs(Math.round(activeDelta)).toLocaleString()}` : `${activeDelta.toFixed(1)}`,
+        direction: activeDelta > 0 ? ("up" as const) : ("down" as const),
+        text: formatted,
+        title: `Q0${currentQ} Net Drift: ${formatted} (cumulative sum across all completed departments this quarter. See INTEL tab for individual event records).`,
       };
     }
 
@@ -101,9 +99,15 @@ export function HolographicTablet() {
       return null;
     }
     const diff = currentVal - prevVal;
-    if (Math.abs(diff) < 0.01) return { direction: "neutral", text: "STABLE" };
-    if (diff > 0) return { direction: "up", text: isCurrency ? `+₹${Math.round(diff).toLocaleString()}` : `+${diff.toFixed(1)}` };
-    return { direction: "down", text: isCurrency ? `-₹${Math.abs(Math.round(diff)).toLocaleString()}` : `${diff.toFixed(1)}` };
+    if (Math.abs(diff) < 0.01) return { direction: "neutral" as const, text: "STABLE", title: "Quarter-over-quarter change: Stable" };
+    const diffText = isCurrency
+      ? (diff > 0 ? `+₹${Math.round(diff).toLocaleString()}` : `-₹${Math.abs(Math.round(diff)).toLocaleString()}`)
+      : (diff > 0 ? `+${diff.toFixed(1)}` : `${diff.toFixed(1)}`);
+    return {
+      direction: diff > 0 ? ("up" as const) : ("down" as const),
+      text: diffText,
+      title: `Quarter-over-quarter delta vs Q0${currentQ - 1}: ${diffText}`,
+    };
   };
 
   // If on login/auth screens or no active session, do not render tablet launcher
@@ -298,6 +302,10 @@ export function HolographicTablet() {
 
               {!isTabletLoading && activeTab === "kpis" && (
                 <div className="tablet-tab-content">
+                  <div className="flex items-center justify-between px-1 mb-2.5 text-[10px] font-mono border-b border-neutral-800/80 pb-1.5">
+                    <span className="text-amber-400 font-bold tracking-wider">LIVE TELEMETRY</span>
+                    <span className="text-neutral-400">TREND BADGES: Q0{currentQ} NET SHIFT</span>
+                  </div>
                   <div className="kpi-grid">
                     {[
                       { key: "cash", label: "LIQUID CASH", val: `₹${Number(state?.cash ?? 0).toLocaleString()}`, trend: computeTrend("cash", state?.cash, prevState?.cash, true) },
@@ -317,7 +325,10 @@ export function HolographicTablet() {
                         <div className="kpi-header">
                           <span>{kpi.label}</span>
                           {kpi.trend && (
-                            <span className={`kpi-trend ${kpi.trend.direction}`}>
+                            <span
+                              className={`kpi-trend ${kpi.trend.direction}`}
+                              title={kpi.trend.title}
+                            >
                               {kpi.trend.direction === "up" && <TrendingUp size={11} />}
                               {kpi.trend.direction === "down" && <TrendingDown size={11} />}
                               {kpi.trend.direction === "neutral" && <Minus size={11} />}
