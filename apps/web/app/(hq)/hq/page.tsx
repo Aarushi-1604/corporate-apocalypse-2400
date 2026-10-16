@@ -13,11 +13,21 @@ export default function HQPage() {
   const { data: activeBoard } = useActiveBoard(session?.company_id);
   const { data: deptLocks } = useDepartmentLocks(session?.company_id);
 
+  const isBankrupt =
+    session?.status === "bankrupt" ||
+    deptLocks?.session_status === "bankrupt";
+
   useEffect(() => {
     if (!isLoading && (!session || isError)) {
       router.replace("/login");
     }
   }, [session, isLoading, isError, router]);
+
+  useEffect(() => {
+    if (!isLoading && isBankrupt) {
+      router.replace("/bankruptcy");
+    }
+  }, [isBankrupt, isLoading, router]);
 
   if (isLoading || !session) {
     return (
@@ -26,16 +36,6 @@ export default function HQPage() {
       </div>
     );
   }
-
-  const isBankrupt =
-    session?.status === "bankrupt" ||
-    deptLocks?.session_status === "bankrupt";
-
-  useEffect(() => {
-    if (!isLoading && isBankrupt) {
-      router.replace("/bankruptcy");
-    }
-  }, [isBankrupt, isLoading, router]);
 
   return (
     <FigmaHQMap

@@ -144,7 +144,7 @@ MARKET_CASCADE_SCENARIOS: List[MarketScenario] = [
         "code": "MACRO-03",
         "shock_name": "DOMESTIC CURRENCY WEAKENS",
         "shock_value": "CURRENCY VALUE -10%",
-        "shock_description": "Foreign currency markets cause the local rupee/dollar to lose 10% of its value.",
+        "shock_description": "Foreign currency markets cause the Indian Rupee (INR) to lose 10% of its value.",
         "cards": [
             {
                 "id": "local_prices_rise",
@@ -187,7 +187,7 @@ MARKET_CASCADE_SCENARIOS: List[MarketScenario] = [
         ],
         "explanations": {
             "currency_drops": "1. The local currency depreciates on foreign exchange markets.",
-            "imports_more_expensive": "2. Every foreign dollar required to buy imported goods now costs more local money.",
+            "imports_more_expensive": "2. Foreign exchange required to buy imported goods now costs more rupees.",
             "factory_bill_up": "3. Factories paying foreign suppliers see their inventory bills shoot up.",
             "profit_squeezed": "4. The sudden cost jump squeezes company profits before contracts can change.",
             "local_prices_rise": "5. Importers raise retail prices on store shelves to cover the foreign exchange loss.",

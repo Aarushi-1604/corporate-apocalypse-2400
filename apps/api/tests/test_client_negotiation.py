@@ -400,32 +400,39 @@ async def test_submit_client_remediation_success():
     db = AsyncMock()
     db.add = MagicMock()
 
-    def mock_scalar_one_or_none(val):
+    session_obj = MagicMock(status="active")
+
+    def mock_scalar_res(val):
         res = MagicMock()
         res.scalar_one_or_none.return_value = val
+        res.scalar_one.return_value = val
         return res
 
     def side_effect(stmt):
         stmt_str = str(stmt).lower()
         if "decision_logs" in stmt_str or "decision_log" in stmt_str:
-            return mock_scalar_one_or_none(None)
+            return mock_scalar_res(None)
         elif "company_states" in stmt_str or "company_state" in stmt_str:
-            return mock_scalar_one_or_none(state)
+            return mock_scalar_res(state)
         elif "contracts" in stmt_str or "contract" in stmt_str:
-            return mock_scalar_one_or_none(contract)
-        return mock_scalar_one_or_none(None)
+            return mock_scalar_res(contract)
+        elif "sessions" in stmt_str or "session" in stmt_str:
+            return mock_scalar_res(session_obj)
+        return mock_scalar_res(None)
 
     db.execute.side_effect = side_effect
+    from unittest.mock import patch
 
     # Base is 6,000. Compensate 10,000 (higher than base)
-    result = await submit_client_remediation(
-        db=db,
-        company=company,
-        quarter=3,
-        contract_id=str(contract_id),
-        compensation_amount=10000.0,
-        status_update="Dedicated engineers deployed to guarantee SLA milestones.",
-    )
+    with patch("app.services.client_negotiation_service.request_llm_completion", AsyncMock(return_value=None)):
+        result = await submit_client_remediation(
+            db=db,
+            company=company,
+            quarter=3,
+            contract_id=str(contract_id),
+            compensation_amount=10000.0,
+            status_update="Dedicated engineers deployed to guarantee SLA milestones.",
+        )
 
     assert result["status"] == "SETTLED"
     assert result["compensation_amount"] == 10000.0

@@ -61,7 +61,7 @@ export function LiveMarketIntelligence({
             <div className="border border-slate-800/90 bg-black/70 p-4 flex flex-col gap-1.5">
               <span className="text-xs font-mono text-slate-400 tracking-wider font-semibold">CRUDE OIL (BBL)</span>
               <strong className="text-2xl font-bold font-mono text-red-400">
-                ${snapshot.oil_price.toFixed(1)}
+                ₹{snapshot.oil_price.toFixed(1)}
               </strong>
               <span className={`text-xs font-mono font-bold ${snapshot.oil_price > 80 ? "text-red-400" : "text-emerald-400"}`}>
                 {snapshot.oil_price > 80 ? "▲ HIGH DRAG" : "● NOMINAL BAND"}

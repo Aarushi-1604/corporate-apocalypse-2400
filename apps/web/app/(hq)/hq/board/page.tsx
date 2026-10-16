@@ -196,9 +196,7 @@ export default function BoardRoomPage() {
                 BOARD MEETING LOCKED
               </h1>
               <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
-                {displayQuarter <= 2
-                  ? "The Board of Directors will only convene after ALL FIVE quarterly operational activities have been formally committed and archived:"
-                  : "The Board of Directors will convene after ALL THREE Headquarters strategic decisions have been formally committed and archived:"}
+                The Board of Directors will only convene after all quarterly departmental decisions and the Press conference have been formally committed:
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left font-mono text-xs">
@@ -208,26 +206,22 @@ export default function BoardRoomPage() {
                 <div className={`p-3 border ${marketDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
                   2. MARKETING &amp; ACQUISITIONS: {marketDone ? "DONE" : "PENDING"}
                 </div>
-                <div className={`p-3 border sm:col-span-${displayQuarter <= 2 ? "1" : "2"} ${rdDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                <div className={`p-3 border ${rdDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
                   3. RESEARCH &amp; DEVELOPMENT: {rdDone ? "DONE" : "PENDING"}
                 </div>
-                {displayQuarter <= 2 && (
-                  <>
-                    <div className={`p-3 border ${clientDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
-                      4. CLIENT WORLD NEGOTIATION: {clientDone ? "DONE" : "PENDING"}
-                    </div>
-                    <div className={`p-3 border sm:col-span-2 ${pressDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
-                      5. PRESS WORLD CONFERENCE: {pressDone ? "DONE" : "PENDING"}
-                    </div>
-                  </>
-                )}
+                <div className={`p-3 border ${clientDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                  4. CLIENT WORLD: {clientDone ? "DONE" : "PENDING"}
+                </div>
+                <div className={`p-3 border sm:col-span-2 ${pressDone ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300" : "border-neutral-800 bg-neutral-900/60 text-neutral-400"}`}>
+                  5. PRESS WORLD CONFERENCE: {pressDone ? "DONE" : "PENDING"}
+                </div>
               </div>
 
               <div className="pt-4 flex justify-center gap-4">
                 <button
                   type="button"
                   onClick={() => router.push("/hq")}
-                  className="px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-mono text-sm tracking-wider uppercase transition-colors"
+                  className="px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-mono text-sm tracking-wider uppercase transition-colors cursor-pointer"
                 >
                   RETURN TO HQ MAP
                 </button>
@@ -241,21 +235,21 @@ export default function BoardRoomPage() {
           <div className="board-card-container">
             <div className="p-8 border-2 border-red-600 bg-black/90 backdrop-blur-md rounded flex flex-col gap-6 text-center shadow-2xl">
               <h1 className="text-4xl font-bold font-mono tracking-widest text-red-500">
-                TERMINATED
+                TERMINATED · Q0{displayQuarter}
               </h1>
               <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
-                The Board of Directors has voted to remove you as Chief Executive Officer effective immediately. Your corporate credentials and discretionary authority have been revoked.
+                The Board of Directors has voted to remove you as Chief Executive Officer effective immediately. Board confidence collapsed below statutory 30% threshold following your responses. Your corporate credentials and discretionary authority have been revoked.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
                 <button
                   onClick={() => router.push("/hq/reports/annual")}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-mono font-bold tracking-widest uppercase rounded transition-colors shadow-lg shadow-red-950"
+                  className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-mono font-bold tracking-widest uppercase rounded transition-colors shadow-lg shadow-red-950 cursor-pointer"
                 >
-                  VIEW TERMINAL AUDIT & ANNUAL REPORT →
+                  VIEW TERMINAL AUDIT &amp; ANNUAL REPORT →
                 </button>
                 <button
                   onClick={handleRestart}
-                  className="px-6 py-3 border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 font-mono font-bold tracking-widest uppercase rounded transition-colors"
+                  className="px-6 py-3 border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 font-mono font-bold tracking-widest uppercase rounded transition-colors cursor-pointer"
                 >
                   ACCEPT A NEW APPOINTMENT
                 </button>
@@ -273,7 +267,7 @@ export default function BoardRoomPage() {
                 CONFIDENCE RATIFIED // EXECUTIVE MANDATE RENEWED
               </div>
               <h1 className="text-3xl font-bold font-sans text-white">
-                QUARTER {completedQuarter ?? meetingQuarter} SURVIVED
+                QUARTER 0{completedQuarter ?? meetingQuarter} SURVIVED
               </h1>
               <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
                 The Board of Directors has formally approved your strategic execution and ratified your operational governance for the quarter.
@@ -283,14 +277,34 @@ export default function BoardRoomPage() {
                   FINAL BOARD CONFIDENCE: <strong>{Number(finalScore).toFixed(0)}%</strong>
                 </div>
               )}
-              <button
-                onClick={handleProceedToNextQuarter}
-                className="mt-2 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-bold tracking-widest uppercase transition-all shadow-lg shadow-emerald-950 hover:shadow-emerald-900"
-              >
-                {(completedQuarter ?? meetingQuarter) < 4
-                  ? `ENTER QUARTER ${(completedQuarter ?? meetingQuarter) + 1} CITY DISTRICT →`
-                  : "PROCEED TO ANNUAL SHAREHOLDER REPORT →"}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-2">
+                {(completedQuarter ?? meetingQuarter) < 4 ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => router.push("/hq")}
+                      className="px-6 py-3.5 bg-neutral-900 border border-neutral-700 hover:border-emerald-500 text-slate-200 font-mono font-bold tracking-widest uppercase transition-all cursor-pointer"
+                    >
+                      RETURN TO HQ →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleProceedToNextQuarter}
+                      className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-bold tracking-widest uppercase transition-all shadow-lg shadow-emerald-950 hover:shadow-emerald-900 cursor-pointer"
+                    >
+                      ENTER QUARTER 0{(completedQuarter ?? meetingQuarter) + 1} CITY DISTRICT →
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleProceedToNextQuarter}
+                    className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-bold tracking-widest uppercase transition-all shadow-lg shadow-emerald-950 hover:shadow-emerald-900 cursor-pointer"
+                  >
+                    PROCEED TO ANNUAL SHAREHOLDER REPORT →
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

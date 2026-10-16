@@ -10,6 +10,7 @@ import {
   useSubmitPitch,
   useSubmitPriceQuote,
   useSubmitClientRemediation,
+  useSubmitQ2SubordinateChoice,
   PitchEvaluationResult,
   DealResolutionResult,
 } from "@/lib/hooks/use-client-negotiation";
@@ -49,6 +50,23 @@ export default function ClientsNegotiationPage() {
   const submitPitchMutation = useSubmitPitch(negSession?.contract_id ?? "", companyId);
   const submitPriceQuoteMutation = useSubmitPriceQuote(negSession?.contract_id ?? "", companyId);
   const submitRemediationMutation = useSubmitClientRemediation(companyId);
+  const submitQ2ChoiceMutation = useSubmitQ2SubordinateChoice(negSession?.contract_id ?? "", companyId);
+
+  const handleSelectQ2Choice = async (tier: "conservative" | "balanced" | "aggressive") => {
+    if (submitQ2ChoiceMutation.isPending) return;
+    soundManager.playClick();
+    try {
+      const res = await submitQ2ChoiceMutation.mutateAsync({ choice_tier: tier });
+      setResolution(res);
+      if (res.outcome === "ACCEPTED" || res.outcome === "COUNTEROFFER") {
+        soundManager.playSuccess();
+      } else {
+        soundManager.playAlert();
+      }
+    } catch {
+      soundManager.playAlert();
+    }
+  };
 
   // Pre-fill suggested price quote once budget or multiplier is known
   useEffect(() => {
@@ -249,10 +267,18 @@ export default function ClientsNegotiationPage() {
               <small>ENGAGEMENT STATUS</small>
               <b
                 style={{
-                  color: isClosed ? "#34d399" : isReactionStage ? "#f59e0b" : "#a855f7",
+                  color: isClosed ? "#34d399" : (quarter === 2 || isReactionStage) ? "#f59e0b" : "#a855f7",
                 }}
               >
-                {isClosed ? "DEAL RESOLVED" : isReactionStage ? "QUOTE PENDING" : isPitchStage ? "PITCH ACTIVE" : "DISCOVERY"}
+                {isClosed
+                  ? "DEAL RESOLVED"
+                  : quarter === 2
+                  ? "DIRECTOR BRIEFING"
+                  : isReactionStage
+                  ? "QUOTE PENDING"
+                  : isPitchStage
+                  ? "PITCH ACTIVE"
+                  : "DISCOVERY"}
               </b>
             </div>
           </div>
@@ -266,6 +292,8 @@ export default function ClientsNegotiationPage() {
               style={{
                 width: isClosed
                   ? "100%"
+                  : quarter === 2
+                  ? "50%"
                   : isReactionStage
                   ? "80%"
                   : isPitchStage
@@ -277,11 +305,22 @@ export default function ClientsNegotiationPage() {
             />
           </div>
           <div className="market-gauge-footer">
-            <span>REQUIREMENT</span>
-            <span>DISCOVERY</span>
-            <span>PITCH</span>
-            <span>EVALUATION</span>
-            <span>RESOLVED</span>
+            {quarter === 2 ? (
+              <>
+                <span>SCENARIO</span>
+                <span>SUBORDINATE BRIEFING</span>
+                <span>COMMERCIAL CHOICES</span>
+                <span>RESOLVED</span>
+              </>
+            ) : (
+              <>
+                <span>REQUIREMENT</span>
+                <span>DISCOVERY</span>
+                <span>PITCH</span>
+                <span>EVALUATION</span>
+                <span>RESOLVED</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -757,9 +796,195 @@ export default function ClientsNegotiationPage() {
         )}
 
         {/* ====================================================================
-            STAGE 1: INITIAL CLIENT REQUIREMENT
+            Q2 STREAMLINED CLIENT WORLD: SUBORDINATE BRIEFING & 3 CHOICES
            ==================================================================== */}
-        {status !== "LOCKED" && isRequirementStage && !isClosed && (
+        {quarter === 2 && status !== "LOCKED" && !isClosed && negSession.subordinate_briefing && (
+          <div className="flex flex-col gap-6 w-full py-2 animate-in fade-in duration-200">
+            {/* Context & Subordinate Briefing Cluster */}
+            <div className="client-content-cluster !m-0 !max-w-none w-full border border-purple-500/50 bg-black/95 p-6 flex flex-col gap-6">
+              {/* Header */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-purple-900/50">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-purple-300 bg-purple-950/80 border border-purple-500/50 px-2.5 py-1 font-bold tracking-wider">
+                      QUARTER 02 COMMERCIAL ACCOUNTS
+                    </span>
+                    <span className="font-mono text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 font-bold">
+                      EXECUTIVE BRIEFING
+                    </span>
+                  </div>
+                  <h1 className="text-2xl font-bold font-mono text-white mt-2 m-0 tracking-wide">
+                    {negSession.subordinate_briefing.client_name.toUpperCase()} // STRATEGIC PROPOSAL
+                  </h1>
+                  <span className="text-xs font-mono text-slate-400">
+                    DELIVERABLES: {negSession.subordinate_briefing.deliverables} • TIMELINE: {negSession.subordinate_briefing.timeline}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleBackToCity}
+                    className="game-button px-5 py-2 text-xs font-mono font-bold tracking-widest text-slate-300 border border-slate-700 bg-neutral-900 cursor-pointer"
+                  >
+                    <span>DISTRICT MAP</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/hq")}
+                    className="game-button gold px-6 py-2 text-xs font-mono font-bold tracking-widest cursor-pointer"
+                  >
+                    <span>RETURN TO HQ →</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Financial Snapshot */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-purple-950/20 border border-purple-900/40 font-mono text-xs">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-purple-400 font-bold">CLIENT PROCUREMENT BUDGET</span>
+                  <strong className="text-lg font-bold text-amber-400">
+                    ₹{negSession.subordinate_briefing.client_budget.toLocaleString()}
+                  </strong>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-purple-400 font-bold">BASELINE DELIVERY OVERHEAD</span>
+                  <strong className="text-lg font-bold text-white">
+                    ₹{negSession.subordinate_briefing.delivery_cost.toLocaleString()}
+                  </strong>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-purple-400 font-bold">CURRENT CLIENT TRUST</span>
+                  <strong className="text-lg font-bold text-purple-300">
+                    {(relationship_score ?? 50).toFixed(0)}%
+                  </strong>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-purple-400 font-bold">RESOLUTION ENGINE</span>
+                  <strong className="text-lg font-bold text-emerald-400">
+                    DETERMINISTIC // INSTANT
+                  </strong>
+                </div>
+              </div>
+
+              {/* Subordinate Dialogue Box */}
+              <div className="p-5 bg-neutral-950/90 border-l-4 border-l-purple-500 border border-purple-900/40 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_#c084fc]" />
+                  <strong className="text-sm font-mono text-purple-300 tracking-wide">
+                    {negSession.subordinate_briefing.speaker_title}
+                  </strong>
+                </div>
+                <p className="text-sm text-slate-200 font-sans leading-relaxed italic m-0">
+                  "{negSession.subordinate_briefing.briefing_text}"
+                </p>
+              </div>
+
+              {/* Actionable Choices Header */}
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <h3 className="text-lg font-bold font-mono text-white m-0">
+                    COMMERCIAL PROPOSAL TIERS
+                  </h3>
+                  <span className="text-xs font-mono text-slate-400">
+                    Select one commercial approach to ratify terms and conclude Q2 client negotiations.
+                  </span>
+                </div>
+              </div>
+
+              {/* The 3 Choice Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {negSession.subordinate_briefing.choices.map((choice) => {
+                  const isConservative = choice.tier === "conservative";
+                  const isBalanced = choice.tier === "balanced";
+
+                  const borderColor = isConservative
+                    ? "border-emerald-500/40 hover:border-emerald-400"
+                    : isBalanced
+                    ? "border-purple-500/40 hover:border-purple-400"
+                    : "border-amber-500/40 hover:border-amber-400";
+
+                  const tagBg = isConservative
+                    ? "bg-emerald-950/70 text-emerald-300 border-emerald-500/40"
+                    : isBalanced
+                    ? "bg-purple-950/70 text-purple-300 border-purple-500/40"
+                    : "bg-amber-950/70 text-amber-300 border-amber-500/40";
+
+                  const btnClass = isConservative
+                    ? "game-button px-4 py-3 text-xs font-mono font-bold tracking-wider text-emerald-300 border border-emerald-500 bg-emerald-950/50 hover:bg-emerald-900/60"
+                    : isBalanced
+                    ? "game-button gold px-4 py-3 text-xs font-mono font-bold tracking-wider"
+                    : "game-button px-4 py-3 text-xs font-mono font-bold tracking-wider text-amber-300 border border-amber-500 bg-amber-950/50 hover:bg-amber-900/60";
+
+                  return (
+                    <div
+                      key={choice.tier}
+                      className={`flex flex-col justify-between p-5 bg-neutral-950 border ${borderColor} rounded transition-all duration-200 flex-1`}
+                    >
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[10px] font-mono px-2 py-0.5 border font-bold uppercase ${tagBg}`}>
+                            {choice.tier}
+                          </span>
+                          <span className="text-xs font-mono text-slate-400">
+                            {isConservative ? "90% BUDGET" : isBalanced ? "105% BUDGET" : "125% BUDGET"}
+                          </span>
+                        </div>
+
+                        <h4 className="text-base font-bold font-mono text-white m-0">
+                          {choice.label}
+                        </h4>
+
+                        <p className="text-xs text-slate-300 font-sans leading-relaxed m-0 min-h-[48px]">
+                          {choice.description}
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2 p-3 bg-black/60 border border-slate-800 font-mono text-xs my-1">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-slate-400">PROPOSAL PRICE</span>
+                            <strong className="text-sm font-bold text-white">
+                              ₹{choice.quoted_price.toLocaleString()}
+                            </strong>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-slate-400">EST. NET MARGIN</span>
+                            <strong className="text-sm font-bold text-emerald-400">
+                              ₹{choice.projected_margin.toLocaleString()}
+                            </strong>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
+                          <span className="text-purple-400 font-bold">RISK:</span>
+                          <span className="truncate">{choice.risk_profile}</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 mt-2 border-t border-slate-800">
+                        <button
+                          type="button"
+                          disabled={submitQ2ChoiceMutation.isPending}
+                          onClick={() => handleSelectQ2Choice(choice.tier)}
+                          className={`w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${btnClass}`}
+                        >
+                          <span>
+                            {submitQ2ChoiceMutation.isPending
+                              ? "RATIFYING PROPOSAL..."
+                              : `SUBMIT ${choice.tier.toUpperCase()} OFFER`}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ====================================================================
+            STAGE 1: INITIAL CLIENT REQUIREMENT (Q1)
+           ==================================================================== */}
+        {quarter === 1 && status !== "LOCKED" && isRequirementStage && !isClosed && (
           <div className="flex flex-col gap-6 w-full py-2 animate-in fade-in duration-200">
             <div className="client-content-cluster !m-0 !max-w-none w-full">
               <div className="client-cluster-header">
@@ -818,9 +1043,9 @@ export default function ClientsNegotiationPage() {
         )}
 
         {/* ====================================================================
-            STAGE 2 & 3: DISCOVERY & PURSUE / REJECT
+            STAGE 2 & 3: DISCOVERY & PURSUE / REJECT (Q1)
            ==================================================================== */}
-        {isDiscoveryStage && !isClosed && (
+        {quarter === 1 && isDiscoveryStage && !isClosed && (
           <div className="flex flex-col gap-6 w-full py-2 animate-in fade-in duration-200">
             <div className="client-content-cluster !m-0 !max-w-none w-full">
               <div className="client-cluster-header">
@@ -902,9 +1127,9 @@ export default function ClientsNegotiationPage() {
         )}
 
         {/* ====================================================================
-            STAGE 4: PITCH SUBMISSION (WHY SHOULD WE CHOOSE YOU?)
+            STAGE 4: PITCH SUBMISSION (WHY SHOULD WE CHOOSE YOU?) (Q1)
            ==================================================================== */}
-        {isPitchStage && !evaluation && !isClosed && (
+        {quarter === 1 && isPitchStage && !evaluation && !isClosed && (
           <div className="flex flex-col gap-6 w-full py-2 animate-in fade-in duration-200">
             <div className="client-content-cluster !m-0 !max-w-none w-full">
               <div className="client-cluster-header">
@@ -1101,9 +1326,9 @@ export default function ClientsNegotiationPage() {
         )}
 
         {/* ====================================================================
-            STAGE 5 & 6: CLIENT REACTION & PRICE QUOTE
+            STAGE 5 & 6: CLIENT REACTION & PRICE QUOTE (Q1)
            ==================================================================== */}
-        {isReactionStage && !isClosed && (
+        {quarter === 1 && isReactionStage && !isClosed && (
           <div className="flex flex-col gap-6 w-full py-2 animate-in fade-in duration-200">
             {/* Reaction Card */}
             <div className="client-content-cluster !m-0 !max-w-none w-full">
@@ -1253,42 +1478,44 @@ export default function ClientsNegotiationPage() {
                 </div>
 
                 {/* State Impact Breakdown */}
-                {resolution && (
+                {(resolution?.stat_deltas ?? negSession.decision_stat_deltas) && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
                     <div className="p-4 bg-neutral-950 border border-slate-800 flex flex-col gap-1.5">
                       <span className="text-sm font-mono text-slate-400 font-semibold">FINAL CONTRACT REVENUE</span>
                       <strong className="text-2xl font-bold font-mono text-emerald-400">
-                        ₹{resolution.final_revenue.toLocaleString()}
+                        ₹{(resolution?.final_revenue ?? (negSession.decision_stat_deltas?.revenue ?? (status === "closed_won" ? negSession.target_value : 0))).toLocaleString()}
                       </strong>
                     </div>
                     <div className="p-4 bg-neutral-950 border border-slate-800 flex flex-col gap-1.5">
                       <span className="text-sm font-mono text-slate-400 font-semibold">LIQUID CASH DELTA</span>
                       <strong className="text-2xl font-bold font-mono text-white">
-                        {resolution.stat_deltas.cash ? `+₹${resolution.stat_deltas.cash.toLocaleString()}` : "₹0"}
+                        {((resolution?.stat_deltas?.cash ?? negSession.decision_stat_deltas?.cash) ?? 0) > 0
+                          ? `+₹${((resolution?.stat_deltas?.cash ?? negSession.decision_stat_deltas?.cash) ?? 0).toLocaleString()}`
+                          : `₹${((resolution?.stat_deltas?.cash ?? negSession.decision_stat_deltas?.cash) ?? 0).toLocaleString()}`}
                       </strong>
                     </div>
                     <div className="p-4 bg-neutral-950 border border-slate-800 flex flex-col gap-1.5">
                       <span className="text-sm font-mono text-slate-400 font-semibold">CLIENT SATISFACTION</span>
                       <strong
                         className={`text-2xl font-bold font-mono ${
-                          (resolution.stat_deltas.client_satisfaction ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
+                          ((resolution?.stat_deltas?.client_satisfaction ?? negSession.decision_stat_deltas?.client_satisfaction) ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
                         }`}
                       >
-                        {(resolution.stat_deltas.client_satisfaction ?? 0) >= 0
-                          ? `+${resolution.stat_deltas.client_satisfaction}`
-                          : resolution.stat_deltas.client_satisfaction}
+                        {((resolution?.stat_deltas?.client_satisfaction ?? negSession.decision_stat_deltas?.client_satisfaction) ?? 0) >= 0
+                          ? `+${((resolution?.stat_deltas?.client_satisfaction ?? negSession.decision_stat_deltas?.client_satisfaction) ?? 0)}`
+                          : ((resolution?.stat_deltas?.client_satisfaction ?? negSession.decision_stat_deltas?.client_satisfaction) ?? 0)}
                       </strong>
                     </div>
                     <div className="p-4 bg-neutral-950 border border-slate-800 flex flex-col gap-1.5">
                       <span className="text-sm font-mono text-slate-400 font-semibold">MARKET SHARE DELTA</span>
                       <strong
                         className={`text-2xl font-bold font-mono ${
-                          (resolution.stat_deltas.market_share ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
+                          ((resolution?.stat_deltas?.market_share ?? negSession.decision_stat_deltas?.market_share) ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
                         }`}
                       >
-                        {(resolution.stat_deltas.market_share ?? 0) >= 0
-                          ? `+${resolution.stat_deltas.market_share}%`
-                          : `${resolution.stat_deltas.market_share}%`}
+                        {((resolution?.stat_deltas?.market_share ?? negSession.decision_stat_deltas?.market_share) ?? 0) >= 0
+                          ? `+${((resolution?.stat_deltas?.market_share ?? negSession.decision_stat_deltas?.market_share) ?? 0)}%`
+                          : `${((resolution?.stat_deltas?.market_share ?? negSession.decision_stat_deltas?.market_share) ?? 0)}%`}
                       </strong>
                     </div>
                   </div>
@@ -1299,13 +1526,22 @@ export default function ClientsNegotiationPage() {
                     Q0{quarter} CLIENT ENGAGEMENT RATIFIED • STATE COMMITTED TO ENTERPRISE LEDGER
                   </span>
 
-                  <button
-                    type="button"
-                    onClick={handleBackToCity}
-                    className="game-button gold px-10 py-3.5 text-sm font-mono font-bold tracking-widest cursor-pointer"
-                  >
-                    <span>RETURN TO CITY MAP →</span>
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleBackToCity}
+                      className="game-button px-5 py-3 text-xs font-mono font-bold tracking-widest text-slate-300 border border-slate-700 bg-neutral-900 cursor-pointer"
+                    >
+                      <span>DISTRICT MAP</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => router.push("/hq")}
+                      className="game-button gold px-10 py-3.5 text-sm font-mono font-bold tracking-widest cursor-pointer"
+                    >
+                      <span>RETURN TO HQ →</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

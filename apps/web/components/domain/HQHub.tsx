@@ -41,7 +41,7 @@ export function HQHub() {
       href: "/hq/operations",
       icon: Sliders,
       color: "from-emerald-600/20 to-teal-600/20 border-emerald-500/40 text-emerald-400",
-      badge: session?.company?.cash ? `\$${session.company.cash.toLocaleString()}` : "Budget Active",
+      badge: session?.company?.cash ? `₹${session.company.cash.toLocaleString()}` : "Budget Active",
     },
     {
       id: "employees",

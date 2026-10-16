@@ -9,7 +9,7 @@ import {
   TrendingUp,
   ShieldAlert,
   Sliders,
-  DollarSign,
+  IndianRupee,
   Lock,
   RotateCcw,
   Sparkles,
@@ -152,7 +152,7 @@ export function OperationsGridGame({
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="h-4 w-4 text-cyan-400" />
+                  <IndianRupee className="h-4 w-4 text-cyan-400" />
                   <span className="text-xs font-mono text-neutral-400 uppercase tracking-wider">
                     Available Capital Reactor
                   </span>

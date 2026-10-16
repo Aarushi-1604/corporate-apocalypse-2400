@@ -13,7 +13,7 @@ Authoritative game-engine logic for multi-stage commercial negotiations:
 import json
 import math
 import re
-from datetime import datetime, timezone
+import uuid
 from typing import Any, Dict, Optional, Tuple
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,6 +43,7 @@ async def get_scheduled_followup_deal(
     db: AsyncSession,
     company: Company,
     quarter: int,
+    existing_contracts: Optional[list[Contract]] = None,
 ) -> Optional[Contract]:
     """
     Exact two-deal follow-up schedule:
@@ -57,45 +58,46 @@ async def get_scheduled_followup_deal(
     if quarter < 3:
         return None
 
-    try:
-        contracts_res = await db.execute(
-            select(Contract).where(Contract.company_id == company.id).order_by(Contract.quarter.asc())
-        )
-    except Exception:
-        return None
-
-    existing_contracts: list[Contract] = []
-    scalars_fn = getattr(contracts_res, "scalars", None)
-    if callable(scalars_fn):
+    if existing_contracts is None:
         try:
-            s_res = scalars_fn()
-            if hasattr(s_res, "__await__"):
-                s_res = await s_res
-            all_fn = getattr(s_res, "all", None)
-            if callable(all_fn):
-                all_res = all_fn()
-                if hasattr(all_res, "__await__"):
-                    all_res = await all_res
-                if isinstance(all_res, (list, tuple)):
-                    existing_contracts = [c for c in all_res if isinstance(c, Contract)]
+            contracts_res = await db.execute(
+                select(Contract).where(Contract.company_id == company.id).order_by(Contract.quarter.asc())
+            )
         except Exception:
-            pass
+            return None
 
-    if not existing_contracts:
-        one_fn = getattr(contracts_res, "scalar_one_or_none", None)
-        if callable(one_fn):
+        existing_contracts = []
+        scalars_fn = getattr(contracts_res, "scalars", None)
+        if callable(scalars_fn):
             try:
-                c_single = one_fn()
-                if hasattr(c_single, "__await__"):
-                    c_single = await c_single
-                if c_single is not None and isinstance(c_single, Contract):
-                    existing_contracts = [c_single]
+                s_res = scalars_fn()
+                if hasattr(s_res, "__await__"):
+                    s_res = await s_res
+                all_fn = getattr(s_res, "all", None)
+                if callable(all_fn):
+                    all_res = all_fn()
+                    if hasattr(all_res, "__await__"):
+                        all_res = await all_res
+                    if isinstance(all_res, (list, tuple)):
+                        existing_contracts = [c for c in all_res if isinstance(c, Contract)]
             except Exception:
                 pass
 
+        if not existing_contracts:
+            one_fn = getattr(contracts_res, "scalar_one_or_none", None)
+            if callable(one_fn):
+                try:
+                    c_single = one_fn()
+                    if hasattr(c_single, "__await__"):
+                        c_single = await c_single
+                    if c_single is not None and isinstance(c_single, Contract):
+                        existing_contracts = [c_single]
+                except Exception:
+                    pass
+
     accepted_statuses = ("closed_won", "accepted", "remediated", "active")
-    q1_deal = next((c for c in existing_contracts if c.quarter == 1 and c.status in accepted_statuses), None)
-    q2_deal = next((c for c in existing_contracts if c.quarter == 2 and c.status in accepted_statuses), None)
+    q1_deal = next((c for c in existing_contracts if c.quarter == 1 and getattr(c, "status", "").lower() in accepted_statuses), None)
+    q2_deal = next((c for c in existing_contracts if c.quarter == 2 and getattr(c, "status", "").lower() in accepted_statuses), None)
 
     q1_accepted = q1_deal is not None
     q2_accepted = q2_deal is not None
@@ -170,6 +172,69 @@ async def check_client_prerequisites(
         return False, "Research & Development must be committed before negotiating with clients."
 
     return True, ""
+
+
+def get_q2_subordinate_briefing(
+    scenario: Dict[str, Any],
+    contract: Optional[Contract] = None,
+    state: Optional[CompanyStateModel] = None,
+) -> Dict[str, Any]:
+    budget = float(scenario["stage_2_discovery"]["budget_expectation"]) if scenario.get("stage_2_discovery") else 40000.0
+    delivery_cost = round(budget * 0.55, -2)
+
+    p_cons = round(budget * 0.90, -2)
+    m_cons = round(p_cons * 0.85 - delivery_cost, -2)
+
+    p_bal = round(budget * 1.05, -2)
+    m_bal = round(p_bal * 0.85 - delivery_cost, -2)
+
+    p_agg = round(budget * 1.25, -2)
+    m_agg = round(p_agg * 0.85 - delivery_cost, -2)
+
+    client_name = scenario.get("client_name", "Enterprise Client")
+    deliverables = scenario.get("stage_2_discovery", {}).get("deliverables", "Enterprise Service Level Fulfillment")
+    timeline = scenario.get("stage_2_discovery", {}).get("timeline", "Quarter 2 Delivery Cycle")
+
+    return {
+        "speaker_title": "Director of Commercial Accounts (Director of CA)",
+        "client_name": client_name,
+        "deliverables": deliverables,
+        "timeline": timeline,
+        "client_budget": budget,
+        "delivery_cost": delivery_cost,
+        "briefing_text": (
+            f"Sir, our technical and delivery leads reviewed the Q2 requirements for {client_name}. "
+            f"Baseline delivery overhead is estimated at ₹{delivery_cost:,.0f} against their allocated budget of ₹{budget:,.0f}. "
+            f"A competitive quote protects our commercial trust and virtually guarantees deal ratification, "
+            f"whereas an aggressive quote maximizes net treasury capital if our brand reputation can withstand client pushback."
+        ),
+        "choices": [
+            {
+                "tier": "conservative",
+                "label": "Conservative Competitive Offer",
+                "quoted_price": p_cons,
+                "projected_margin": m_cons,
+                "risk_profile": "Extremely Low Rejection Risk // High Relationship Trust",
+                "description": f"Discount proposal to ₹{p_cons:,.0f} (90% of budget). Minimizes procurement friction and secures recurring quarterly revenue.",
+            },
+            {
+                "tier": "balanced",
+                "label": "Balanced Enterprise Offer",
+                "quoted_price": p_bal,
+                "projected_margin": m_bal,
+                "risk_profile": "Moderate Negotiation Risk // Standard Market Margin",
+                "description": f"Standard proposal at ₹{p_bal:,.0f} (105% of budget). Fair enterprise margin with moderate client counteroffer probability.",
+            },
+            {
+                "tier": "aggressive",
+                "label": "Aggressive Premium Offer",
+                "quoted_price": p_agg,
+                "projected_margin": m_agg,
+                "risk_profile": "High Pushback Risk // Maximum Capital Extraction",
+                "description": f"Premium proposal at ₹{p_agg:,.0f} (125% of budget). Demands strong brand credibility; high risk of client counteroffer or rejection.",
+            },
+        ],
+    }
 
 
 async def get_or_create_negotiation_session(
@@ -305,25 +370,7 @@ async def get_or_create_negotiation_session(
         )
 
         # Determine target deal using exact two-deal schedule table:
-        target_deal = await get_scheduled_followup_deal(db, company, quarter)
-        if target_deal is None and quarter >= 3:
-            # Fallback for Q3/Q4: if player has any active deal or existing contract, use it for remediation
-            target_deal = next((c for c in existing_contracts if c.status == "closed_won"), None)
-            if not target_deal and existing_contracts:
-                target_deal = existing_contracts[0]
-            if not target_deal:
-                # Create an emergency SLA contract so remediation is always available
-                target_deal = Contract(
-                    company_id=company.id,
-                    quarter=quarter,
-                    client_name="Global Enterprise Client",
-                    client_type="Enterprise",
-                    status="closed_won",
-                    value=35000.0,
-                    relationship_score=40.0,
-                )
-                db.add(target_deal)
-                await db.flush()
+        target_deal = await get_scheduled_followup_deal(db, company, quarter, existing_contracts=existing_contracts)
 
         if target_deal is None:
             return {
@@ -342,13 +389,16 @@ async def get_or_create_negotiation_session(
                 "total_active_contracts": len([c for c in active_portfolio if c["status"] == "closed_won"]),
                 "total_contract_value": total_contract_value,
                 "total_ongoing_quarterly_revenue": total_ongoing_rev,
+                "decision_summary": None,
+                "decision_stat_deltas": None,
+                "subordinate_briefing": None,
                 "company_capabilities": {
                     "name": company.name,
                     "sector": company.sector,
                     "innovation": 50.0,
                     "brand": 50.0,
                     "risk": 20.0,
-                    "unique_strength": company.unique_strength,
+                    "unique_strength": getattr(company, "unique_strength", ""),
                 },
             }
 
@@ -537,6 +587,8 @@ async def get_or_create_negotiation_session(
     decision_log = decision_log_res.scalar_one_or_none()
     is_locked = decision_log is not None or contract.status in ("closed_won", "closed_lost")
 
+    briefing = get_q2_subordinate_briefing(scenario, contract, state) if quarter == 2 else None
+
     return {
         "contract_id": str(contract.id),
         "quarter": quarter,
@@ -547,6 +599,7 @@ async def get_or_create_negotiation_session(
         "is_locked": is_locked,
         "decision_summary": decision_log.summary if decision_log else None,
         "decision_stat_deltas": decision_log.stat_deltas if decision_log else None,
+        "subordinate_briefing": briefing,
         "company_capabilities": {
             "name": company.name,
             "sector": company.sector,
@@ -940,6 +993,58 @@ async def submit_price_quote_and_resolve(
     }
 
 
+async def submit_q2_subordinate_choice(
+    db: AsyncSession,
+    company: Company,
+    contract_id: str,
+    choice_tier: str,
+) -> Dict[str, Any]:
+    """
+    Q2 Subordinate Choice resolution:
+    Resolves client negotiation through subordinate recommendation tiers (conservative, balanced, aggressive)
+    using deterministic deal resolution without conversational prompt overhead.
+    """
+    choice_tier = choice_tier.lower().strip()
+    if choice_tier not in ("conservative", "balanced", "aggressive"):
+        raise ValueError("Invalid choice tier. Must be 'conservative', 'balanced', or 'aggressive'.")
+
+    contract_res = await db.execute(select(Contract).where(Contract.id == contract_id))
+    contract = contract_res.scalar_one_or_none()
+    if not contract or contract.company_id != company.id:
+        raise ValueError("Contract not found.")
+
+    if contract.quarter != 2:
+        raise ValueError("Subordinate briefing choice is only available in Quarter 2.")
+
+    if contract.status in ("closed_won", "closed_lost"):
+        raise ValueError("This contract negotiation has already been resolved.")
+
+    scenario = get_scenario_for_company(
+        company_id_int=company.id.int,
+        quarter=2,
+        company_name=company.name,
+        sector=company.sector,
+    )
+    budget = float(scenario["stage_2_discovery"]["budget_expectation"]) if scenario.get("stage_2_discovery") else 40000.0
+
+    if choice_tier == "conservative":
+        quoted_price = round(budget * 0.90, -2)
+    elif choice_tier == "balanced":
+        quoted_price = round(budget * 1.05, -2)
+    else:  # aggressive
+        quoted_price = round(budget * 1.25, -2)
+
+    result = await submit_price_quote_and_resolve(
+        db=db,
+        company=company,
+        contract_id=contract_id,
+        quoted_price=quoted_price,
+        pitch_score=65,
+    )
+    result["choice_tier"] = choice_tier
+    return result
+
+
 async def _evaluate_remediation_response(
     client_name: str,
     contract_val: float,
@@ -1083,7 +1188,7 @@ async def submit_client_remediation(
     contract = None
     if contract_id:
         try:
-            cid = uuid.UUID(contract_id) if isinstance(contract_id, str) else contract_id
+            cid = uuid.UUID(str(contract_id)) if not isinstance(contract_id, uuid.UUID) else contract_id
             c_res = await db.execute(select(Contract).where(Contract.id == cid))
             contract = c_res.scalar_one_or_none()
         except Exception:
@@ -1094,19 +1199,14 @@ async def submit_client_remediation(
         c_res = await db.execute(
             select(Contract).where(Contract.company_id == company.id).order_by(Contract.quarter.desc())
         )
-        contract = c_res.scalars().first()
+        scalars_fn = getattr(c_res, "scalars", None)
+        if callable(scalars_fn):
+            s_obj = scalars_fn()
+            first_fn = getattr(s_obj, "first", None)
+            if callable(first_fn):
+                contract = first_fn()
     if not contract:
-        contract = Contract(
-            company_id=company.id,
-            quarter=quarter,
-            client_name="Global Enterprise Client",
-            client_type="Enterprise",
-            status="closed_won",
-            value=35000.0,
-            relationship_score=40.0,
-        )
-        db.add(contract)
-        await db.flush()
+        raise ValueError("No active contract eligible for SLA remediation.")
 
     client_name = contract.client_name
     contract_val = float(contract.value) if float(contract.value) > 0 else 30000.0

@@ -55,6 +55,8 @@ export type ScoreBreakdown = {
 export type AnnualReport = {
   outcome: string; // SURVIVED, BANKRUPT, FIRED
   raw_status: string;
+  ending_quarter?: number;
+  terminal_reason?: string;
   ceo_name: string;
   company_name: string;
   sector: string;

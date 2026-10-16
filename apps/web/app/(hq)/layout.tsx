@@ -16,6 +16,8 @@ const FULLSCREEN_ROUTES = [
   "/hq/press",
   "/hq/board",
   "/hq/leaderboard",
+  "/hq/reports/annual",
+  "/hq/reports/corporate-times",
 ];
 
 export default function HqLayout({ children }: { children: React.ReactNode }) {

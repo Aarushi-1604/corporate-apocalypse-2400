@@ -143,6 +143,7 @@ def deterministic_press_final(
         if any(w in s.lower() for w in ["will", "commit", "promise", "guarantee", "initiate"]):
             commitments.append(s.strip())
 
+    min_words = 15 if len(statements) >= 3 else 5
     if acc_score >= 2 and eva_score == 0:
         tone = "FAVOURABLE"
         headline = f"{company_name.upper()} CEO TAKES COMMAND IN FIERCE CRISIS DEFENSE"
@@ -155,7 +156,7 @@ def deterministic_press_final(
         )
         verdict = "Poised, resolute, and accountable. Public trust steadying."
         score = 85
-    elif eva_score > acc_score or word_count < 15:
+    elif eva_score > acc_score or word_count < min_words:
         tone = "DAMAGING"
         headline = f"EVASIVE CEO STUMBLES AS {company_name.upper()} EMBROILED IN SCANDAL"
         article_body = (
@@ -227,7 +228,7 @@ CURRENT INTERVIEW RECORD:
 
     user_prompt += f"""
 TASK SPECIFICATION:
-Is this the final evaluation after 3 responses? {is_final}
+Is this the final conference evaluation? {is_final}
 Current Exchange Index: {exchange_index}
 Output required JSON strictly matching schema.
 """

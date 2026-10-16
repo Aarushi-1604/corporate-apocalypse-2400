@@ -218,7 +218,7 @@ export function PressWorldScreen({
                   BREAKING // HOSTILE PRESS BRIEFING
                 </div>
                 <span className="exchange-progress-badge">
-                  EXCHANGE {exchangeIndex + 1} OF 3
+                  EXCHANGE {exchangeIndex + 1} OF {pressData.total_exchanges || (pressData.quarter === 2 ? 1 : 3)}
                 </span>
               </div>
 
@@ -328,7 +328,9 @@ export function PressWorldScreen({
                       disabled={!canSubmit}
                       className="deliver-statement-btn"
                     >
-                      {exchangeIndex === 2 ? "CONCLUDE CONFERENCE" : "DELIVER STATEMENT"}
+                      {exchangeIndex >= ((pressData.total_exchanges || (pressData.quarter === 2 ? 1 : 3)) - 1)
+                        ? "CONCLUDE CONFERENCE"
+                        : "DELIVER STATEMENT"}
                     </button>
                   </div>
                 </form>

@@ -79,7 +79,29 @@ export interface NegotiationSessionResponse {
     stat_deltas?: Record<string, number> | null;
     compensation_paid?: number;
   };
+  subordinate_briefing?: Q2SubordinateBriefing | null;
 }
+
+export interface Q2SubordinateChoice {
+  tier: "conservative" | "balanced" | "aggressive";
+  label: string;
+  quoted_price: number;
+  projected_margin: number;
+  risk_profile: string;
+  description: string;
+}
+
+export interface Q2SubordinateBriefing {
+  speaker_title: string;
+  client_name: string;
+  deliverables: string;
+  timeline: string;
+  client_budget: number;
+  delivery_cost: number;
+  briefing_text: string;
+  choices: Q2SubordinateChoice[];
+}
+
 
 export interface PitchEvaluationResult {
   status: string;
@@ -268,4 +290,35 @@ export function useSubmitClientRemediation(companyId?: string) {
     },
   });
 }
+
+export function useSubmitQ2SubordinateChoice(contractId: string, companyId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      choice_tier,
+    }: {
+      choice_tier: "conservative" | "balanced" | "aggressive";
+    }): Promise<DealResolutionResult> => {
+      const res = await fetch(`${API_BASE}/api/v1/contracts/${contractId}/q2-subordinate-choice`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ choice_tier }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail ?? "Failed to submit subordinate choice");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["negotiation-session", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["company-state", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["department-locks", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["session"] });
+      queryClient.invalidateQueries({ queryKey: ["press-session", companyId] });
+    },
+  });
+}
+
 

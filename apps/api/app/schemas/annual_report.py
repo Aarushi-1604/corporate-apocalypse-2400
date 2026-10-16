@@ -58,6 +58,8 @@ class ScoreBreakdown(BaseModel):
 class AnnualReportOut(BaseModel):
     outcome: str  # SURVIVED, BANKRUPT, FIRED
     raw_status: str  # completed, bankrupt, fired
+    ending_quarter: int | None = None
+    terminal_reason: str | None = None
     ceo_name: str
     company_name: str
     sector: str

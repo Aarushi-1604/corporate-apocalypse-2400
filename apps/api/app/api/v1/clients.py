@@ -16,6 +16,7 @@ from app.services.client_negotiation_service import (
     submit_pitch_evaluation,
     submit_price_quote_and_resolve,
     submit_client_remediation,
+    submit_q2_subordinate_choice,
 )
 
 router = APIRouter()
@@ -214,4 +215,34 @@ async def post_client_remediation(
             status_update=payload.status_update,
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+class Q2SubordinateChoicePayload(BaseModel):
+    choice_tier: str = Field(..., description="'conservative', 'balanced', or 'aggressive'")
+
+
+@router.post("/contracts/{contract_id}/q2-subordinate-choice")
+@router.post("/companies/{company_id}/contracts/{contract_id}/q2-subordinate-choice")
+async def post_q2_subordinate_choice(
+    contract_id: str,
+    payload: Q2SubordinateChoicePayload,
+    session_row: SessionModel = Depends(get_current_session),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Stage 2 streamlined subordinate choice: Conservative, Balanced, or Aggressive."""
+    company_res = await db.execute(select(Company).where(Company.session_id == session_row.id))
+    company = company_res.scalar_one_or_none()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found.")
+
+    try:
+        return await submit_q2_subordinate_choice(
+            db=db,
+            company=company,
+            contract_id=contract_id,
+            choice_tier=payload.choice_tier,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+

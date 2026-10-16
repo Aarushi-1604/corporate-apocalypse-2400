@@ -209,12 +209,21 @@ async def get_annual_report(db: AsyncSession, company: Company) -> AnnualReportO
     # Also include press decisions if any
     for d in decisions:
         if d.decision_type == "press":
+            deltas = d.stat_deltas if isinstance(d.stat_deltas, dict) else {}
+            headline = deltas.get("headline") or d.summary
+            verdict = deltas.get("media_verdict") or deltas.get("tone") or ""
+            detail_str = f"Verdict: {verdict}" if verdict else "Press conference evaluated by municipal press corps."
+            brand_val = deltas.get("brand", 0.0)
+            try:
+                brand_str = f"Brand: {float(brand_val):+.1f}"
+            except (ValueError, TypeError):
+                brand_str = "Coverage logged"
             press_summaries.append(
                 PressHeadlineEntry(
                     quarter=d.quarter,
-                    headline=d.summary,
-                    details=f"Impact: {d.stat_deltas}",
-                    reputation_impact=f"Brand delta: {d.stat_deltas.get('brand', 0.0):+}",
+                    headline=headline,
+                    details=detail_str,
+                    reputation_impact=brand_str,
                 )
             )
 
@@ -246,14 +255,21 @@ async def get_annual_report(db: AsyncSession, company: Company) -> AnnualReportO
 
     # Outcomes
     raw_status = session_row.status
+    ending_quarter = session_row.current_quarter or (all_states[-1].quarter if all_states else 4)
+
     if raw_status == "completed":
         outcome = "SURVIVED"
+        ending_quarter = 4
+        terminal_reason = "Fiscal solvency & corporate governance ratified across all 4 operational quarters."
     elif raw_status == "bankrupt":
         outcome = "BANKRUPT"
+        terminal_reason = f"Insolvency default: operating commitments exceeded treasury cash reserves in Quarter {ending_quarter}."
     elif raw_status == "fired":
         outcome = "FIRED"
+        terminal_reason = f"Governance dismissal: Board confidence collapsed below statutory 30% threshold in Quarter {ending_quarter}."
     else:
         outcome = raw_status.upper()
+        terminal_reason = "Executive tenure concluded."
 
     final_score = float(score_row.final_score) if score_row and score_row.final_score is not None else 0.0
     revenue_score = float(score_row.revenue_score) if score_row and score_row.revenue_score is not None else 0.0
@@ -279,6 +295,8 @@ async def get_annual_report(db: AsyncSession, company: Company) -> AnnualReportO
     return AnnualReportOut(
         outcome=outcome,
         raw_status=raw_status,
+        ending_quarter=ending_quarter,
+        terminal_reason=terminal_reason,
         ceo_name=ceo_name,
         company_name=company.name,
         sector=company.sector,

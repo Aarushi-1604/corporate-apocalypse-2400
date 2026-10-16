@@ -9,5 +9,10 @@ router = APIRouter()
 
 
 @router.get("/leaderboard", response_model=list[LeaderboardRowOut])
-async def leaderboard(limit: int = 25, db: AsyncSession = Depends(get_db)) -> list[LeaderboardRowOut]:
-    return await get_leaderboard(db, limit)
+async def leaderboard(
+    limit: int = 50,
+    status_filter: str | None = None,
+    batch: str | None = None,
+    db: AsyncSession = Depends(get_db),
+) -> list[LeaderboardRowOut]:
+    return await get_leaderboard(db, limit=limit, filter_status=status_filter, batch=batch)

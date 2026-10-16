@@ -177,8 +177,8 @@ async def get_or_create_press_session(
             "statements": deltas.get("statements", []),
             "questions": deltas.get("questions", []),
             "score": deltas.get("score"),
-            "current_exchange_index": 3,
-            "total_exchanges": 3,
+            "current_exchange_index": 1 if quarter == 2 else 3,
+            "total_exchanges": 1 if quarter == 2 else 3,
         }
 
     # 2. If quarter > 2: Passive Press Coverage (Corporate Times news generation based directly on HQ Ops and Client Negos)
@@ -391,13 +391,14 @@ async def get_or_create_press_session(
 
     # 2. Check prerequisites for Q1/Q2
     can_access, reason = await check_press_prerequisites(db, company, quarter)
+    total_exchanges = 1 if quarter == 2 else 3
     if not can_access:
         return {
             "quarter": quarter,
             "status": "LOCKED",
             "lock_reason": reason,
             "current_exchange_index": 0,
-            "total_exchanges": 3,
+            "total_exchanges": total_exchanges,
         }
 
     session_key = f"{company.id}:{quarter}"
@@ -462,6 +463,7 @@ async def get_or_create_press_session(
     if ceo_name:
         crisis_context["ceo_name"] = ceo_name
 
+    total_exchanges = 1 if quarter == 2 else 3
     new_session = {
         "quarter": quarter,
         "status": "ACTIVE",
@@ -473,8 +475,8 @@ async def get_or_create_press_session(
         "current_question": crisis_context["opening_question"],
         "questions": [crisis_context["opening_question"]],
         "statements": [],
-        "current_exchange_index": 0,  # 0: waiting for first response; 1: follow-up 1; 2: follow-up 2
-        "total_exchanges": 3,
+        "current_exchange_index": 0,  # 0: waiting for first response
+        "total_exchanges": total_exchanges,
     }
     ACTIVE_PRESS_SESSIONS[session_key] = new_session
     return new_session
@@ -514,15 +516,16 @@ async def submit_press_response(
     if session_data.get("status") == "LOCKED":
         raise ValueError(session_data.get("lock_reason", "Press conference is locked."))
 
+    total_exchanges = session_data.get("total_exchanges", 1 if quarter == 2 else 3)
     exchange_idx = session_data["current_exchange_index"]
-    if exchange_idx >= 3:
-        raise ValueError("All 3 statements for this press conference have already been submitted.")
+    if exchange_idx >= total_exchanges:
+        raise ValueError("All statements for this press conference have already been submitted.")
 
     session_data["statements"].append(statement.strip())
     session_data["current_exchange_index"] += 1
 
-    if session_data["current_exchange_index"] < 3:
-        # Generate follow-up question via LLM pipeline
+    if session_data["current_exchange_index"] < total_exchanges:
+        # Generate follow-up question via LLM pipeline (for Q1 follow-up exchanges)
         llm_res = await evaluate_press_step_llm(
             crisis_context=session_data["crisis_context"],
             statements=session_data["statements"],
@@ -542,7 +545,7 @@ async def submit_press_response(
         return {
             "status": "ACTIVE",
             "current_exchange_index": session_data["current_exchange_index"],
-            "total_exchanges": 3,
+            "total_exchanges": total_exchanges,
             "next_question": next_q,
             "tone": session_data["latest_tone"],
             "journalist_notes": session_data["journalist_notes"],
@@ -550,11 +553,11 @@ async def submit_press_response(
             "questions": session_data["questions"],
         }
 
-    # Final exchange completed! (3 responses received)
+    # Final exchange completed! (1 response in Q2, or 3 responses in Q1)
     final_eval = await evaluate_press_step_llm(
         crisis_context=session_data["crisis_context"],
         statements=session_data["statements"],
-        exchange_index=3,
+        exchange_index=session_data["current_exchange_index"],
         company_name=company.name,
         is_final=True,
     )
@@ -652,8 +655,8 @@ async def submit_press_response(
 
     return {
         "status": "COMPLETED",
-        "current_exchange_index": 3,
-        "total_exchanges": 3,
+        "current_exchange_index": total_exchanges,
+        "total_exchanges": total_exchanges,
         "headline": headline,
         "article_body": article_body,
         "media_verdict": media_verdict,
