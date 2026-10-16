@@ -72,6 +72,23 @@ def _to_state_out(row: CompanyStateModel) -> CompanyStateOut:
 async def lock_decisions(
     db: AsyncSession, session_row: SessionModel, company: Company, quarter: int
 ) -> LockResponse:
+    if session_row.status == "bankrupt":
+        current_res = await db.execute(
+            select(CompanyStateModel).where(
+                CompanyStateModel.company_id == company.id,
+                CompanyStateModel.quarter == quarter,
+            )
+        )
+        curr = current_res.scalar_one_or_none()
+        if curr:
+            return LockResponse(
+                new_quarter=quarter,
+                deltas={},
+                board_session_required=False,
+                bankruptcy=True,
+                already_locked=False,
+                new_state=_to_state_out(curr),
+            )
     if session_row.status != "active":
         raise ValueError("GAME_COMPLETE")
     if quarter != session_row.current_quarter:
@@ -122,6 +139,32 @@ async def lock_decisions(
         Decision(category=row.category, amount=float(row.amount))
         for row in budget_result.scalars().all()
     ]
+    total_spent = sum(d.amount for d in decisions)
+
+    from app.services.solvency_service import enforce_solvency
+    solvency = await enforce_solvency(
+        db=db,
+        session_row=session_row,
+        company=company,
+        quarter=quarter,
+        action_type="operations",
+        action_label=f"Q{quarter} Operations Budget Lock",
+        required_cash=total_spent,
+        state=current,
+    )
+    if solvency.is_bankrupt:
+        return LockResponse(
+            new_quarter=quarter,
+            deltas={},
+            board_session_required=False,
+            bankruptcy=True,
+            already_locked=False,
+            new_state=_to_state_out(solvency.current_state or current),
+            action_attempted=f"Q{quarter} Operations Budget Lock",
+            required_amount=total_spent,
+            available_cash=solvency.available_cash,
+            final_score=solvency.final_score,
+        )
 
     engine_state = EngineCompanyState(
         cash=float(current.cash), revenue=float(current.revenue), profit=float(current.profit),

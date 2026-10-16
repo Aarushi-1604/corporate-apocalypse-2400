@@ -100,3 +100,7 @@ class ExecuteMarketDecisionResponse(BaseModel):
     new_brand: float
     new_risk: float
     bankruptcy: bool = False
+    action_attempted: str | None = None
+    required_amount: float | None = None
+    available_cash: float | None = None
+    final_score: float | None = None

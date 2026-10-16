@@ -133,10 +133,9 @@ export default function ClientsNegotiationPage() {
   };
 
   const handleAuthorizeRemediation = async () => {
-    if (!negSession?.remediation) return;
+    if (!negSession?.remediation || submitRemediationMutation.isPending) return;
     const base = negSession.remediation.base_amount;
     const amount = Number(compensationAmount);
-    const treasury = session?.company?.cash ?? 0;
 
     if (!isCeoWordCountValid) {
       setRemediationError(
@@ -150,11 +149,6 @@ export default function ClientsNegotiationPage() {
 
     if (amount < base) {
       setRemediationError(`Compensation cannot be lower than the base demand of ₹${base.toLocaleString()}.`);
-      soundManager.playAlert();
-      return;
-    }
-    if (amount > treasury) {
-      setRemediationError(`Insufficient treasury capital. Treasury holds ₹${treasury.toLocaleString()}, but ₹${amount.toLocaleString()} was allocated.`);
       soundManager.playAlert();
       return;
     }

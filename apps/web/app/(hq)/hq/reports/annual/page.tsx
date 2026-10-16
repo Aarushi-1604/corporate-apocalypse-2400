@@ -89,7 +89,7 @@ export default function AnnualReportPage() {
               report.final_cash < 0 ? "text-red-400" : "text-neutral-100"
             }`}
           >
-            ${report.final_cash.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            ₹{report.final_cash.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </div>
           <div className="mt-2 text-xs text-neutral-400">
             {report.final_cash < 0 ? "TERMINAL DEFICIT // INSOLVENT" : "SOLVENT WORKING CAPITAL"}
@@ -172,19 +172,19 @@ export default function AnnualReportPage() {
             <div className="border-l-2 border-emerald-500 pl-3">
               <div className="text-[10px] uppercase text-neutral-500">Revenue</div>
               <div className="font-bold text-neutral-200">
-                ${(report.final_kpis.revenue ?? 0).toLocaleString()}
+                ₹{(report.final_kpis.revenue ?? 0).toLocaleString()}
               </div>
             </div>
             <div className="border-l-2 border-emerald-500 pl-3">
               <div className="text-[10px] uppercase text-neutral-500">Profit</div>
               <div className="font-bold text-neutral-200">
-                ${(report.final_kpis.profit ?? 0).toLocaleString()}
+                ₹{(report.final_kpis.profit ?? 0).toLocaleString()}
               </div>
             </div>
             <div className="border-l-2 border-cyan-500 pl-3">
               <div className="text-[10px] uppercase text-neutral-500">Stock Price</div>
               <div className="font-bold text-neutral-200">
-                ${(report.final_kpis.stock_price ?? 0).toFixed(2)}
+                ₹{(report.final_kpis.stock_price ?? 0).toFixed(2)}
               </div>
             </div>
             <div className="border-l-2 border-cyan-500 pl-3">
@@ -268,7 +268,7 @@ export default function AnnualReportPage() {
                     <span className="text-xs text-neutral-400">({deal.client_type})</span>
                   </div>
                   <div className="mt-1 text-xs text-neutral-400">
-                    Contract Value: <span className="font-semibold text-emerald-400">${deal.value.toLocaleString()}</span> | Relationship:{" "}
+                    Contract Value: <span className="font-semibold text-emerald-400">₹{deal.value.toLocaleString()}</span> | Relationship:{" "}
                     <span className="text-neutral-300">{deal.relationship_score.toFixed(0)}/100</span>
                   </div>
                 </div>
@@ -315,14 +315,31 @@ export default function AnnualReportPage() {
           ) : (
             report.decisions.map((d, idx) => (
               <div key={idx} className="rounded border border-neutral-800/80 bg-neutral-950/60 p-3 text-xs">
-                <div className="flex items-center justify-between text-neutral-500">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-neutral-500">
                   <span className="font-semibold text-emerald-400 uppercase">
                     Q{d.quarter} // {d.decision_type}
                   </span>
                   {d.stat_deltas && Object.keys(d.stat_deltas).length > 0 && (
-                    <span className="text-neutral-400">
-                      Deltas: {JSON.stringify(d.stat_deltas)}
-                    </span>
+                    <div className="flex flex-wrap gap-1.5 mt-1 sm:mt-0">
+                      {Object.entries(d.stat_deltas)
+                        .filter(([k]) => k !== "insolvent" && k !== "required_amount" && k !== "available_cash")
+                        .map(([k, v]) => (
+                          <span
+                            key={k}
+                            className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                              Number(v) > 0
+                                ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40"
+                                : Number(v) < 0
+                                ? "bg-red-950/60 text-red-300 border border-red-500/40"
+                                : "bg-neutral-800 text-neutral-400 border border-neutral-700"
+                            }`}
+                          >
+                            {k === "cash"
+                              ? `${Number(v) > 0 ? "+" : ""}₹${Math.abs(Number(v)).toLocaleString()} CASH`
+                              : `${Number(v) > 0 ? "+" : ""}${v} ${k.toUpperCase()}`}
+                          </span>
+                        ))}
+                    </div>
                   )}
                 </div>
                 <div className="mt-1 text-neutral-300 font-sans">{d.summary}</div>
@@ -340,12 +357,21 @@ export default function AnnualReportPage() {
         >
           VIEW GLOBAL LEADERBOARD →
         </Link>
-        <Link
-          href="/hq"
-          className="w-full sm:w-auto rounded border border-neutral-700 bg-neutral-900 px-6 py-3 text-center text-xs uppercase tracking-wider text-neutral-300 hover:bg-neutral-800 transition-colors"
-        >
-          RETURN TO HEADQUARTERS
-        </Link>
+        {isBankrupt ? (
+          <Link
+            href="/bankruptcy"
+            className="w-full sm:w-auto rounded border border-red-500/60 bg-red-950/40 px-6 py-3 text-center text-xs uppercase tracking-wider font-bold text-red-300 hover:bg-red-900/60 transition-colors shadow-[0_0_15px_rgba(239,68,68,0.25)]"
+          >
+            RETURN TO BANKRUPTCY TERMINAL
+          </Link>
+        ) : (
+          <Link
+            href="/hq"
+            className="w-full sm:w-auto rounded border border-neutral-700 bg-neutral-900 px-6 py-3 text-center text-xs uppercase tracking-wider text-neutral-300 hover:bg-neutral-800 transition-colors"
+          >
+            RETURN TO HEADQUARTERS
+          </Link>
+        )}
       </div>
     </div>
   );

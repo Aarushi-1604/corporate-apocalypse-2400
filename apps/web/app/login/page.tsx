@@ -32,10 +32,14 @@ export default function LoginPage() {
       });
   }, []);
 
-  // If already authenticated with active company session, route to city
+  // If already authenticated with active company session, route to city (or bankruptcy if insolvent)
   useEffect(() => {
     if (!isLoading && session?.company) {
-      router.replace("/city");
+      if (session?.status === "bankrupt") {
+        router.replace("/bankruptcy");
+      } else {
+        router.replace("/city");
+      }
     }
   }, [session, isLoading, router]);
 

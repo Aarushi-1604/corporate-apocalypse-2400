@@ -155,20 +155,18 @@ async def test_q4_unaffordable_directive_triggers_authoritative_bankruptcy():
         risk=20.0,
     )
 
-    # Mock DB executions
-    # 1. State lookup -> low_cash_state
-    # 2. Existing log lookup -> None
-    # 3. Issue lookup -> None
-    mock_state_res = MagicMock()
-    mock_state_res.scalar_one_or_none.return_value = low_cash_state
+    def mock_db_execute(stmt):
+        m = MagicMock()
+        stmt_str = str(stmt)
+        if "company_states" in stmt_str:
+            m.scalar_one_or_none.return_value = low_cash_state
+        else:
+            m.scalar_one_or_none.return_value = None
+            m.scalars.return_value.first.return_value = None
+            m.scalars.return_value.all.return_value = []
+        return m
 
-    mock_log_res = MagicMock()
-    mock_log_res.scalar_one_or_none.return_value = None
-
-    mock_issue_res = MagicMock()
-    mock_issue_res.scalar_one_or_none.return_value = None
-
-    db.execute.side_effect = [mock_state_res, mock_log_res, mock_issue_res]
+    db.execute.side_effect = mock_db_execute
 
     payload = ExecuteMarketDecisionRequest(
         quarter=4,
@@ -176,7 +174,7 @@ async def test_q4_unaffordable_directive_triggers_authoritative_bankruptcy():
         option_id="q4_emergency_market_sustainment",  # Cost: 20,000
     )
 
-    with patch("app.api.v1.market.finalize_game", new_callable=AsyncMock) as mock_finalize:
+    with patch("app.services.solvency_service.finalize_game", new_callable=AsyncMock) as mock_finalize:
         res = await execute_strategic_decision(
             payload=payload,
             company=company,
@@ -186,8 +184,8 @@ async def test_q4_unaffordable_directive_triggers_authoritative_bankruptcy():
 
         assert res.bankruptcy is True
         assert res.status == "bankrupt"
-        assert res.new_cash == -11000.0
-        assert low_cash_state.cash == -11000.0
+        assert res.new_cash == 9000.0
+        assert low_cash_state.cash == 9000.0
         assert session_row.status == "bankrupt"
         assert session_row.current_stage == "report"
         assert session_row.ended_at is not None

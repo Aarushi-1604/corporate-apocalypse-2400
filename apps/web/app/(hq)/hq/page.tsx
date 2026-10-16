@@ -29,8 +29,13 @@ export default function HQPage() {
 
   const isBankrupt =
     session?.status === "bankrupt" ||
-    deptLocks?.session_status === "bankrupt" ||
-    (session?.company?.cash ?? 0) < 0;
+    deptLocks?.session_status === "bankrupt";
+
+  useEffect(() => {
+    if (!isLoading && isBankrupt) {
+      router.replace("/bankruptcy");
+    }
+  }, [isBankrupt, isLoading, router]);
 
   return (
     <FigmaHQMap

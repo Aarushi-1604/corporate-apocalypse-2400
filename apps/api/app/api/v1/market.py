@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.services.scoring_service import finalize_game
+from app.services.solvency_service import enforce_solvency
 from app.core.deps import get_current_session, get_owned_company
 from app.models import (
     Company,
@@ -223,7 +224,39 @@ async def execute_strategic_decision(
             bankruptcy=is_bankrupt,
         )
 
-    # 3. Apply state deltas & deduct cost from cash
+    # 3. Authoritative Solvency Enforcement
+    solvency = await enforce_solvency(
+        db=db,
+        session_row=session_row,
+        company=company,
+        quarter=quarter,
+        action_type="market",
+        action_label=f"Strategic Marketing: '{option['title']}'",
+        required_cash=cost,
+        state=state,
+    )
+    if solvency.is_bankrupt:
+        return ExecuteMarketDecisionResponse(
+            status="bankrupt",
+            option_id=option["id"],
+            option_title=option["title"],
+            summary=f"Insolvency default: Required ₹{cost:,.0f} exceeds available liquid cash of ₹{solvency.available_cash:,.0f}.",
+            cost_cash=0.0,
+            stat_deltas={"cash": 0.0, "insolvent": 1.0},
+            press_headline=solvency.press_headline or f"INSOLVENCY DEFAULT: {company.name} DECLARES BANKRUPTCY IN Q{quarter}",
+            press_body=solvency.press_body or f"{company.name} attempted '{option['title']}' requiring ₹{cost:,.0f}, exceeding available liquid cash of ₹{solvency.available_cash:,.0f}.",
+            new_cash=solvency.available_cash,
+            new_market_share=float(state.market_share),
+            new_brand=float(state.brand),
+            new_risk=float(state.risk),
+            bankruptcy=True,
+            action_attempted=f"Strategic Marketing: '{option['title']}'",
+            required_amount=cost,
+            available_cash=solvency.available_cash,
+            final_score=solvency.final_score,
+        )
+
+    # 4. Solvency verified -- apply state deltas & deduct cost from cash
     deltas = dict(option["stat_deltas"])
     deltas["cash"] = -cost
 
@@ -243,23 +276,8 @@ async def execute_strategic_decision(
                 new_val = max(0.0, min(100.0, new_val))
             setattr(state, k, new_val)
 
-    # 4. Check bankruptcy condition authoritatively
-    is_bankrupt = new_cash < 0
-    if is_bankrupt:
-        session_row.status = "bankrupt"
-        session_row.ended_at = datetime.now(timezone.utc)
-        session_row.current_stage = "report"
-        await finalize_game(db, company)
-
-        press_headline = f"INSOLVENCY DEFAULT: {company.name} DECLARES BANKRUPTCY IN Q{quarter}"
-        press_body = (
-            f"{company.name} committed to '{option['title']}' requiring ₹{cost:,.0f} in capital, "
-            f"exceeding available liquid reserves and plunging balance sheet cash to ₹{new_cash:,.0f}. "
-            f"Corporate insolvency proceedings have been initiated and operations terminated."
-        )
-    else:
-        press_headline = option["press_headline"].format(company=company.name)
-        press_body = option["press_body"].format(company=company.name)
+    press_headline = option["press_headline"].format(company=company.name)
+    press_body = option["press_body"].format(company=company.name)
 
     # 5. Record into DecisionLog
     log_entry = DecisionLog(
@@ -279,8 +297,8 @@ async def execute_strategic_decision(
         )
     )
     issue = issue_result.scalar_one_or_none()
-    if issue:
-        events = list(issue.market_events) if isinstance(issue.market_events, list) else []
+    if issue and isinstance(getattr(issue, "market_events", None), list):
+        events = list(issue.market_events)
         events.append(f"BREAKING: {press_headline} - {press_body}")
         issue.market_events = events
 
@@ -288,7 +306,7 @@ async def execute_strategic_decision(
     await db.refresh(state)
 
     return ExecuteMarketDecisionResponse(
-        status="bankrupt" if is_bankrupt else "committed",
+        status="committed",
         option_id=option["id"],
         option_title=option["title"],
         summary=option["description"],
@@ -300,5 +318,5 @@ async def execute_strategic_decision(
         new_market_share=float(state.market_share),
         new_brand=float(state.brand),
         new_risk=float(state.risk),
-        bankruptcy=is_bankrupt,
+        bankruptcy=False,
     )

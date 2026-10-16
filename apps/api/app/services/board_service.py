@@ -234,6 +234,14 @@ async def respond_to_board_exchange(
     if board_session.company_id != company_id:
         raise ValueError("FORBIDDEN")
 
+    company_res = await db.execute(select(Company).where(Company.id == company_id))
+    comp_row = company_res.scalar_one_or_none()
+    if comp_row:
+        s_res = await db.execute(select(SessionModel).where(SessionModel.id == comp_row.session_id))
+        s_row = s_res.scalar_one_or_none()
+        if s_row and s_row.status in ("bankrupt", "fired", "completed"):
+            raise ValueError("GAME_COMPLETE")
+
     if exchange.chosen_response is not None:
         raise ValueError("ALREADY_ANSWERED")
 
@@ -274,6 +282,10 @@ async def respond_to_board_exchange(
     state = state_result.scalar_one()
 
     deltas = [float(e.confidence_delta) for e in all_exchanges]
+    total_delta = sum(deltas)
+    if total_delta < 0:
+        # Critical Board Evaluation: Enforce strict accountability on poor executive responses
+        deltas.append(-5.0)
     final_confidence, fired = resolve_outcome(float(state.board_confidence), deltas)
 
     state.board_confidence = final_confidence

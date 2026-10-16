@@ -35,6 +35,11 @@ class ExecuteRdDecisionResponse(BaseModel):
     new_innovation: float
     new_risk: float
     new_board_confidence: float
+    bankruptcy: bool = False
+    action_attempted: Optional[str] = None
+    required_amount: Optional[float] = None
+    available_cash: Optional[float] = None
+    final_score: Optional[float] = None
 
 
 @router.get("/proposal")

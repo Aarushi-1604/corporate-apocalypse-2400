@@ -561,7 +561,8 @@ async def test_client_remediation_refund_and_insolvency():
         )
 
         assert res["status"] == "BANKRUPT"
-        assert res["new_cash"] == -3000.0
+        assert res["new_cash"] == 5000.0  # Rejected deduction: cash never drops to negative!
+        assert res["bankrupt"] is True
         assert session_row.status == "bankrupt"
         mock_finalize.assert_awaited_once()
 

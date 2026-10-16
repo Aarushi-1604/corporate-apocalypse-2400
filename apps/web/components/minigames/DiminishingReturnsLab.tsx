@@ -33,7 +33,7 @@ const ROUNDS: Round[] = [
   {
     title: "Round 1 -- The Marketing Machine",
     story:
-      "You have 8 units of ₹25,000. Marketing looks amazing on the first dollar. Watch what the 'Next unit adds' meter does as you keep feeding it.",
+      "You have 8 units of ₹25,000. Marketing looks amazing on the first rupee. Watch what the 'Next unit adds' meter does as you keep feeding it.",
     units: 8,
     seconds: 30,
     depts: [
@@ -286,7 +286,7 @@ export function DiminishingReturnsLab({ onComplete }: DiminishingReturnsLabProps
           </h2>
         </div>
         <p className="text-base text-neutral-200 max-w-2xl mx-auto leading-relaxed">
-          You understand the principle: each extra dollar into the same department earns less than
+          You understand the principle: each extra rupee into the same department earns less than
           the one before it. Executive financial controls are now unlocked.
         </p>
         <button
@@ -397,7 +397,7 @@ export function DiminishingReturnsLab({ onComplete }: DiminishingReturnsLabProps
                   </div>
                   <div className="text-[10px] text-neutral-500 font-mono">
                     {currentUnits === 0
-                      ? "First dollar: Maximum impact"
+                      ? "First rupee: Maximum impact"
                       : nextGain < 8
                       ? "⚠️ Steep diminishing returns"
                       : "Moderate marginal gain"}

@@ -144,23 +144,28 @@ export function ProjectHelixDecisionStage({
               return (
                 <div
                   key={option.id}
-                  onClick={() => {
-                    if (isOptionAffordable) handleSelect(option.id);
-                  }}
-                  className={`p-6 border flex flex-col justify-between transition-all ${
-                    !isOptionAffordable
-                      ? "opacity-40 border-red-950 bg-black/50 cursor-not-allowed"
-                      : isSelected
-                      ? "border-cyan-400 bg-cyan-950/25 shadow-[0_0_20px_rgba(0,240,255,0.25)] cursor-pointer"
-                      : "border-slate-800/90 bg-neutral-950/80 hover:border-slate-700 hover:bg-neutral-900/90 cursor-pointer"
+                  onClick={() => handleSelect(option.id)}
+                  className={`p-6 border flex flex-col justify-between transition-all cursor-pointer ${
+                    isSelected
+                      ? "border-cyan-400 bg-cyan-950/25 shadow-[0_0_20px_rgba(0,240,255,0.25)]"
+                      : !isOptionAffordable
+                      ? "border-red-900/60 bg-red-950/20 hover:border-red-700"
+                      : "border-slate-800/90 bg-neutral-950/80 hover:border-slate-700 hover:bg-neutral-900/90"
                   }`}
                 >
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono tracking-widest text-cyan-400 font-bold uppercase">
-                        EXECUTIVE DIRECTIVE
-                      </span>
-                      <span className="font-mono text-sm font-bold text-slate-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono tracking-widest text-cyan-400 font-bold uppercase">
+                          EXECUTIVE DIRECTIVE
+                        </span>
+                        {!isOptionAffordable && (
+                          <span className="text-[10px] font-mono text-red-400 bg-red-950/80 border border-red-500/50 px-1.5 py-0.5 font-bold animate-pulse">
+                            INSOLVENCY RISK
+                          </span>
+                        )}
+                      </div>
+                      <span className={`font-mono text-sm font-bold ${!isOptionAffordable ? "text-red-400" : "text-slate-200"}`}>
                         EXPENDITURE: {option.cost_cash > 0 ? `₹${option.cost_cash.toLocaleString()}` : "₹0 (PRESERVE)"}
                       </span>
                     </div>

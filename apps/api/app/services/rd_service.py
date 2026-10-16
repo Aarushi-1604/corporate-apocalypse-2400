@@ -104,8 +104,38 @@ async def execute_rd_decision(
         }
 
     cost = float(selected_option["cost_cash"])
-    if cost > 0 and float(state.cash) < cost:
-        raise ValueError(f"Insufficient cash reserves to fund {project_spec['name']}.")
+    from app.services.solvency_service import enforce_solvency
+    solvency = await enforce_solvency(
+        db=db,
+        session_row=session_row,
+        company=company,
+        quarter=quarter,
+        action_type="rd",
+        action_label=f"R&D: '{selected_option['action_label']}' ({project_spec['name']})",
+        required_cash=cost,
+        state=state,
+    )
+    if solvency.is_bankrupt:
+        return {
+            "status": "bankrupt",
+            "option_id": selected_option["id"],
+            "option_title": selected_option["title"],
+            "action_label": selected_option["action_label"],
+            "summary": f"Insolvency default: Required ₹{cost:,.0f} exceeds available liquid cash of ₹{solvency.available_cash:,.0f}.",
+            "cost_cash": 0.0,
+            "stat_deltas": {"cash": 0.0, "insolvent": 1.0},
+            "press_headline": solvency.press_headline or f"R&D INSOLVENCY: {company.name} DECLARES BANKRUPTCY",
+            "press_body": solvency.press_body or f"{company.name} attempted '{project_spec['name']}' requiring ₹{cost:,.0f}, exceeding available liquid cash of ₹{solvency.available_cash:,.0f}.",
+            "new_cash": solvency.available_cash,
+            "new_innovation": float(state.innovation),
+            "new_risk": float(state.risk),
+            "new_board_confidence": float(state.board_confidence),
+            "bankruptcy": True,
+            "action_attempted": f"R&D: '{selected_option['action_label']}' ({project_spec['name']})",
+            "required_amount": cost,
+            "available_cash": solvency.available_cash,
+            "final_score": solvency.final_score,
+        }
 
     # Apply state deltas
     deltas = dict(selected_option["stat_deltas"])
@@ -147,8 +177,8 @@ async def execute_rd_decision(
         )
     )
     issue = issue_result.scalar_one_or_none()
-    if issue:
-        events = list(issue.market_events) if isinstance(issue.market_events, list) else []
+    if issue and isinstance(getattr(issue, "market_events", None), list):
+        events = list(issue.market_events)
         events.append(f"RESEARCH DISPATCH: {press_headline} - {press_body}")
         issue.market_events = events
 

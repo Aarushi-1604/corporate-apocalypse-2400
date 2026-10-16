@@ -148,6 +148,10 @@ export interface DecisionResult {
   new_brand: number;
   new_risk: number;
   bankruptcy?: boolean;
+  action_attempted?: string;
+  required_amount?: number;
+  available_cash?: number;
+  final_score?: number;
 }
 
 export function useStrategicDilemmas(companyId: string | undefined, quarter?: number) {
@@ -164,6 +168,8 @@ export function useStrategicDilemmas(companyId: string | undefined, quarter?: nu
     enabled: !!companyId,
   });
 }
+
+import { handleBankruptcyRedirect } from "@/lib/bankruptcy";
 
 export function useExecuteMarketDecision(companyId: string | undefined) {
   const queryClient = useQueryClient();
@@ -188,10 +194,21 @@ export function useExecuteMarketDecision(companyId: string | undefined) {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Refresh market view and session caches
       queryClient.invalidateQueries({ queryKey: ["market", companyId] });
       queryClient.invalidateQueries({ queryKey: ["session"] });
+      if (data.bankruptcy || data.status === "bankrupt") {
+        handleBankruptcyRedirect({
+          bankruptcy: true,
+          action_attempted: (data as any).action_attempted || data.option_title || "Market Strategic Mandate",
+          required_amount: (data as any).required_amount ?? data.cost_cash,
+          available_cash: (data as any).available_cash ?? data.new_cash,
+          final_score: (data as any).final_score,
+          press_headline: data.press_headline,
+          press_body: data.press_body,
+        });
+      }
     },
   });
 }

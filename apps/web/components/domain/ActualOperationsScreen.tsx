@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { type RegisterResponse } from "@/lib/api/registration";
 import { useBudgetDraft, saveBudget, lockDecisions } from "@/lib/hooks/use-budget";
 import { soundManager } from "@/lib/audio";
+import { handleBankruptcyRedirect } from "@/lib/bankruptcy";
 
 // -----------------------------------------------------------------------------
 // Categorization & Color Profiles for the 17 Backend Sectors

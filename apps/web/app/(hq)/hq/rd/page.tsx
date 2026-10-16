@@ -129,7 +129,7 @@ export default function ResearchDepartmentPage() {
             <div>
               <small>INNOVATION CAPACITY</small>
               <b style={{ color: "#00f0ff" }}>
-                {decisionResult ? decisionResult.new_innovation.toFixed(1) : "ACTIVE"}
+                {decisionResult?.new_innovation != null ? decisionResult.new_innovation.toFixed(1) : "ACTIVE"}
               </b>
             </div>
             <div>

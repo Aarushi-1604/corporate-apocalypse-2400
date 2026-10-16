@@ -43,3 +43,7 @@ class LockResponse(BaseModel):
     bankruptcy: bool
     already_locked: bool
     new_state: CompanyStateOut
+    action_attempted: str | None = None
+    required_amount: float | None = None
+    available_cash: float | None = None
+    final_score: float | None = None

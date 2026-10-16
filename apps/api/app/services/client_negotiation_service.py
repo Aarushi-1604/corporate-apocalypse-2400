@@ -105,8 +105,6 @@ async def get_scheduled_followup_deal(
             return q1_deal
         elif q2_accepted:
             return q2_deal
-        elif any(c.status in accepted_statuses for c in existing_contracts):
-            return next(c for c in existing_contracts if c.status in accepted_statuses)
         else:
             return None
     elif quarter >= 4:
@@ -308,6 +306,25 @@ async def get_or_create_negotiation_session(
 
         # Determine target deal using exact two-deal schedule table:
         target_deal = await get_scheduled_followup_deal(db, company, quarter)
+        if target_deal is None and quarter >= 4:
+            # Fallback for Q4: if player has any active deal or existing contract, use it for remediation
+            target_deal = next((c for c in existing_contracts if c.status == "closed_won"), None)
+            if not target_deal and existing_contracts:
+                target_deal = existing_contracts[0]
+            if not target_deal:
+                # Create an emergency SLA contract so Q4 remediation is always available
+                target_deal = Contract(
+                    company_id=company.id,
+                    quarter=quarter,
+                    client_name="Global Enterprise Client",
+                    client_type="Enterprise",
+                    status="closed_won",
+                    value=35000.0,
+                    relationship_score=40.0,
+                )
+                db.add(target_deal)
+                await db.flush()
+
         if target_deal is None:
             return {
                 "contract_id": "",
@@ -956,10 +973,10 @@ async def _evaluate_remediation_response(
             elif "```" in cleaned:
                 cleaned = cleaned.split("```")[1].split("```")[0].strip()
             data = json.loads(cleaned)
-            score = max(0, min(100, int(data.get("quality_score", 60))))
-            sat = max(-15.0, min(15.0, float(data.get("satisfaction_delta", 5.0))))
-            brand = max(-5.0, min(5.0, float(data.get("brand_delta", 1.0))))
-            risk = max(-3.0, min(4.0, float(data.get("risk_delta", 0.0))))
+            score = max(0, min(100, int(data.get("quality_score", 50))))
+            sat = max(-20.0, min(12.0, float(data.get("satisfaction_delta", 2.0))))
+            brand = max(-8.0, min(4.0, float(data.get("brand_delta", 0.5))))
+            risk = max(-3.0, min(6.0, float(data.get("risk_delta", 0.0))))
             return {
                 "client_reaction": str(data.get("client_reaction", "Client accepted terms.")),
                 "quality_score": score,
@@ -977,23 +994,23 @@ async def _evaluate_remediation_response(
     matches = len(clean_words.intersection(good_keywords))
 
     if matches >= 3:
-        score = 85
+        score = 75
         reaction = f"{client_name} director accepted the proactive executive remediation plan."
-        sat = 10.0
-        brand = 3.0
-        risk = -2.0
+        sat = 5.0
+        brand = 1.5
+        risk = -1.0
     elif matches >= 1:
-        score = 65
-        reaction = f"{client_name} acknowledged the statement and approved standard remediation terms."
-        sat = 4.0
-        brand = 1.0
-        risk = 0.0
+        score = 45
+        reaction = f"{client_name} acknowledged the statement with skepticism and approved provisional remediation terms."
+        sat = -3.0
+        brand = -1.5
+        risk = 1.0
     else:
-        score = 40
-        reaction = f"{client_name} expressed skepticism but accepted mandatory compensation rebate."
-        sat = -5.0
-        brand = -2.0
-        risk = 2.0
+        score = 20
+        reaction = f"{client_name} expressed severe dissatisfaction and demanded immediate compensation rebate."
+        sat = -12.0
+        brand = -5.0
+        risk = 4.0
 
     return {
         "client_reaction": reaction,
@@ -1060,9 +1077,9 @@ async def submit_client_remediation(
     if not state:
         raise ValueError(f"Company state not found for Quarter {quarter}.")
 
-    # 4. Fetch scheduled contract for this quarter using exact two-deal schedule
-    contract = await get_scheduled_followup_deal(db, company, quarter)
-    if not contract and contract_id:
+    # 4. Fetch contract for this quarter with robust Q4 support
+    contract = None
+    if contract_id:
         try:
             cid = uuid.UUID(contract_id) if isinstance(contract_id, str) else contract_id
             c_res = await db.execute(select(Contract).where(Contract.id == cid))
@@ -1070,7 +1087,24 @@ async def submit_client_remediation(
         except Exception:
             pass
     if not contract:
-        raise ValueError(f"No pending client deal scheduled for Quarter {quarter}.")
+        contract = await get_scheduled_followup_deal(db, company, quarter)
+    if not contract:
+        c_res = await db.execute(
+            select(Contract).where(Contract.company_id == company.id).order_by(Contract.quarter.desc())
+        )
+        contract = c_res.scalars().first()
+    if not contract:
+        contract = Contract(
+            company_id=company.id,
+            quarter=quarter,
+            client_name="Global Enterprise Client",
+            client_type="Enterprise",
+            status="closed_won",
+            value=35000.0,
+            relationship_score=40.0,
+        )
+        db.add(contract)
+        await db.flush()
 
     client_name = contract.client_name
     contract_val = float(contract.value) if float(contract.value) > 0 else 30000.0
@@ -1103,16 +1137,43 @@ async def submit_client_remediation(
     risk_reduction = min(6.0, max(-3.0, round(-eval_risk + (ratio * 1.5), 2)))
     esg_boost = 1.0
 
-    # 6. Authoritative cash deduction and bankruptcy check
+    session_row = (
+        await db.execute(select(SessionModel).where(SessionModel.id == company.session_id))
+    ).scalar_one()
+    from app.services.solvency_service import enforce_solvency
+    solvency = await enforce_solvency(
+        db=db,
+        session_row=session_row,
+        company=company,
+        quarter=quarter,
+        action_type="client_remediation",
+        action_label=f"Client SLA Remediation with {client_name}",
+        required_cash=compensation_amount,
+        state=state,
+    )
+    if solvency.is_bankrupt:
+        return {
+            "status": "BANKRUPT",
+            "client_name": client_name,
+            "compensation_amount": 0.0,
+            "base_amount": base_amount,
+            "stat_deltas": {"cash": 0.0, "insolvent": 1.0},
+            "summary": f"Insolvency default: SLA compensation of ₹{compensation_amount:,.0f} exceeded available liquid cash of ₹{solvency.available_cash:,.0f}.",
+            "new_cash": solvency.available_cash,
+            "new_client_satisfaction": float(state.client_satisfaction),
+            "new_brand": float(state.brand),
+            "new_risk": float(state.risk),
+            "bankrupt": True,
+            "bankruptcy": True,
+            "action_attempted": f"Client SLA Remediation with {client_name}",
+            "required_amount": compensation_amount,
+            "available_cash": solvency.available_cash,
+            "final_score": solvency.final_score,
+        }
+
+    # 6. Solvency verified -- deduct compensation and apply updates
     state.cash = float(state.cash) - compensation_amount
     bankrupt = False
-    if float(state.cash) < 0:
-        from app.services.scoring_service import finalize_game
-        session_row = (await db.execute(select(SessionModel).where(SessionModel.id == company.session_id))).scalar_one()
-        session_row.status = "bankrupt"
-        session_row.ended_at = datetime.now(timezone.utc)
-        await finalize_game(db, company)
-        bankrupt = True
 
     # 7. Apply KPI changes
     state.client_satisfaction = _clamp(float(state.client_satisfaction) + sat_boost, 0.0, 100.0)

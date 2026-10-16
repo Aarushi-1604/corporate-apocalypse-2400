@@ -123,7 +123,7 @@ export function OperationsGridGame({
         avatarIcon: "COO",
       },
       dialogueText:
-        "Welcome to the Operations Grid, CEO. Every dollar allocated here directly controls our growth trajectory and vulnerability profile. Be wary of Diminishing Returns—over-investing in a single category yields shrinking marginal gains while starving other critical infrastructure.",
+        "Welcome to the Operations Grid, CEO. Every rupee allocated here directly controls our growth trajectory and vulnerability profile. Be wary of Diminishing Returns—over-investing in a single category yields shrinking marginal gains while starving other critical infrastructure.",
       concept: {
         title: "Diminishing Returns & Marginal Utility",
         category: "Operations",
@@ -163,10 +163,10 @@ export function OperationsGridGame({
                       isOverBudget ? "text-rose-400 animate-pulse" : "text-cyan-300"
                     }`}
                   >
-                    ${remainingBudget.toLocaleString()}
+                    ₹{remainingBudget.toLocaleString()}
                   </span>
                   <span className="text-xs text-neutral-500 font-mono">
-                    / ${availableCapital.toLocaleString()} Total Capital
+                    / ₹{availableCapital.toLocaleString()} Total Capital
                   </span>
                 </div>
               </div>
@@ -240,7 +240,7 @@ export function OperationsGridGame({
                         <div className="flex justify-between items-center text-xs">
                           <span className="font-medium text-neutral-200">{item.label}</span>
                           <span className="font-mono text-neutral-400">
-                            ${currentVal.toLocaleString()}
+                            ₹{currentVal.toLocaleString()}
                           </span>
                         </div>
 

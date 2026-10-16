@@ -12,6 +12,8 @@ export default function AssignmentPage() {
   useEffect(() => {
     if (!isLoading && (!session || isError)) {
       router.replace("/login");
+    } else if (!isLoading && session?.status === "bankrupt") {
+      router.replace("/bankruptcy");
     }
   }, [session, isLoading, isError, router]);
 

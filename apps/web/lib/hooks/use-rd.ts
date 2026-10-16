@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { API_BASE } from "@/lib/api-config";
+import { handleBankruptcyRedirect } from "@/lib/bankruptcy";
 
 export interface HelixOption {
   id: string;
@@ -47,6 +48,11 @@ export interface ExecuteRdDecisionResult {
   new_innovation: number;
   new_risk: number;
   new_board_confidence: number;
+  bankruptcy?: boolean;
+  action_attempted?: string;
+  required_amount?: number;
+  available_cash?: number;
+  final_score?: number;
 }
 
 export async function fetchRdProposal(): Promise<HelixProposalResponse> {
@@ -88,13 +94,24 @@ export function useExecuteRdDecision(companyId?: string) {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       if (companyId) {
         queryClient.invalidateQueries({ queryKey: ["department-locks", companyId] });
         queryClient.invalidateQueries({ queryKey: ["company-state", companyId] });
       }
       queryClient.invalidateQueries({ queryKey: ["session"] });
       queryClient.invalidateQueries({ queryKey: ["rd-proposal"] });
+      if (data.bankruptcy || (data as any).status === "bankrupt") {
+        handleBankruptcyRedirect({
+          bankruptcy: true,
+          action_attempted: (data as any).action_attempted || data.action_label || "R&D Strategic Investment",
+          required_amount: (data as any).required_amount ?? data.cost_cash,
+          available_cash: (data as any).available_cash ?? data.new_cash,
+          final_score: (data as any).final_score,
+          press_headline: data.press_headline,
+          press_body: data.press_body,
+        });
+      }
     },
   });
 }

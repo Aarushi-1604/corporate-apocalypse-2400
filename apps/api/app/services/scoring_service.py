@@ -23,11 +23,13 @@ async def finalize_game(db: AsyncSession, company: Company) -> None:
 
     quarterly_states = [
         {
-            "revenue": float(s.revenue), "profit": float(s.profit),
-            "client_satisfaction": float(s.client_satisfaction),
-            "employee_satisfaction": float(s.employee_satisfaction),
-            "innovation": float(s.innovation), "investor_confidence": float(s.investor_confidence),
-            "risk": float(s.risk),
+            "revenue": float(s.revenue if s.revenue is not None else 0.0),
+            "profit": float(s.profit if s.profit is not None else 0.0),
+            "client_satisfaction": float(s.client_satisfaction if s.client_satisfaction is not None else 50.0),
+            "employee_satisfaction": float(s.employee_satisfaction if s.employee_satisfaction is not None else 50.0),
+            "innovation": float(s.innovation if s.innovation is not None else 50.0),
+            "investor_confidence": float(s.investor_confidence if s.investor_confidence is not None else 50.0),
+            "risk": float(s.risk if s.risk is not None else 20.0),
         }
         for s in states
     ]

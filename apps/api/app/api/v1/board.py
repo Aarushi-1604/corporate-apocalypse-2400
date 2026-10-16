@@ -41,6 +41,8 @@ async def respond(
             raise HTTPException(status_code=409, detail="This exchange was already answered.")
         if str(e) == "INVALID_OPTION":
             raise HTTPException(status_code=400, detail="Invalid response option.")
+        if str(e) == "GAME_COMPLETE":
+            raise HTTPException(status_code=409, detail="This session has already ended.")
         raise
 
     return BoardRespondResponse(

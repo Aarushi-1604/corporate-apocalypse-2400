@@ -275,7 +275,7 @@ export function DiminishingReturnsTrainingReactor({
               “Welcome to the Operations Grid, CEO. Before you manage real corporate capital,
               you must prove you understand the <strong>Principle of Diminishing Marginal Returns</strong>.
               Every ₹25,000 unit allocated here influences our trajectory. Be wary of over-investing in a
-              single sector—each subsequent dollar yields shrinking output while starving other critical infrastructure.”
+              single sector—each subsequent rupee yields shrinking output while starving other critical infrastructure.”
             </p>
 
             <div className="briefing-card-grid">
@@ -801,7 +801,7 @@ export function DiminishingReturnsTrainingReactor({
                     +{nextYield.toFixed(1)} <small>YIELD</small>
                   </strong>
                   <b>
-                    {percentChange !== null ? `${percentChange}% vs PREVIOUS` : "INITIAL DOLLAR"}
+                    {percentChange !== null ? `${percentChange}% vs PREVIOUS` : "INITIAL RUPEE"}
                   </b>
                 </div>
               </article>

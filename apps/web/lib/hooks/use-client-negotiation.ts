@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { API_BASE } from "@/lib/api-config";
+import { handleBankruptcyRedirect } from "@/lib/bankruptcy";
 
 export interface ClientDiscoveryDetails {
   deliverables: string;
@@ -247,12 +248,23 @@ export function useSubmitClientRemediation(companyId?: string) {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["negotiation-session", companyId] });
       queryClient.invalidateQueries({ queryKey: ["company-state", companyId] });
       queryClient.invalidateQueries({ queryKey: ["department-locks", companyId] });
       queryClient.invalidateQueries({ queryKey: ["session"] });
       queryClient.invalidateQueries({ queryKey: ["press-session", companyId] });
+      if (data.status === "BANKRUPT" || (data as any).bankruptcy || (data as any).bankrupt) {
+        handleBankruptcyRedirect({
+          bankruptcy: true,
+          action_attempted: (data as any).action_attempted || `Client SLA Remediation with ${data.client_name || "Client"}`,
+          required_amount: (data as any).required_amount ?? data.compensation_amount,
+          available_cash: (data as any).available_cash ?? data.new_cash,
+          final_score: (data as any).final_score,
+          press_headline: (data as any).press_headline,
+          press_body: (data as any).press_body,
+        });
+      }
     },
   });
 }

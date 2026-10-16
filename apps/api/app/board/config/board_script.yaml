@@ -13,7 +13,7 @@ exchanges:
       - label: "Commit to organizational restructuring: streamline overhead and reallocate resources toward high-margin core competencies."
         confidence_delta: 4
       - label: "Maintain current operational velocity: absorb short-term variance while protecting foundational capability and client trust."
-        confidence_delta: -2
+        confidence_delta: -4
 
   - speaker: lead_investor
     question: "Our return projections and enterprise valuation expectations for this quarter were missed. What is your strategic plan to correct course?"
@@ -25,7 +25,7 @@ exchanges:
       - label: "Pivot capital expenditure aggressively into scalable, automated service delivery to permanently lower marginal cost."
         confidence_delta: 3
       - label: "Request patient capital allocation: absorb near-term yield compression to solidify defensible long-term market dominance."
-        confidence_delta: -3
+        confidence_delta: -5
 
   - speaker: cfo
     question: "Cash reserves and working capital burn are critical concerns right now. How do we stabilize our solvency and balance sheet?"
@@ -37,7 +37,7 @@ exchanges:
       - label: "Monetize non-core corporate assets and intellectual property licenses to inject non-dilutive liquidity immediately."
         confidence_delta: 2
       - label: "Protect strategic R&D and talent retention expenditures by drawing against revolving credit reserves."
-        confidence_delta: -2
+        confidence_delta: -4
 
   - speaker: independent_director
     question: "Governance concerns aside, do you believe our operational decisions reflect responsible enterprise risk management and corporate ethics?"
@@ -45,7 +45,7 @@ exchanges:
       - label: "Institute an independent compliance oversight audit to verify risk models and report directly to the board."
         confidence_delta: 4
       - label: "Affirm executive discretion: competitive speed in volatile markets necessitates calculated risk tolerance."
-        confidence_delta: -3
+        confidence_delta: -5
       - label: "Establish transparent KPI disclosures and bind senior executive compensation to verified compliance milestones."
         confidence_delta: 3
       - label: "Commission a comprehensive risk-reward audit across all commercial deals before renewing any high-exposure contract."
@@ -61,7 +61,7 @@ exchanges:
       - label: "Cap executive discretionary spending and redirect internal capital into frontline operational safety and compensation."
         confidence_delta: 3
       - label: "Prioritize organizational survival above headcount guarantees: demand maximum productivity until stability is restored."
-        confidence_delta: -2
+        confidence_delta: -4
 
   - speaker: government_observer
     question: "Municipal and regulatory authorities are scrutinizing our sector closely. Can you assure this board of sustained compliance and civic alignment?"
@@ -73,7 +73,7 @@ exchanges:
       - label: "Engage municipal authorities in joint civic infrastructure initiatives to align corporate growth with urban priorities."
         confidence_delta: 2
       - label: "Mount a rigorous sovereign legal defense of corporate autonomy against expanding municipal oversight mandates."
-        confidence_delta: -3
+        confidence_delta: -5
 
 quarter_scripts:
   1:
@@ -87,7 +87,7 @@ quarter_scripts:
         - label: "Commit to organizational restructuring: streamline overhead and reallocate resources toward high-margin core competencies."
           confidence_delta: 4
         - label: "Maintain current operational velocity: absorb short-term variance while protecting foundational capability and client trust."
-          confidence_delta: -2
+          confidence_delta: -4
 
     - speaker: lead_investor
       question: "Our return projections and enterprise valuation expectations for this quarter were missed. What is your strategic plan to correct course?"
@@ -99,7 +99,7 @@ quarter_scripts:
         - label: "Pivot capital expenditure aggressively into scalable, automated service delivery to permanently lower marginal cost."
           confidence_delta: 3
         - label: "Request patient capital allocation: absorb near-term yield compression to solidify defensible long-term market dominance."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: cfo
       question: "Cash reserves and working capital burn are critical concerns right now. How do we stabilize our solvency and balance sheet?"
@@ -111,7 +111,7 @@ quarter_scripts:
         - label: "Monetize non-core corporate assets and intellectual property licenses to inject non-dilutive liquidity immediately."
           confidence_delta: 2
         - label: "Protect strategic R&D and talent retention expenditures by drawing against revolving credit reserves."
-          confidence_delta: -2
+          confidence_delta: -4
 
     - speaker: independent_director
       question: "Governance concerns aside, do you believe our operational decisions reflect responsible enterprise risk management and corporate ethics?"
@@ -119,7 +119,7 @@ quarter_scripts:
         - label: "Institute an independent compliance oversight audit to verify risk models and report directly to the board."
           confidence_delta: 4
         - label: "Affirm executive discretion: competitive speed in volatile markets necessitates calculated risk tolerance."
-          confidence_delta: -3
+          confidence_delta: -5
         - label: "Establish transparent KPI disclosures and bind senior executive compensation to verified compliance milestones."
           confidence_delta: 3
         - label: "Commission a comprehensive risk-reward audit across all commercial deals before renewing any high-exposure contract."
@@ -135,7 +135,7 @@ quarter_scripts:
         - label: "Cap executive discretionary spending and redirect internal capital into frontline operational safety and compensation."
           confidence_delta: 3
         - label: "Prioritize organizational survival above headcount guarantees: demand maximum productivity until stability is restored."
-          confidence_delta: -2
+          confidence_delta: -4
 
     - speaker: government_observer
       question: "Municipal and regulatory authorities are scrutinizing our sector closely. Can you assure this board of sustained compliance and civic alignment?"
@@ -147,7 +147,7 @@ quarter_scripts:
         - label: "Engage municipal authorities in joint civic infrastructure initiatives to align corporate growth with urban priorities."
           confidence_delta: 2
         - label: "Mount a rigorous sovereign legal defense of corporate autonomy against expanding municipal oversight mandates."
-          confidence_delta: -3
+          confidence_delta: -5
 
   2:
     - speaker: chairperson
@@ -160,7 +160,7 @@ quarter_scripts:
         - label: "Enforce disciplined departmental unit economics: mandate positive operating cash flow across every branch."
           confidence_delta: 5
         - label: "Maintain current footprint and absorb market friction while waiting for over-leveraged challengers to default."
-          confidence_delta: -2
+          confidence_delta: -4
 
     - speaker: lead_investor
       question: "We observe escalating cash outlays without proportionate EBITDA margin growth. How will you protect our equity valuation?"
@@ -172,7 +172,7 @@ quarter_scripts:
         - label: "Institute variable performance-linked executive compensation and eliminate non-essential corporate retainers."
           confidence_delta: 3
         - label: "Defend aggressive spending as essential market positioning, accepting short-term valuation depression."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: cfo
       question: "Working capital demands have tightened our debt covenants. What is your immediate balance sheet deleveraging plan?"
@@ -194,7 +194,7 @@ quarter_scripts:
         - label: "Require mandatory third-party cybersecurity and statutory compliance audits prior to new partner integrations."
           confidence_delta: 3
         - label: "Streamline compliance protocols to accelerate commercial execution, relying on standard corporate indemnification."
-          confidence_delta: -3
+          confidence_delta: -5
         - label: "Tie executive performance bonuses directly to zero-incident governance and regulatory certification milestones."
           confidence_delta: 2
 
@@ -208,7 +208,7 @@ quarter_scripts:
         - label: "Standardize flexible shift scheduling and allocate dedicated operational wellness and professional development funding."
           confidence_delta: 2
         - label: "Freeze base wages and demand mandatory operational overtime until quarterly delivery quotas are fully met."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: government_observer
       question: "Municipal regulators are reviewing corporate supply chain environmental impact and commercial fair-competition practices. What is your stance?"
@@ -220,7 +220,7 @@ quarter_scripts:
         - label: "Limit external disclosures strictly to statutory legal minimums to safeguard proprietary commercial secrets."
           confidence_delta: 1
         - label: "Lobby municipal representatives aggressively to challenge new oversight guidelines as anti-growth burdens."
-          confidence_delta: -2
+          confidence_delta: -4
 
   3:
     - speaker: chairperson
@@ -233,7 +233,7 @@ quarter_scripts:
         - label: "Execute surgical corporate restructuring: downscale non-performing departments to preserve runway into Q4."
           confidence_delta: 4
         - label: "Rely on existing balance sheet reserves without structural changes, hoping for macro conditions to stabilize."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: lead_investor
       question: "Institutional syndicates are questioning our solvency profile and capital efficiency. How do we prevent equity downgrade?"
@@ -245,7 +245,7 @@ quarter_scripts:
         - label: "Liquidate idle property, plant, and secondary patents to inject non-dilutive liquidity into the corporate treasury."
           confidence_delta: 5
         - label: "Urge investors to absorb mounting paper losses, claiming macro headwinds are entirely beyond executive control."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: cfo
       question: "Supplier price spikes and liquidity strain threaten our operating solvency. How will you navigate cash commitments this quarter?"
@@ -257,7 +257,7 @@ quarter_scripts:
         - label: "Restructure commercial contracts with enterprise clients to pass through inflation surcharges directly."
           confidence_delta: 3
         - label: "Exhaust short-term commercial paper lines to sustain deficit spending through the inflationary cycle."
-          confidence_delta: -2
+          confidence_delta: -4
 
     - speaker: independent_director
       question: "Contractual disputes and vendor defaults are multiplying across our supply base. How do we contain escalating legal and counterparty risks?"
@@ -269,7 +269,7 @@ quarter_scripts:
         - label: "Enforce strict penalty clauses and initiate immediate statutory litigation against breaching suppliers."
           confidence_delta: 1
         - label: "Waive contract compliance breaches quietly to preserve fragile trade relationships despite rising company exposure."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: employee_rep
       question: "Rumors of restructuring and automation have shattered employee security. How do you preserve organizational stability?"
@@ -281,7 +281,7 @@ quarter_scripts:
         - label: "Reallocate redundant operational staff into high-growth customer-facing and retention roles."
           confidence_delta: 5
         - label: "Issue an ultimatum demanding unconditional productivity increases while dismissing workforce restructuring concerns."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: government_observer
       question: "Municipal regulators have launched a sector-wide anti-monopoly and price-gouging probe. How do we respond to the regulatory summons?"
@@ -293,7 +293,7 @@ quarter_scripts:
         - label: "Engage specialized regulatory counsel to litigate and restrict the scope of municipal investigation subpoenas."
           confidence_delta: 1
         - label: "Refuse voluntary disclosures and publicly accuse municipal authorities of politically motivated regulatory overreach."
-          confidence_delta: -3
+          confidence_delta: -5
 
   4:
     - speaker: chairperson
@@ -306,7 +306,7 @@ quarter_scripts:
         - label: "Execute an orderly stakeholder reconciliation: balance investor returns, workforce stability, and ethical standing."
           confidence_delta: 5
         - label: "Gamble remaining treasury capital on speculative high-risk gambits to artificially inflate terminal enterprise valuation."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: lead_investor
       question: "Our capital deployment window is ending. What is your final mandate to maximize shareholder returns and terminal valuation?"
@@ -318,7 +318,7 @@ quarter_scripts:
         - label: "Prepare the corporation for high-multiple strategic acquisition or blue-chip equity recapitalization."
           confidence_delta: 3
         - label: "Liquidate foundational operating capabilities to engineer a temporary, unsustainable year-end accounting surplus."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: cfo
       question: "The external auditor is completing our terminal balance sheet audit. How do we ensure clean certification and zero impairment write-downs?"
@@ -330,7 +330,7 @@ quarter_scripts:
         - label: "Establish a segregated indemnity escrow to protect the enterprise against future tax and statutory reassessments."
           confidence_delta: 3
         - label: "Delay booking unavoidable liabilities and supplier payables until after the terminal fiscal reporting deadline."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: independent_director
       question: "History will judge this leadership by its integrity and enterprise stewardship. Can you defend your governance record before the stakeholders?"
@@ -342,7 +342,7 @@ quarter_scripts:
         - label: "Enshrine permanent corporate whistleblower protections and ESG governance bylaws into our foundational charter."
           confidence_delta: 4
         - label: "Classify operational archives and internal risk memos under corporate privilege to conceal past regulatory near-misses."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: employee_rep
       question: "Our workforce carried this company through every crisis. How will the terminal closing honor their sacrifice?"
@@ -354,7 +354,7 @@ quarter_scripts:
         - label: "Guarantee multi-year employment tenure contracts and cost-of-living adjustments for all frontline departments."
           confidence_delta: 3
         - label: "Cancel year-end bonuses and announce post-closing head-count cuts to artificially bolster executive liquidation payouts."
-          confidence_delta: -3
+          confidence_delta: -5
 
     - speaker: government_observer
       question: "The sovereign oversight commission is drafting its final sector assessment. Does this enterprise deserve to remain chartered in New Kalki City?"
@@ -366,4 +366,4 @@ quarter_scripts:
         - label: "Pay all municipal levies and regulatory assessments in full with an additional voluntary civic infrastructure grant."
           confidence_delta: 3
         - label: "Declare corporate sovereignty and threaten to relocate operations to a rival economic zone to evade local jurisdiction."
-          confidence_delta: -3
+          confidence_delta: -5
