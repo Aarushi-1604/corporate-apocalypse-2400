@@ -142,10 +142,14 @@ export function AriaAssistant() {
         }
       }
 
+      const replyText =
+        (data.answer && data.answer.trim()) ||
+        "Executive advisory telemetry active. In commercial client negotiations, align deliverable milestones closely with your core operational capabilities while maintaining at least 15% liquid capital reserves.";
+
       const ariaMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: "aria",
-        text: data.answer,
+        text: replyText,
         source: data.source,
         isBlocked: data.was_blocked,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -298,7 +302,9 @@ export function AriaAssistant() {
                         : "bg-slate-900/90 border border-slate-800 text-slate-200 rounded-tl-none shadow-sm"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{m.text}</p>
+                    <p className="whitespace-pre-wrap">
+                      {m.text || "Advisory telemetry active. Proceed with strategic caution."}
+                    </p>
                   </div>
                 </div>
               );

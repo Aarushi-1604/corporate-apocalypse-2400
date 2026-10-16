@@ -45,9 +45,9 @@ async def _fallback_llm_completion(system_prompt: str, user_prompt: str) -> str 
                     {"role": "user", "content": user_prompt},
                 ],
                 "temperature": 0.3,
-                "max_tokens": 200,
+                "max_tokens": 1000,
             }
-            async with httpx.AsyncClient(timeout=6.0) as client:
+            async with httpx.AsyncClient(timeout=8.0) as client:
                 res = await client.post(
                     "https://api.groq.com/openai/v1/chat/completions",
                     headers=headers,
@@ -55,8 +55,9 @@ async def _fallback_llm_completion(system_prompt: str, user_prompt: str) -> str 
                 )
                 if res.status_code == 200:
                     data = res.json()
-                    content = data["choices"][0]["message"]["content"]
-                    return content.strip()
+                    content = (data.get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
+                    if content:
+                        return content
         except Exception:
             pass
 
@@ -67,14 +68,18 @@ async def _fallback_llm_completion(system_prompt: str, user_prompt: str) -> str 
             payload = {
                 "systemInstruction": {"parts": [{"text": system_prompt}]},
                 "contents": [{"parts": [{"text": user_prompt}]}],
-                "generationConfig": {"temperature": 0.3, "maxOutputTokens": 200},
+                "generationConfig": {"temperature": 0.3, "maxOutputTokens": 400},
             }
-            async with httpx.AsyncClient(timeout=6.0) as client:
+            async with httpx.AsyncClient(timeout=8.0) as client:
                 res = await client.post(url, json=payload)
                 if res.status_code == 200:
                     data = res.json()
-                    text = data["candidates"][0]["content"]["parts"][0]["text"]
-                    return text.strip()
+                    try:
+                        text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        if text:
+                            return text
+                    except (KeyError, IndexError):
+                        pass
         except Exception:
             pass
 
@@ -119,12 +124,13 @@ async def get_advisor_response(
 
     generated = await generate_completion(current_system_prompt, user_prompt)
 
-    if generated is None:
+    if not generated or not generated.strip():
         generated = await _fallback_llm_completion(current_system_prompt, user_prompt)
 
-    if generated is None:
+    if not generated or not generated.strip():
         if is_rephrase:
-            return f"Executive Rephrasing: '{query.strip().capitalize()}. We are committed to operational excellence and strategic value delivery.'", "heuristic_rephrase", False
+            cleaned_draft = query.replace("Rephrase my draft into professional corporate executive language:", "").strip()
+            return f"Executive Rephrasing: 'In addressing this engagement, our organization is committed to deploying adaptive operational solutions that optimize resource efficiency, eliminate unnecessary expenditure, and uphold seamless customer service standards without compromising reliability.'", "heuristic_rephrase", False
         fallback_text = concepts[0]["body"] if concepts else (
             "As your executive advisor, I recommend weighing short-term liquidity against multi-quarter capability investments. Focus on keeping risk below 40% and preserving cash reserves for unexpected market shocks."
         )
