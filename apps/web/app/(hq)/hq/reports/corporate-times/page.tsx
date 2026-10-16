@@ -17,12 +17,12 @@ export default function CorporateTimesPage() {
 
       <h2 className="mb-2 text-sm font-semibold uppercase text-neutral-500">Top Performers</h2>
       {data.top_companies.map((c, i) => (
-        <p key={i} className="text-neutral-300">{c.name} ({c.sector}) -- {c.revenue.toFixed(0)} revenue</p>
+        <p key={i} className="text-neutral-300">{c.name} ({c.sector}) -- ₹{(c.revenue ?? 0).toLocaleString()} revenue</p>
       ))}
 
       <h2 className="mb-2 mt-6 text-sm font-semibold uppercase text-neutral-500">Biggest Losses</h2>
       {data.biggest_failures.map((c, i) => (
-        <p key={i} className="text-neutral-300">{c.name} ({c.sector}) -- {c.profit.toFixed(0)} profit</p>
+        <p key={i} className="text-neutral-300">{c.name} ({c.sector}) -- ₹{(c.profit ?? 0).toLocaleString()} profit</p>
       ))}
 
       <h2 className="mb-2 mt-6 text-sm font-semibold uppercase text-neutral-500">Boardroom Gossip</h2>

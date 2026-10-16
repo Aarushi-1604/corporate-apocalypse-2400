@@ -90,11 +90,8 @@ export default function BoardRoomPage() {
   const clientDone = Boolean(deptLocks?.client?.locked);
   const pressDone = Boolean(deptLocks?.press?.locked);
 
-  const q = sessionQuarter ?? 1;
   const prereqsSatisfied =
-    q <= 2
-      ? opsDone && marketDone && rdDone && clientDone && pressDone
-      : opsDone && marketDone && rdDone;
+    opsDone && marketDone && rdDone && clientDone && pressDone;
   const isLocked = !prereqsSatisfied && !activeBoard;
 
   const handleRespond = async (index: number) => {
@@ -281,9 +278,9 @@ export default function BoardRoomPage() {
               <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
                 The Board of Directors has formally approved your strategic execution and ratified your operational governance for the quarter.
               </p>
-              {finalScore !== null && (
+              {finalScore != null && (
                 <div className="p-4 bg-emerald-950/40 border border-emerald-500/40 font-mono text-sm text-emerald-300">
-                  FINAL BOARD CONFIDENCE: <strong>{finalScore.toFixed(0)}%</strong>
+                  FINAL BOARD CONFIDENCE: <strong>{Number(finalScore).toFixed(0)}%</strong>
                 </div>
               )}
               <button

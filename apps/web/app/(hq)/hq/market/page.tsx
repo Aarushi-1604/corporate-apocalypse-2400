@@ -162,7 +162,7 @@ export default function MarketDepartmentPage() {
             </div>
             <div>
               <small>MARKET SHARE</small>
-              <b>{marketData ? `${marketData.player_market_share.toFixed(1)}%` : "—"}</b>
+              <b>{marketData?.player_market_share != null ? `${marketData.player_market_share.toFixed(1)}%` : "—"}</b>
             </div>
             <div>
               <small>CASCADE STATUS</small>

@@ -14,7 +14,7 @@ export default function EmployeesPage() {
     <div>
       <h1 className="mb-2 text-2xl font-bold">Employee Portal</h1>
       <p className="mb-6 text-sm text-neutral-400">
-        Employee Satisfaction: {state ? state.employee_satisfaction.toFixed(1) : "--"}
+        Employee Satisfaction: {state?.employee_satisfaction != null ? state.employee_satisfaction.toFixed(1) : "--"}
       </p>
 
       {isLoading && <p className="text-neutral-400">Loading feed...</p>}

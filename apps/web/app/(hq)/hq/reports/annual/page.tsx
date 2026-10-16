@@ -77,7 +77,7 @@ export default function AnnualReportPage() {
         <div className="rounded-lg border border-neutral-800 bg-neutral-900/60 p-6 text-center shadow-lg backdrop-blur">
           <div className="text-xs uppercase tracking-wider text-neutral-500">FINAL AUTHORITATIVE CEO SCORE</div>
           <div className="mt-3 text-6xl font-black text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-            {report.final_score.toFixed(1)}
+            {(report.final_score ?? 0).toFixed(1)}
           </div>
           <div className="mt-2 text-xs text-neutral-400">Normalized Index / 100.0 Scale</div>
         </div>
@@ -268,8 +268,8 @@ export default function AnnualReportPage() {
                     <span className="text-xs text-neutral-400">({deal.client_type})</span>
                   </div>
                   <div className="mt-1 text-xs text-neutral-400">
-                    Contract Value: <span className="font-semibold text-emerald-400">₹{deal.value.toLocaleString()}</span> | Relationship:{" "}
-                    <span className="text-neutral-300">{deal.relationship_score.toFixed(0)}/100</span>
+                    Contract Value: <span className="font-semibold text-emerald-400">₹{(deal.value ?? 0).toLocaleString()}</span> | Relationship:{" "}
+                    <span className="text-neutral-300">{(deal.relationship_score ?? 50).toFixed(0)}/100</span>
                   </div>
                 </div>
                 <div className="rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-neutral-300">

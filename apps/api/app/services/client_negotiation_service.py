@@ -306,13 +306,13 @@ async def get_or_create_negotiation_session(
 
         # Determine target deal using exact two-deal schedule table:
         target_deal = await get_scheduled_followup_deal(db, company, quarter)
-        if target_deal is None and quarter >= 4:
-            # Fallback for Q4: if player has any active deal or existing contract, use it for remediation
+        if target_deal is None and quarter >= 3:
+            # Fallback for Q3/Q4: if player has any active deal or existing contract, use it for remediation
             target_deal = next((c for c in existing_contracts if c.status == "closed_won"), None)
             if not target_deal and existing_contracts:
                 target_deal = existing_contracts[0]
             if not target_deal:
-                # Create an emergency SLA contract so Q4 remediation is always available
+                # Create an emergency SLA contract so remediation is always available
                 target_deal = Contract(
                     company_id=company.id,
                     quarter=quarter,
@@ -331,6 +331,8 @@ async def get_or_create_negotiation_session(
                 "quarter": quarter,
                 "has_followup": False,
                 "status": "COMPLETED",
+                "relationship_score": avg_rel,
+                "target_value": total_contract_value,
                 "is_locked": True,
                 "lock_reason": None,
                 "message": f"No pending client follow-up for Quarter {quarter}.",

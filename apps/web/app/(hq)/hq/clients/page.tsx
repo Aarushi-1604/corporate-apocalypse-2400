@@ -242,7 +242,7 @@ export default function ClientsNegotiationPage() {
             <div>
               <small>CLIENT TRUST</small>
               <b style={{ color: "#c084fc" }}>
-                {evaluation ? evaluation.new_relationship_score.toFixed(0) : relationship_score.toFixed(0)}%
+                {(evaluation ? evaluation.new_relationship_score : (relationship_score ?? 50)).toFixed(0)}%
               </b>
             </div>
             <div>
@@ -690,13 +690,13 @@ export default function ClientsNegotiationPage() {
                             {isWon && (
                               <div className="flex justify-between items-center text-slate-400">
                                 <span>ONGOING Q{quarter} REVENUE:</span>
-                                <strong className="text-emerald-400">+₹{contract.ongoing_quarterly_revenue.toLocaleString()}</strong>
+                                <strong className="text-emerald-400">+₹{(contract.ongoing_quarterly_revenue ?? 0).toLocaleString()}</strong>
                               </div>
                             )}
                             <div className="flex justify-between items-center text-slate-400">
                               <span>CLIENT TRUST SCORE:</span>
-                              <strong className={contract.relationship_score >= 50 ? "text-purple-300" : "text-amber-400"}>
-                                {contract.relationship_score.toFixed(0)}%
+                              <strong className={(contract.relationship_score ?? 50) >= 50 ? "text-purple-300" : "text-amber-400"}>
+                                {(contract.relationship_score ?? 50).toFixed(0)}%
                               </strong>
                             </div>
                           </div>
@@ -1076,7 +1076,7 @@ export default function ClientsNegotiationPage() {
                     className="w-full p-4 bg-black/90 border border-purple-900/60 focus:border-purple-400 rounded-none text-white text-base font-sans leading-relaxed outline-none resize-none"
                   />
                   <div className="flex justify-between text-sm font-mono text-slate-400">
-                    <span>Capabilities context: Innovation {negSession.company_capabilities.innovation.toFixed(0)} • Brand {negSession.company_capabilities.brand.toFixed(0)}</span>
+                    <span>Capabilities context: Innovation {(negSession.company_capabilities?.innovation ?? 50).toFixed(0)} • Brand {(negSession.company_capabilities?.brand ?? 50).toFixed(0)}</span>
                     <span>{pitchText.length} / 1,500 chars</span>
                   </div>
                 </div>
