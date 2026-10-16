@@ -93,58 +93,9 @@ async def get_active_event(db: AsyncSession, company: Company, quarter: int) -> 
             response_deadline=instance.response_deadline,
         )
 
-    if instances_this_quarter:
-        # Already had (and resolved) this quarter's one event -- Phase
-        # 13 deliberately caps at one event per quarter. Expanding to
-        # multiple per quarter is a later-phase content/pacing change.
-        return None
-
-    state_result = await db.execute(
-        select(CompanyStateModel).where(
-            CompanyStateModel.company_id == company.id,
-            CompanyStateModel.quarter == quarter,
-        )
-    )
-    state = state_result.scalar_one()
-    elapsed = (datetime.now(timezone.utc) - state.recorded_at.replace(tzinfo=timezone.utc)).total_seconds()
-    if elapsed < MIN_DELAY_SECONDS:
-        return None
-
-    templates_result = await db.execute(
-        select(EventTemplateModel).where(EventTemplateModel.min_quarter <= quarter,EventTemplateModel.category.notlike("hr\\_%", escape="\\"))
-    )
-    candidates = templates_result.scalars().all()
-    if not candidates:
-        return None
-
-    from app.events.models import EventTemplateConfig
-
-    candidate_configs = [
-        EventTemplateConfig(
-            category=c.category, severity=c.severity, title=c.title, body=c.body,
-            weight=float(c.weight), min_quarter=c.min_quarter,
-            response_options=c.response_options, default_response=c.default_response,
-        )
-        for c in candidates
-    ]
-    rng = random.Random(company.id.int + quarter)
-    chosen_config = pick_event_template(candidate_configs, rng)
-    chosen_db = next(c for c in candidates if c.title == chosen_config.title)
-
-    new_instance = EventInstance(
-        company_id=company.id, template_id=chosen_db.id, quarter=quarter,
-        response_deadline=datetime.now(timezone.utc) + timedelta(seconds=RESPONSE_WINDOW_SECONDS),
-    )
-    db.add(new_instance)
-    await db.commit()
-    await db.refresh(new_instance)
-
-    return ActiveEventOut(
-        event_instance_id=new_instance.id, category=chosen_db.category, severity=chosen_db.severity,
-        title=chosen_db.title, body=chosen_db.body,
-        response_options=[ResponseOptionOut(label=o["label"]) for o in chosen_db.response_options],
-        response_deadline=new_instance.response_deadline,
-    )
+    # Automatic timed crisis trigger removed for upgraded 2400 gameplay loop.
+    # Crisis events are no longer automatically triggered mid-quarter on a 60-second timer.
+    return None
 
 
 async def respond_to_event(

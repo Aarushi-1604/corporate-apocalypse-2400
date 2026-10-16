@@ -51,15 +51,10 @@ export function HolographicTablet() {
     }
   };
 
-  // If on login/auth screens or no active session, do not render tablet launcher
-  if (isAuthRoute || isSessionLoading || !session) {
-    return null;
-  }
-
-  const currentQ = tabletData?.quarter ?? session.current_quarter ?? 1;
-  const companyName = tabletData?.company_name ?? session.company?.name ?? "APEX DYNAMICS";
+  const currentQ = tabletData?.quarter ?? session?.current_quarter ?? 1;
+  const companyName = tabletData?.company_name ?? session?.company?.name ?? "APEX DYNAMICS";
   const ceoName = tabletData?.player_name ?? "Executive CEO";
-  const sector = tabletData?.sector ?? session.company?.sector ?? "Corporate Sector";
+  const sector = tabletData?.sector ?? session?.company?.sector ?? "Corporate Sector";
   const sessionStatus = tabletData?.session_status ?? "active";
 
   const state = tabletData?.state;
@@ -67,16 +62,58 @@ export function HolographicTablet() {
   const locks = tabletData?.locks;
   const recentEvents = tabletData?.recent_events ?? [];
 
-  // KPI Trends Calculation (genuine only when prevState exists)
-  const computeTrend = (currentVal: number | undefined, prevVal: number | undefined) => {
+  // Accumulate in-quarter decision deltas for live KPI badges (Hook called unconditionally)
+  const quarterDeltas = useMemo(() => {
+    const deltas: Record<string, number> = {};
+    const events = tabletData?.recent_events ?? [];
+    for (const ev of events) {
+      if (ev.quarter === currentQ && ev.stat_deltas) {
+        for (const [k, v] of Object.entries(ev.stat_deltas)) {
+          const num = typeof v === "number" ? v : parseFloat(v as string);
+          if (!isNaN(num)) {
+            deltas[k] = (deltas[k] ?? 0) + num;
+          }
+        }
+      }
+    }
+    return deltas;
+  }, [tabletData?.recent_events, currentQ]);
+
+  // KPI Trends Calculation (reflects active quarter decision deltas or inter-quarter comparison)
+  const computeTrend = (metricKey: string, currentVal: number | undefined, prevVal: number | undefined, isCurrency = false) => {
+    // 1. If we have active in-quarter decision deltas, show them!
+    const activeDelta = quarterDeltas[metricKey];
+    if (activeDelta !== undefined && Math.abs(activeDelta) >= 0.01) {
+      const formatted = isCurrency
+        ? (activeDelta > 0 ? `+₹${Math.round(activeDelta).toLocaleString()}` : `-₹${Math.abs(Math.round(activeDelta)).toLocaleString()}`)
+        : (activeDelta > 0 ? `+${activeDelta.toFixed(1)}` : `${activeDelta.toFixed(1)}`);
+      return {
+        direction: activeDelta > 0 ? ("up" as const) : ("down" as const),
+        text: formatted,
+        title: `Q0${currentQ} Net Drift: ${formatted} (cumulative sum across all completed departments this quarter. See INTEL tab for individual event records).`,
+      };
+    }
+
+    // 2. Otherwise fall back to inter-quarter comparison (quarter > 1)
     if (currentVal === undefined || prevVal === undefined || currentQ <= 1) {
       return null;
     }
     const diff = currentVal - prevVal;
-    if (Math.abs(diff) < 0.01) return { direction: "neutral", text: "STABLE" };
-    if (diff > 0) return { direction: "up", text: `+${diff.toFixed(1)}` };
-    return { direction: "down", text: `${diff.toFixed(1)}` };
+    if (Math.abs(diff) < 0.01) return { direction: "neutral" as const, text: "STABLE", title: "Quarter-over-quarter change: Stable" };
+    const diffText = isCurrency
+      ? (diff > 0 ? `+₹${Math.round(diff).toLocaleString()}` : `-₹${Math.abs(Math.round(diff)).toLocaleString()}`)
+      : (diff > 0 ? `+${diff.toFixed(1)}` : `${diff.toFixed(1)}`);
+    return {
+      direction: diff > 0 ? ("up" as const) : ("down" as const),
+      text: diffText,
+      title: `Quarter-over-quarter delta vs Q0${currentQ - 1}: ${diffText}`,
+    };
   };
+
+  // If on login/auth screens or no active session, do not render tablet launcher
+  if (isAuthRoute || isSessionLoading || !session) {
+    return null;
+  }
 
   return (
     <>
@@ -265,26 +302,33 @@ export function HolographicTablet() {
 
               {!isTabletLoading && activeTab === "kpis" && (
                 <div className="tablet-tab-content">
+                  <div className="flex items-center justify-between px-1 mb-2.5 text-[10px] font-mono border-b border-neutral-800/80 pb-1.5">
+                    <span className="text-amber-400 font-bold tracking-wider">LIVE TELEMETRY</span>
+                    <span className="text-neutral-400">TREND BADGES: Q0{currentQ} NET SHIFT</span>
+                  </div>
                   <div className="kpi-grid">
                     {[
-                      { label: "LIQUID CASH", val: `₹${Number(state?.cash ?? 0).toLocaleString()}`, trend: computeTrend(state?.cash, prevState?.cash) },
-                      { label: "REVENUE", val: `₹${Number(state?.revenue ?? 0).toLocaleString()}`, trend: computeTrend(state?.revenue, prevState?.revenue) },
-                      { label: "DEBT OUTSTANDING", val: `₹${Number(state?.debt ?? 0).toLocaleString()}`, trend: computeTrend(state?.debt, prevState?.debt) },
-                      { label: "BRAND REPUTATION", val: `${Number(state?.brand ?? 50).toFixed(1)}/100`, trend: computeTrend(state?.brand, prevState?.brand) },
-                      { label: "INVESTOR CONFIDENCE", val: `${Number(state?.investor_confidence ?? 50).toFixed(1)}%`, trend: computeTrend(state?.investor_confidence, prevState?.investor_confidence) },
-                      { label: "BOARD CONFIDENCE", val: `${Number(state?.board_confidence ?? 50).toFixed(1)}%`, trend: computeTrend(state?.board_confidence, prevState?.board_confidence) },
-                      { label: "CLIENT TRUST", val: `${Number(state?.client_satisfaction ?? 50).toFixed(1)}%`, trend: computeTrend(state?.client_satisfaction, prevState?.client_satisfaction) },
-                      { label: "MARKET SHARE", val: `${Number(state?.market_share ?? 5).toFixed(1)}%`, trend: computeTrend(state?.market_share, prevState?.market_share) },
-                      { label: "RISK PROFILE", val: `${Number(state?.risk ?? 20).toFixed(1)}%`, trend: computeTrend(state?.risk, prevState?.risk) },
-                      { label: "INNOVATION RATING", val: `${Number(state?.innovation ?? 50).toFixed(1)}/100`, trend: computeTrend(state?.innovation, prevState?.innovation) },
-                      { label: "ESG INTEGRITY", val: `${Number(state?.esg ?? 50).toFixed(1)}/100`, trend: computeTrend(state?.esg, prevState?.esg) },
-                      { label: "EMPLOYEE MORALE", val: `${Number(state?.employee_satisfaction ?? 50).toFixed(1)}%`, trend: computeTrend(state?.employee_satisfaction, prevState?.employee_satisfaction) },
+                      { key: "cash", label: "LIQUID CASH", val: `₹${Number(state?.cash ?? 0).toLocaleString()}`, trend: computeTrend("cash", state?.cash, prevState?.cash, true) },
+                      { key: "revenue", label: "REVENUE", val: `₹${Number(state?.revenue ?? 0).toLocaleString()}`, trend: computeTrend("revenue", state?.revenue, prevState?.revenue) },
+                      { key: "debt", label: "DEBT OUTSTANDING", val: `₹${Number(state?.debt ?? 0).toLocaleString()}`, trend: computeTrend("debt", state?.debt, prevState?.debt, true) },
+                      { key: "brand", label: "BRAND REPUTATION", val: `${Number(state?.brand ?? 50).toFixed(1)}/100`, trend: computeTrend("brand", state?.brand, prevState?.brand) },
+                      { key: "investor_confidence", label: "INVESTOR CONFIDENCE", val: `${Number(state?.investor_confidence ?? 50).toFixed(1)}%`, trend: computeTrend("investor_confidence", state?.investor_confidence, prevState?.investor_confidence) },
+                      { key: "board_confidence", label: "BOARD CONFIDENCE", val: `${Number(state?.board_confidence ?? 50).toFixed(1)}%`, trend: computeTrend("board_confidence", state?.board_confidence, prevState?.board_confidence) },
+                      { key: "client_satisfaction", label: "CLIENT TRUST", val: `${Number(state?.client_satisfaction ?? 50).toFixed(1)}%`, trend: computeTrend("client_satisfaction", state?.client_satisfaction, prevState?.client_satisfaction) },
+                      { key: "market_share", label: "MARKET SHARE", val: `${Number(state?.market_share ?? 5).toFixed(1)}%`, trend: computeTrend("market_share", state?.market_share, prevState?.market_share) },
+                      { key: "risk", label: "RISK PROFILE", val: `${Number(state?.risk ?? 20).toFixed(1)}%`, trend: computeTrend("risk", state?.risk, prevState?.risk) },
+                      { key: "innovation", label: "INNOVATION RATING", val: `${Number(state?.innovation ?? 50).toFixed(1)}/100`, trend: computeTrend("innovation", state?.innovation, prevState?.innovation) },
+                      { key: "esg", label: "ESG INTEGRITY", val: `${Number(state?.esg ?? 50).toFixed(1)}/100`, trend: computeTrend("esg", state?.esg, prevState?.esg) },
+                      { key: "employee_satisfaction", label: "EMPLOYEE MORALE", val: `${Number(state?.employee_satisfaction ?? 50).toFixed(1)}%`, trend: computeTrend("employee_satisfaction", state?.employee_satisfaction, prevState?.employee_satisfaction) },
                     ].map((kpi, idx) => (
                       <div key={idx} className="kpi-card">
                         <div className="kpi-header">
                           <span>{kpi.label}</span>
                           {kpi.trend && (
-                            <span className={`kpi-trend ${kpi.trend.direction}`}>
+                            <span
+                              className={`kpi-trend ${kpi.trend.direction}`}
+                              title={kpi.trend.title}
+                            >
                               {kpi.trend.direction === "up" && <TrendingUp size={11} />}
                               {kpi.trend.direction === "down" && <TrendingDown size={11} />}
                               {kpi.trend.direction === "neutral" && <Minus size={11} />}
@@ -395,11 +439,21 @@ export function HolographicTablet() {
                             <p className="timeline-summary">{ev.summary}</p>
                             {ev.stat_deltas && Object.keys(ev.stat_deltas).length > 0 && (
                               <div className="timeline-deltas">
-                                {Object.entries(ev.stat_deltas).map(([k, v]) => (
-                                  <span key={k} className={`delta-tag ${v >= 0 ? "pos" : "neg"}`}>
-                                    {k.replace(/_/g, " ")}: {v >= 0 ? `+${v}` : v}
-                                  </span>
-                                ))}
+                                {Object.entries(ev.stat_deltas).map(([k, v]) => {
+                                  const num = typeof v === "number" ? v : parseFloat(v as string);
+                                  if (isNaN(num)) return null;
+                                  const isCash = k.toLowerCase().includes("cash") || k.toLowerCase().includes("debt");
+                                  const formatted = isCash
+                                    ? (num >= 0 ? `+₹${Math.round(num).toLocaleString()}` : `-₹${Math.abs(Math.round(num)).toLocaleString()}`)
+                                    : (Math.abs(num) >= 50
+                                      ? `${num >= 0 ? "+" : ""}${Math.round(num)}`
+                                      : `${num >= 0 ? "+" : ""}${num.toFixed(1)}`);
+                                  return (
+                                    <span key={k} className={`delta-tag ${num >= 0 ? "pos" : "neg"}`}>
+                                      {k.replace(/_/g, " ")}: {formatted}
+                                    </span>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>

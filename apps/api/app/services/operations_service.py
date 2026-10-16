@@ -156,6 +156,19 @@ async def lock_decisions(
     total_spent = sum(d.amount for d in decisions)
     current.cash = float(current.cash) - total_spent
 
+    # Apply operational deltas directly to active quarter state so live KPIs reflect budget commitments immediately
+    for k, v in result.deltas.items():
+        if hasattr(current, k) and k != "cash":
+            attr_val = getattr(current, k)
+            current_val = float(attr_val) if attr_val is not None else 50.0
+            new_val = current_val + float(v)
+            if k in [
+                "brand", "risk", "market_share", "client_satisfaction",
+                "employee_satisfaction", "investor_confidence", "board_confidence", "esg",
+            ]:
+                new_val = max(0.0, min(100.0, new_val))
+            setattr(current, k, new_val)
+
     new_state_row = CompanyStateModel(
         company_id=company.id, quarter=quarter + 1,
         cash=result.new_state.cash, revenue=result.new_state.revenue, profit=result.new_state.profit,
@@ -195,11 +208,6 @@ async def lock_decisions(
         session_row.current_stage = "board"
         await db.flush()
         await trigger_board_session(db, company, quarter + 1, trigger_reason="low_board_confidence")
-    elif quarter >= 4:
-        session_row.status = "completed"
-        session_row.ended_at = datetime.now(timezone.utc)
-        session_row.current_stage = "report"
-        await finalize_game(db, company)
     else:
         session_row.current_stage = "planning"
 

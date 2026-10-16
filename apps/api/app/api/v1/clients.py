@@ -15,6 +15,7 @@ from app.services.client_negotiation_service import (
     handle_pursue_or_reject,
     submit_pitch_evaluation,
     submit_price_quote_and_resolve,
+    submit_client_remediation,
 )
 
 router = APIRouter()
@@ -186,3 +187,31 @@ async def post_price_quote(
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+class ClientRemediationPayload(BaseModel):
+    contract_id: Optional[str] = None
+    compensation_amount: float = Field(..., gt=0)
+    status_update: str = Field(default="", max_length=1000)
+
+
+@router.post("/companies/{company_id}/client-remediation")
+async def post_client_remediation(
+    company_id: str,
+    payload: ClientRemediationPayload,
+    company: Company = Depends(get_owned_company),
+    session_row: SessionModel = Depends(get_current_session),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Q3 SLA audit review and compensation restitution settlement."""
+    try:
+        return await submit_client_remediation(
+            db=db,
+            company=company,
+            quarter=session_row.current_quarter,
+            contract_id=payload.contract_id or "",
+            compensation_amount=payload.compensation_amount,
+            status_update=payload.status_update,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

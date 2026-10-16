@@ -1,9 +1,11 @@
 import uuid
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
+from app.services.scoring_service import finalize_game
 from app.core.deps import get_current_session, get_owned_company
 from app.models import (
     Company,
@@ -165,6 +167,12 @@ async def execute_strategic_decision(
     if quarter != session_row.current_quarter:
         raise HTTPException(status_code=409, detail="Quarter mismatch -- refresh session.")
 
+    if session_row.status in ["bankrupt", "fired", "completed"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Company run has terminated with status '{session_row.status}'.",
+        )
+
     dilemma = next(
         (d for d in MARKETING_STRATEGIC_DILEMMAS if d["id"] == payload.dilemma_id), None
     )
@@ -187,8 +195,6 @@ async def execute_strategic_decision(
         raise HTTPException(status_code=404, detail=f"No company state found for quarter {quarter}.")
 
     cost = option["cost_cash"]
-    if float(state.cash) < cost:
-        raise HTTPException(status_code=400, detail="Insufficient liquid cash for this strategic offensive.")
 
     # 2. Check if decision already logged this quarter (Idempotency)
     existing_log = await db.execute(
@@ -200,8 +206,9 @@ async def execute_strategic_decision(
     )
     already = existing_log.scalar_one_or_none()
     if already is not None:
+        is_bankrupt = session_row.status == "bankrupt" or float(state.cash) < 0
         return ExecuteMarketDecisionResponse(
-            status="already_committed",
+            status="bankrupt" if is_bankrupt else "already_committed",
             option_id=payload.option_id,
             option_title=option["title"],
             summary=already.summary,
@@ -213,17 +220,20 @@ async def execute_strategic_decision(
             new_market_share=float(state.market_share),
             new_brand=float(state.brand),
             new_risk=float(state.risk),
+            bankruptcy=is_bankrupt,
         )
 
-    # 3. Apply state deltas (bounded metrics clamped to 0..100)
+    # 3. Apply state deltas & deduct cost from cash
     deltas = dict(option["stat_deltas"])
     deltas["cash"] = -cost
 
-    state.cash = float(state.cash) - cost
+    new_cash = float(state.cash) - cost
+    state.cash = new_cash
 
     for k, v in option["stat_deltas"].items():
         if hasattr(state, k):
-            current_val = float(getattr(state, k))
+            attr_val = getattr(state, k)
+            current_val = float(attr_val) if attr_val is not None else 50.0
             new_val = current_val + v
             # If bounded metric, clamp between 0 and 100
             if k in [
@@ -233,10 +243,25 @@ async def execute_strategic_decision(
                 new_val = max(0.0, min(100.0, new_val))
             setattr(state, k, new_val)
 
-    # 4. Record into DecisionLog
-    press_headline = option["press_headline"].format(company=company.name)
-    press_body = option["press_body"].format(company=company.name)
+    # 4. Check bankruptcy condition authoritatively
+    is_bankrupt = new_cash < 0
+    if is_bankrupt:
+        session_row.status = "bankrupt"
+        session_row.ended_at = datetime.now(timezone.utc)
+        session_row.current_stage = "report"
+        await finalize_game(db, company)
 
+        press_headline = f"INSOLVENCY DEFAULT: {company.name} DECLARES BANKRUPTCY IN Q{quarter}"
+        press_body = (
+            f"{company.name} committed to '{option['title']}' requiring ₹{cost:,.0f} in capital, "
+            f"exceeding available liquid reserves and plunging balance sheet cash to ₹{new_cash:,.0f}. "
+            f"Corporate insolvency proceedings have been initiated and operations terminated."
+        )
+    else:
+        press_headline = option["press_headline"].format(company=company.name)
+        press_body = option["press_body"].format(company=company.name)
+
+    # 5. Record into DecisionLog
     log_entry = DecisionLog(
         company_id=company.id,
         quarter=quarter,
@@ -246,7 +271,7 @@ async def execute_strategic_decision(
     )
     db.add(log_entry)
 
-    # 5. Weave into Corporate Times issue for this quarter if it exists
+    # 6. Weave into Corporate Times issue for this quarter if it exists
     issue_result = await db.execute(
         select(CorporateTimesIssue).where(
             CorporateTimesIssue.session_id == session_row.id,
@@ -263,7 +288,7 @@ async def execute_strategic_decision(
     await db.refresh(state)
 
     return ExecuteMarketDecisionResponse(
-        status="committed",
+        status="bankrupt" if is_bankrupt else "committed",
         option_id=option["id"],
         option_title=option["title"],
         summary=option["description"],
@@ -275,4 +300,5 @@ async def execute_strategic_decision(
         new_market_share=float(state.market_share),
         new_brand=float(state.brand),
         new_risk=float(state.risk),
+        bankruptcy=is_bankrupt,
     )

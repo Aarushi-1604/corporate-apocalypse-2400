@@ -38,7 +38,8 @@ export interface CompanyCapabilities {
 export interface NegotiationSessionResponse {
   contract_id: string;
   quarter: number;
-  scenario: ClientScenario;
+  has_followup?: boolean;
+  scenario?: ClientScenario | null;
   status: string;
   relationship_score: number;
   target_value: number;
@@ -47,6 +48,36 @@ export interface NegotiationSessionResponse {
   decision_summary?: string | null;
   decision_stat_deltas?: Record<string, number> | null;
   company_capabilities: CompanyCapabilities;
+  active_portfolio?: Array<{
+    id: string;
+    quarter_signed: number;
+    client_name: string;
+    client_type: string;
+    status: string;
+    value: number;
+    relationship_score: number;
+    ongoing_quarterly_revenue: number;
+    obligation: string;
+    dispute_status: string;
+    deliverable_status: string;
+    summary: string;
+  }>;
+  total_active_contracts?: number;
+  total_contract_value?: number;
+  total_ongoing_quarterly_revenue?: number;
+  remediation?: {
+    contract_id: string;
+    client_name: string;
+    client_type: string;
+    contract_value: number;
+    base_amount: number;
+    max_amount: number;
+    audit_feedback: string;
+    settled: boolean;
+    summary?: string | null;
+    stat_deltas?: Record<string, number> | null;
+    compensation_paid?: number;
+  };
 }
 
 export interface PitchEvaluationResult {
@@ -178,3 +209,51 @@ export function useSubmitPriceQuote(contractId: string, companyId?: string) {
     },
   });
 }
+
+export interface ClientRemediationResult {
+  status: string;
+  client_name: string;
+  compensation_amount: number;
+  base_amount: number;
+  stat_deltas: Record<string, number>;
+  summary: string;
+  new_cash: number;
+  new_client_satisfaction: number;
+  new_brand: number;
+  new_risk: number;
+}
+
+export function useSubmitClientRemediation(companyId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      contract_id,
+      compensation_amount,
+      status_update,
+    }: {
+      contract_id?: string;
+      compensation_amount: number;
+      status_update?: string;
+    }): Promise<ClientRemediationResult> => {
+      const res = await fetch(`${API_BASE}/api/v1/companies/${companyId}/client-remediation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ contract_id, compensation_amount, status_update }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail ?? "Failed to authorize SLA remediation");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["negotiation-session", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["company-state", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["department-locks", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["session"] });
+      queryClient.invalidateQueries({ queryKey: ["press-session", companyId] });
+    },
+  });
+}
+

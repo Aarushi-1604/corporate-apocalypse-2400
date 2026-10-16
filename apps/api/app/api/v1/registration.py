@@ -61,6 +61,7 @@ async def get_me(
         company_id=company.id,
         current_quarter=session_row.current_quarter,
         resumed=True,
+        status=session_row.status,
         company=CompanyOut(
             name=company.name, sector=company.sector, backstory=company.backstory,
             unique_strength=company.unique_strength, unique_weakness=company.unique_weakness,

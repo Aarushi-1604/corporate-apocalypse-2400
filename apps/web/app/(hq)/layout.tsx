@@ -13,12 +13,15 @@ const FULLSCREEN_ROUTES = [
   "/hq/clients",
   "/hq/press",
   "/hq/board",
+  "/hq/leaderboard",
 ];
 
 export default function HqLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const isFullscreen = FULLSCREEN_ROUTES.includes(pathname);
+  const isFullscreen = FULLSCREEN_ROUTES.some(
+    (route) => pathname === route || (route !== "/hq" && pathname.startsWith(route + "/"))
+  );
 
   if (isFullscreen) {
     return <>{children}</>;

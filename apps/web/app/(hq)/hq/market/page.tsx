@@ -420,11 +420,14 @@ export default function MarketDepartmentPage() {
                 dilemma={activeDilemma}
                 quarter={quarter}
                 companyId={companyId}
+                currentCash={marketData?.company_cash ?? session?.company?.cash}
                 isAlreadyCommitted={isMarketLocked}
-                onDecisionExecuted={async () => {
+                onDecisionExecuted={async (result) => {
                   await queryClient.invalidateQueries({ queryKey: ["department-locks", companyId] });
                   await queryClient.invalidateQueries({ queryKey: ["corporate-times", quarter] });
                   await queryClient.invalidateQueries({ queryKey: ["market", companyId] });
+                  await queryClient.invalidateQueries({ queryKey: ["session"] });
+                  await queryClient.invalidateQueries({ queryKey: ["tablet-snapshot", companyId] });
                 }}
                 onReturnToHQ={() => {
                   router.push("/hq");

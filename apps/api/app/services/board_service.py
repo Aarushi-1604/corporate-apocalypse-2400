@@ -65,7 +65,7 @@ async def check_board_prerequisites(
     if not rd_res.scalar_one_or_none():
         return False, "Research & Development must be committed before convening the Board."
 
-    # 4. Client World (for Q1/Q2, require completed negotiation)
+    # 4. Client World
     if quarter <= 2:
         client_res = await db.execute(
             select(DecisionLog).where(
@@ -76,18 +76,30 @@ async def check_board_prerequisites(
         )
         if not client_res.scalar_one_or_none():
             return False, "Client contract negotiation must be concluded before convening the Board."
-
-    # 5. Press World (for Q1/Q2, require completed press conference)
-    if quarter <= 2:
-        press_res = await db.execute(
-            select(DecisionLog).where(
-                DecisionLog.company_id == company.id,
-                DecisionLog.quarter == quarter,
-                DecisionLog.decision_type == "press",
+    else:
+        from app.services.client_negotiation_service import get_scheduled_followup_deal
+        scheduled_deal = await get_scheduled_followup_deal(db, company, quarter)
+        if scheduled_deal is not None:
+            client_res = await db.execute(
+                select(DecisionLog).where(
+                    DecisionLog.company_id == company.id,
+                    DecisionLog.quarter == quarter,
+                    DecisionLog.decision_type.in_(["client_negotiation", "client_remediation"]),
+                )
             )
+            if not client_res.scalar_one_or_none():
+                return False, f"Enterprise Client World review must be concluded before convening the Board."
+
+    # 5. Press World (required across all quarters Q1-Q4)
+    press_res = await db.execute(
+        select(DecisionLog).where(
+            DecisionLog.company_id == company.id,
+            DecisionLog.quarter == quarter,
+            DecisionLog.decision_type == "press",
         )
-        if not press_res.scalar_one_or_none():
-            return False, "Press conference must be concluded before convening the Board."
+    )
+    if not press_res.scalar_one_or_none():
+        return False, "Press World report must be published before convening the Board."
 
     return True, ""
 
@@ -158,6 +170,8 @@ async def get_active_board_exchange(
         select(SessionModel).where(SessionModel.id == company.session_id)
     )
     session_row = session_row_res.scalar_one_or_none()
+    if session_row and hasattr(session_row, "status") and session_row.status in ["bankrupt", "fired", "completed"]:
+        return None
     current_q = session_row.current_quarter if session_row else 1
 
     result = await db.execute(

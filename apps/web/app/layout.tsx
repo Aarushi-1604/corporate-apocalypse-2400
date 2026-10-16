@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 import { HolographicTablet } from "@/components/domain/HolographicTablet";
+import { AriaAssistant } from "@/components/domain/AriaAssistant";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           {children}
           <HolographicTablet />
+          <AriaAssistant />
         </Providers>
         <div id="overlay-root" />
       </body>

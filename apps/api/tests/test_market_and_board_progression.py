@@ -129,37 +129,146 @@ def test_board_room_quarters_are_semantically_distinct():
 
 
 @pytest.mark.asyncio
-async def test_market_affordability_protection():
+async def test_q4_unaffordable_directive_triggers_authoritative_bankruptcy():
     """
-    Verify that decision execution enforces cash sufficiency and does not allow negative cash.
+    Regression Test for SymbITech Day 1 Priority 1:
+    In Q4, Anshuumaan Soni's company has ₹9,000 cash. The cheapest directive is ₹20,000.
+    Authorizing this unaffordable mandate must drive cash to -₹11,000, trigger authoritative
+    bankruptcy immediately, finalize the game, set session status to 'bankrupt', and prevent
+    further progression or duplicate deductions.
     """
-    from fastapi import HTTPException
+    from unittest.mock import patch
     from app.api.v1.market import execute_strategic_decision
     from app.schemas.market import ExecuteMarketDecisionRequest
     from app.models import Company, CompanyState as CompanyStateModel, Session as SessionModel
 
     db = AsyncMock()
-    company = Company(id=uuid.uuid4(), name="Solvent Corp")
-    session_row = SessionModel(id=uuid.uuid4(), current_quarter=4)
+    company = Company(id=uuid.uuid4(), name="Anshuumaan Soni Corp")
+    session_row = SessionModel(id=uuid.uuid4(), current_quarter=4, status="active")
 
-    # State with cash insufficient for Q4 expensive buyout (costs 55,000, company only has 10,000)
     low_cash_state = CompanyStateModel(
         company_id=company.id,
         quarter=4,
-        cash=10000.0,
+        cash=9000.0,
         market_share=15.0,
         brand=50.0,
         risk=20.0,
     )
 
+    # Mock DB executions
+    # 1. State lookup -> low_cash_state
+    # 2. Existing log lookup -> None
+    # 3. Issue lookup -> None
     mock_state_res = MagicMock()
     mock_state_res.scalar_one_or_none.return_value = low_cash_state
-    db.execute.return_value = mock_state_res
+
+    mock_log_res = MagicMock()
+    mock_log_res.scalar_one_or_none.return_value = None
+
+    mock_issue_res = MagicMock()
+    mock_issue_res.scalar_one_or_none.return_value = None
+
+    db.execute.side_effect = [mock_state_res, mock_log_res, mock_issue_res]
 
     payload = ExecuteMarketDecisionRequest(
         quarter=4,
         dilemma_id="terminal_market_dominance_q4",
-        option_id="q4_total_industry_monopoly",  # Cost: 55,000
+        option_id="q4_emergency_market_sustainment",  # Cost: 20,000
+    )
+
+    with patch("app.api.v1.market.finalize_game", new_callable=AsyncMock) as mock_finalize:
+        res = await execute_strategic_decision(
+            payload=payload,
+            company=company,
+            session_row=session_row,
+            db=db,
+        )
+
+        assert res.bankruptcy is True
+        assert res.status == "bankrupt"
+        assert res.new_cash == -11000.0
+        assert low_cash_state.cash == -11000.0
+        assert session_row.status == "bankrupt"
+        assert session_row.current_stage == "report"
+        assert session_row.ended_at is not None
+        mock_finalize.assert_awaited_once_with(db, company)
+        assert "INSOLVENCY" in res.press_headline or "BANKRUPT" in res.press_headline
+
+
+@pytest.mark.asyncio
+async def test_q4_affordable_directive_normal_progression():
+    """
+    Verify that an affordable directive execution deducts cash cleanly without triggering bankruptcy.
+    """
+    from unittest.mock import patch
+    from app.api.v1.market import execute_strategic_decision
+    from app.schemas.market import ExecuteMarketDecisionRequest
+    from app.models import Company, CompanyState as CompanyStateModel, Session as SessionModel
+
+    db = AsyncMock()
+    company = Company(id=uuid.uuid4(), name="Solvent Enterprise")
+    session_row = SessionModel(id=uuid.uuid4(), current_quarter=4, status="active")
+
+    healthy_state = CompanyStateModel(
+        company_id=company.id,
+        quarter=4,
+        cash=50000.0,
+        market_share=20.0,
+        brand=60.0,
+        risk=15.0,
+    )
+
+    mock_state_res = MagicMock()
+    mock_state_res.scalar_one_or_none.return_value = healthy_state
+
+    mock_log_res = MagicMock()
+    mock_log_res.scalar_one_or_none.return_value = None
+
+    mock_issue_res = MagicMock()
+    mock_issue_res.scalar_one_or_none.return_value = None
+
+    db.execute.side_effect = [mock_state_res, mock_log_res, mock_issue_res]
+
+    payload = ExecuteMarketDecisionRequest(
+        quarter=4,
+        dilemma_id="terminal_market_dominance_q4",
+        option_id="q4_emergency_market_sustainment",  # Cost: 20,000
+    )
+
+    with patch("app.api.v1.market.finalize_game", new_callable=AsyncMock) as mock_finalize:
+        res = await execute_strategic_decision(
+            payload=payload,
+            company=company,
+            session_row=session_row,
+            db=db,
+        )
+
+        assert res.bankruptcy is False
+        assert res.status == "committed"
+        assert res.new_cash == 30000.0
+        assert healthy_state.cash == 30000.0
+        assert session_row.status == "active"
+        mock_finalize.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_market_blocks_decisions_when_session_already_terminated():
+    """
+    Verify that if a session is already bankrupt or terminated, market decision endpoint returns 400.
+    """
+    from fastapi import HTTPException
+    from app.api.v1.market import execute_strategic_decision
+    from app.schemas.market import ExecuteMarketDecisionRequest
+    from app.models import Company, Session as SessionModel
+
+    db = AsyncMock()
+    company = Company(id=uuid.uuid4(), name="Bankrupt Enterprise")
+    session_row = SessionModel(id=uuid.uuid4(), current_quarter=4, status="bankrupt")
+
+    payload = ExecuteMarketDecisionRequest(
+        quarter=4,
+        dilemma_id="terminal_market_dominance_q4",
+        option_id="q4_emergency_market_sustainment",
     )
 
     with pytest.raises(HTTPException) as exc_info:
@@ -171,6 +280,5 @@ async def test_market_affordability_protection():
         )
 
     assert exc_info.value.status_code == 400
-    assert "Insufficient liquid cash" in exc_info.value.detail
-    # Ensure company cash was not deducted into negative
-    assert low_cash_state.cash == 10000.0
+    assert "terminated" in exc_info.value.detail.lower()
+

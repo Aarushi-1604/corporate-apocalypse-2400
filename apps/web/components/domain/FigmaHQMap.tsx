@@ -65,11 +65,17 @@ export function FigmaHQMap({
 }: FigmaHQMapProps) {
   const [lockedMessage, setLockedMessage] = useState(false);
 
-  const opsLocked = Boolean(departmentLocks?.operations?.locked);
-  const marketLocked = Boolean(departmentLocks?.market?.locked);
-  const rdLocked = Boolean(departmentLocks?.rd?.locked);
+  const isBankrupt =
+    data.status === "bankrupt" ||
+    (departmentLocks as any)?.session_status === "bankrupt" ||
+    (data.company?.cash ?? 0) < 0;
+
+  const opsLocked = isBankrupt || Boolean(departmentLocks?.operations?.locked);
+  const marketLocked = isBankrupt || Boolean(departmentLocks?.market?.locked);
+  const rdLocked = isBankrupt || Boolean(departmentLocks?.rd?.locked);
 
   const handleBoardClick = () => {
+    if (isBankrupt) return;
     if (boardUnlocked) {
       onEnterBoard();
     } else {
@@ -179,6 +185,52 @@ export function FigmaHQMap({
       <div className="map-hint">
         MOVE BETWEEN DEPARTMENTS <span>•</span> SELECT A LOCATION
       </div>
+
+      {isBankrupt && (
+        <div className="absolute inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="max-w-xl w-full border-2 border-red-500 bg-neutral-950 p-8 flex flex-col gap-5 shadow-[0_0_50px_rgba(239,68,68,0.5)]">
+            <div className="flex items-center gap-3 pb-3 border-b border-red-900/60">
+              <div className="w-10 h-10 rounded bg-red-950 border border-red-500 flex items-center justify-center text-red-400 font-bold text-xl">
+                ⚠
+              </div>
+              <div>
+                <span className="text-xs font-mono tracking-widest text-red-400 font-bold uppercase">
+                  INSOLVENCY PROCEEDINGS // RUN TERMINATED
+                </span>
+                <h2 className="text-2xl font-bold font-sans text-red-100 m-0">
+                  CORPORATE BANKRUPTCY
+                </h2>
+              </div>
+            </div>
+            <p className="text-sm font-mono text-slate-300 leading-relaxed m-0">
+              Cash reserves have been depleted into a deficit (₹{(data.company?.cash ?? 0).toLocaleString()}). All executive authority and departmental operations have been terminated under statutory insolvency proceedings.
+            </p>
+            <div className="p-3 bg-red-950/40 border border-red-500/40 text-xs font-mono text-red-300">
+              Your final score has been calculated and submitted to the Corporate Leaderboard. No further decisions, board meetings, or quarter progression are permitted.
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = "/hq/reports/annual";
+                }}
+                className="game-button gold px-6 py-2.5 text-xs font-mono font-bold tracking-widest cursor-pointer"
+              >
+                <span>[ VIEW FINAL REPORT ]</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = "/hq/leaderboard";
+                }}
+                className="game-button px-6 py-2.5 text-xs font-mono font-bold tracking-widest cursor-pointer text-amber-400 border border-amber-500/50 bg-neutral-900"
+              >
+                <span>[ VIEW LEADERBOARD ]</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

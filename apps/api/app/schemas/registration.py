@@ -61,4 +61,5 @@ class RegisterResponse(BaseModel):
     company_id: uuid.UUID
     current_quarter: int
     resumed: bool
+    status: str = "active"
     company: CompanyOut

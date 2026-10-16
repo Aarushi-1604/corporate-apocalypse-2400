@@ -249,12 +249,20 @@ export default function BoardRoomPage() {
               <p className="text-neutral-300 leading-relaxed text-sm md:text-base">
                 The Board of Directors has voted to remove you as Chief Executive Officer effective immediately. Your corporate credentials and discretionary authority have been revoked.
               </p>
-              <button
-                onClick={handleRestart}
-                className="mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-mono font-bold tracking-widest uppercase rounded transition-colors"
-              >
-                ACCEPT A NEW APPOINTMENT
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+                <button
+                  onClick={() => router.push("/hq/reports/annual")}
+                  className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-mono font-bold tracking-widest uppercase rounded transition-colors shadow-lg shadow-red-950"
+                >
+                  VIEW TERMINAL AUDIT & ANNUAL REPORT →
+                </button>
+                <button
+                  onClick={handleRestart}
+                  className="px-6 py-3 border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 font-mono font-bold tracking-widest uppercase rounded transition-colors"
+                >
+                  ACCEPT A NEW APPOINTMENT
+                </button>
+              </div>
             </div>
           </div>
         )}

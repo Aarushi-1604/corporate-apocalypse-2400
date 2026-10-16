@@ -135,11 +135,19 @@ async def get_department_locks(
         select(DecisionLog).where(
             DecisionLog.company_id == company.id,
             DecisionLog.quarter == quarter,
-            DecisionLog.decision_type == "client_negotiation",
+            DecisionLog.decision_type.in_(["client_negotiation", "client_remediation"]),
         )
     )
     client_log = client_log_result.scalar_one_or_none()
-    client_locked = client_log is not None
+    if quarter > 2:
+        from app.services.client_negotiation_service import get_scheduled_followup_deal
+        scheduled_deal = await get_scheduled_followup_deal(db, company, quarter)
+        if scheduled_deal is None:
+            client_locked = True
+        else:
+            client_locked = client_log is not None
+    else:
+        client_locked = client_log is not None
 
     # 5. Check Press lock:
     press_log_result = await db.execute(

@@ -19,6 +19,7 @@ export type SessionData = {
   company_id: string;
   current_quarter: number;
   resumed: boolean;
+  status?: string;
   company: CompanyOut;
 };
 

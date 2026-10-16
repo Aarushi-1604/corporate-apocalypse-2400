@@ -23,7 +23,9 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     groq_model: str = "openai/gpt-oss-20b"
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-3.5-flash-lite"
+    gemini_model: str = "gemini-1.5-flash"
+    enable_ollama: bool = False
+    event_access_code: str = "SYMBITECH2026"
     model_config = SettingsConfigDict(
         env_file=('.env', 'apps/api/.env', '../apps/api/.env'),
         env_file_encoding = 'utf-8',

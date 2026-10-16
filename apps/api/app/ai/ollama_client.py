@@ -18,6 +18,8 @@ async def get_embedding(text: str) -> list[float] | None:
     process), so it needs the identical resilience.
     """
     settings = get_settings()
+    if not getattr(settings, "enable_ollama", False):
+        return None
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
@@ -58,6 +60,9 @@ async def generate_completion(system_prompt: str, user_prompt: str) -> str | Non
     alone deliberately: retrying a genuinely slow or erroring model
     just doubles the wait for no benefit.
     """
+    settings = get_settings()
+    if not getattr(settings, "enable_ollama", False):
+        return None
     try:
         return await _attempt_generation(system_prompt, user_prompt)
     except httpx.ConnectError:
